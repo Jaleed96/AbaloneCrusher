@@ -45,12 +45,12 @@ public class Menu extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         final int appHeight = 750;
-        final int appWidth = 1300;
+        final int appWidth = 1100;
         primaryStage.setTitle("Abalone");
        
         gridpane.setVgap(8);
-        gridpane.setPadding(new Insets(10, 10, 10 ,10));
-        gridpane.setHgap(8);
+        gridpane.setPadding(new Insets(0, 0, 0,0));
+        gridpane.setHgap(3);
         
         
         
