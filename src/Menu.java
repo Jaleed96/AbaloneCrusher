@@ -24,9 +24,9 @@ public class Menu extends Application {
     Label timeLimit = new Label("Time Limit per move (P1): ");
     Label timeLimit2 = new Label("Time Limit per move (P2): ");
     Label moveLimit = new Label("Move limit per game: ");
-    TextField p1TimeLimit = new TextField();
-    TextField tbmoveLimit = new TextField();
-    TextField p2TimeLimit = new TextField();
+    TextField p1TimeLimit = new TextField("");
+    TextField p2TimeLimit = new TextField("");
+    TextField tbmoveLimit = new TextField("");
     RadioButton humanRb = new RadioButton("Human");
     RadioButton aiRb = new RadioButton("AI");
     RadioButton standardRb = new RadioButton("Standard");
@@ -34,7 +34,7 @@ public class Menu extends Application {
     RadioButton belgianRb = new RadioButton("Belgian Daisy");
     RadioButton humanRb2 = new RadioButton("Human");
     RadioButton aiRb2 = new RadioButton("AI");
-    Button btn1 = new Button("START");
+    Button startBtn = new Button("START");
     final ToggleGroup player1SelectionGroup = new ToggleGroup();
     final ToggleGroup player2SelectionGroup = new ToggleGroup();
     final ToggleGroup gameModeGroup = new ToggleGroup();
@@ -44,8 +44,8 @@ public class Menu extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        final int appHeight = 900;
-        final int appWidth = 1400;
+        final int appHeight = 750;
+        final int appWidth = 1300;
         primaryStage.setTitle("Abalone");
        
         gridpane.setVgap(8);
@@ -71,7 +71,7 @@ public class Menu extends Application {
         belgianRb.setToggleGroup(gameModeGroup);
         
         
-        GridPane.setConstraints(title, 25, 0);
+        GridPane.setConstraints(title, 25, 3);
         GridPane.setConstraints(blackLabel, 23, 10);
         GridPane.setConstraints(whiteLabel, 25, 10);
         GridPane.setConstraints(humanRb, 24, 10);
@@ -84,11 +84,11 @@ public class Menu extends Application {
         GridPane.setConstraints(belgianRb, 26, 22);
         GridPane.setConstraints(timeLimit, 23, 14);
         GridPane.setConstraints(timeLimit2, 25, 14);
-        GridPane.setConstraints(moveLimit, 24, 23);
+        GridPane.setConstraints(moveLimit, 24, 26);
         GridPane.setConstraints(p1TimeLimit, 24, 14);
-        GridPane.setConstraints(p2TimeLimit, 25, 23);
-        GridPane.setConstraints(tbmoveLimit, 26, 14);
-        GridPane.setConstraints(btn1, 25, 26);
+        GridPane.setConstraints(tbmoveLimit, 25, 26);
+        GridPane.setConstraints(p2TimeLimit, 26, 14);
+        GridPane.setConstraints(startBtn, 25, 29);
         GridPane.setHalignment(blackLabel, HPos.RIGHT);
         GridPane.setHalignment(whiteLabel, HPos.RIGHT);
         GridPane.setHalignment(timeLimit2, HPos.RIGHT);
@@ -106,9 +106,15 @@ public class Menu extends Application {
         GridPane.setHalignment(standard, HPos.CENTER);
         GridPane.setHalignment(german, HPos.CENTER);
         GridPane.setHalignment(belgian, HPos.CENTER);
+        
+        GridPane.setHalignment(standardRb, HPos.CENTER);
+        GridPane.setHalignment(germanRb, HPos.CENTER);
+        GridPane.setHalignment(belgianRb, HPos.CENTER);
+        
+        GridPane.setHalignment(startBtn, HPos.CENTER);
        
          
-        gridpane.getChildren().addAll(title, standard, german, belgian, blackLabel, whiteLabel, humanRb, aiRb, initialLayout, humanRb2, aiRb2, standardRb, germanRb, belgianRb, timeLimit, timeLimit2, moveLimit, p1TimeLimit, p2TimeLimit, tbmoveLimit, btn1);
+        gridpane.getChildren().addAll(title, standard, german, belgian, blackLabel, whiteLabel, humanRb, aiRb, initialLayout, humanRb2, aiRb2, standardRb, germanRb, belgianRb, timeLimit, timeLimit2, moveLimit, p1TimeLimit, p2TimeLimit, tbmoveLimit, startBtn);
           
         Scene scene = new Scene(gridpane, appWidth, appHeight);
         primaryStage.setScene(scene);
