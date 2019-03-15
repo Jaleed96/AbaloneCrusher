@@ -112,7 +112,12 @@ public class Menu extends Application {
         GridPane.setHalignment(belgianRb, HPos.CENTER);
         
         GridPane.setHalignment(startBtn, HPos.CENTER);
-       
+
+
+        startBtn.setOnAction(e -> {
+            primaryStage.setScene(new Game(new Config(), 1000, 750).getScene());
+            primaryStage.show();
+        });
          
         gridpane.getChildren().addAll(title, standard, german, belgian, blackLabel, whiteLabel, humanRb, aiRb, initialLayout, humanRb2, aiRb2, standardRb, germanRb, belgianRb, timeLimit, timeLimit2, moveLimit, p1TimeLimit, p2TimeLimit, tbmoveLimit, startBtn);
           
