@@ -34,11 +34,11 @@ public class Game {
         bottomRow.getChildren().addAll(moveInput, undoBtn);
 
         Board b = null;
-        double cellHeight = 80;
+        double boardHeight = 500;
         switch (cfg.initialLayout) {
-            case Standard:     b = BoardUtil.makeStandardLayout(cellHeight); break;
-            case GermanDaisy:  b = BoardUtil.makeGermanDaisy(cellHeight);    break;
-            case BelgianDaisy: b = BoardUtil.makeBelgianDaisy(cellHeight);   break;
+            case Standard:     b = BoardUtil.makeStandardLayout(boardHeight); break;
+            case GermanDaisy:  b = BoardUtil.makeGermanDaisy(boardHeight);    break;
+            case BelgianDaisy: b = BoardUtil.makeBelgianDaisy(boardHeight);   break;
         }
 
         centerPane.getChildren().addAll(topRow, b.drawable(), bottomRow);

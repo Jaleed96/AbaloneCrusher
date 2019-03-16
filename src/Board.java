@@ -16,12 +16,14 @@ public class Board {
     }
 
     private byte[][] board;
+    private Cell[][] cells;
     private Pane pane;
 
-    Board(byte[][] board, double cellHeight) {
+    Board(byte[][] board, double height) {
         this.board = board;
         pane = new Pane();
 
+        double cellHeight = height / 7;
         double cellWidth = Hexagon.width30Deg(cellHeight / 2);
         double verticalHexOffset = Hexagon.verticalOffset30Deg(cellHeight / 2);
 
