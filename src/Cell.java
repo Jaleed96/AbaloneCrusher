@@ -4,7 +4,7 @@ import javafx.scene.shape.Shape;
 
 public class Cell extends Group {
     private static final Color BORDER_COLOR = Color.BLACK;
-    private static final Color EMPTY_COLOR = Color.LIGHTSKYBLUE;
+    private static final Color BACKGROUND_COLOR = Color.LIGHTSKYBLUE;
     private static final Color OFF_THE_BOARD = Color.GRAY;
 
     private Shape shape;
@@ -22,7 +22,7 @@ public class Cell extends Group {
         shape = Hexagon.drawable30Deg(centerX, centerY, side);
         shape.setStroke(BORDER_COLOR);
         shape.setStrokeWidth(1);
-        shape.setFill(EMPTY_COLOR);
+        shape.setFill(BACKGROUND_COLOR);
 
         getChildren().addAll(shape);
     }
@@ -32,6 +32,11 @@ public class Cell extends Group {
         marble.setCenterPos(centerX, centerY);
         marble.setRadius(side - side / 2.5);
         getChildren().add(marble);
+    }
+
+    public void setEmpty() {
+        getChildren().remove(marble);
+        marble = null;
     }
 
     public void markOffTheBoard() {
