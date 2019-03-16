@@ -3,6 +3,10 @@ public class Config {
         AI, Human
     }
 
+    public enum InitialBoard {
+        Standard, GermanDaisy, BelgianDaisy
+    }
+
     public PlayerType B_type;
     public PlayerType W_type;
 
@@ -10,5 +14,5 @@ public class Config {
     public int W_timeLimit;
     public int moveLimit;
 
-    Board initialLayout;
+    InitialBoard initialLayout;
 }

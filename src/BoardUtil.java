@@ -75,15 +75,15 @@ public class BoardUtil {
         return coordMap.get(coord);
     }
 
-    public static Board makeStandardLayout() {
-        return new Board(STANDARD_LAYOUT);
+    public static Board makeStandardLayout(double cellHeight) {
+        return new Board(STANDARD_LAYOUT, cellHeight);
     }
 
-    public static Board makeGermanDaisy() {
-        return new Board(GERMAN_DAISY_LAYOUT);
+    public static Board makeGermanDaisy(double cellHeight) {
+        return new Board(GERMAN_DAISY_LAYOUT, cellHeight);
     }
 
-    public static Board makeBelgianDaisy() {
-        return new Board(BELGIAN_DAISY_LAYOUT);
+    public static Board makeBelgianDaisy(double cellHeight) {
+        return new Board(BELGIAN_DAISY_LAYOUT, cellHeight);
     }
 }

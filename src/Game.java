@@ -33,7 +33,15 @@ public class Game {
         undoBtn = new Button("Undo last move");
         bottomRow.getChildren().addAll(moveInput, undoBtn);
 
-        centerPane.getChildren().addAll(topRow, bottomRow);
+        Board b = null;
+        double cellHeight = 80;
+        switch (cfg.initialLayout) {
+            case Standard:     b = BoardUtil.makeStandardLayout(cellHeight); break;
+            case GermanDaisy:  b = BoardUtil.makeGermanDaisy(cellHeight);    break;
+            case BelgianDaisy: b = BoardUtil.makeBelgianDaisy(cellHeight);   break;
+        }
+
+        centerPane.getChildren().addAll(topRow, b.drawable(), bottomRow);
 
         // VBOX History box on the right
         VBox rightPane = new VBox(50);

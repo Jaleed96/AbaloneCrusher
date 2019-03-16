@@ -7,12 +7,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import jdk.internal.org.objectweb.asm.tree.IntInsnNode;
 
 public class Menu extends Application {
     
@@ -38,9 +36,6 @@ public class Menu extends Application {
     final ToggleGroup player1SelectionGroup = new ToggleGroup();
     final ToggleGroup player2SelectionGroup = new ToggleGroup();
     final ToggleGroup gameModeGroup = new ToggleGroup();
-    
-   
-
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -51,9 +46,7 @@ public class Menu extends Application {
         gridpane.setVgap(8);
         gridpane.setPadding(new Insets(0, 0, 0,0));
         gridpane.setHgap(3);
-        
-        
-        
+
         title.setFont(new Font(30));
         title.setStyle("-fx-font-weight: bold");
         
@@ -67,10 +60,13 @@ public class Menu extends Application {
         humanRb2.setToggleGroup(player2SelectionGroup);
         aiRb2.setToggleGroup(player2SelectionGroup);
         standardRb.setToggleGroup(gameModeGroup);
+        standardRb.setUserData(Config.InitialBoard.Standard);
+        standardRb.setSelected(true);
         germanRb.setToggleGroup(gameModeGroup);
+        germanRb.setUserData(Config.InitialBoard.GermanDaisy);
         belgianRb.setToggleGroup(gameModeGroup);
-        
-        
+        belgianRb.setUserData(Config.InitialBoard.BelgianDaisy);
+
         GridPane.setConstraints(title, 25, 3);
         GridPane.setConstraints(blackLabel, 23, 10);
         GridPane.setConstraints(whiteLabel, 25, 10);
@@ -101,8 +97,7 @@ public class Menu extends Application {
         
         ImageView belgian = new ImageView(("/belgiandaisy.png"));
         GridPane.setConstraints(belgian, 26, 21);
-        
-        
+
         GridPane.setHalignment(standard, HPos.CENTER);
         GridPane.setHalignment(german, HPos.CENTER);
         GridPane.setHalignment(belgian, HPos.CENTER);
@@ -113,18 +108,18 @@ public class Menu extends Application {
         
         GridPane.setHalignment(startBtn, HPos.CENTER);
 
-
         startBtn.setOnAction(e -> {
-            primaryStage.setScene(new Game(new Config(), 1000, 750).getScene());
+            Config cfg = new Config();
+            cfg.initialLayout = (Config.InitialBoard) gameModeGroup.getSelectedToggle().getUserData();
+            primaryStage.setScene(new Game(cfg, 1000, 750).getScene());
             primaryStage.show();
         });
          
         gridpane.getChildren().addAll(title, standard, german, belgian, blackLabel, whiteLabel, humanRb, aiRb, initialLayout, humanRb2, aiRb2, standardRb, germanRb, belgianRb, timeLimit, timeLimit2, moveLimit, p1TimeLimit, p2TimeLimit, tbmoveLimit, startBtn);
-          
+
         Scene scene = new Scene(gridpane, appWidth, appHeight);
         primaryStage.setScene(scene);
         primaryStage.show();
-
     }
     
     /**
