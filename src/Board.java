@@ -123,11 +123,9 @@ public class Board {
         List<Move> moves = new ArrayList<>();
         BoardUtil.Neighbors neighbors = BoardUtil.neighborsOf(from);
         for (BoardUtil.Neighbor to : neighbors.toArray()) {
-            if (to != null) {
-                Move move = new Move(this, from, to);
-                if (move.isLegal()) {
-                    moves.add(move);
-                }
+            Move move = new Move(this, from, to);
+            if (move.isLegal()) {
+                moves.add(move);
             }
         }
         return moves;

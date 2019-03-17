@@ -1,5 +1,7 @@
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class BoardUtil {
 
@@ -32,7 +34,8 @@ public class BoardUtil {
     /// A neighbor is null if it's out of bounds
     public static class Neighbors {
         public final Neighbor NW, W, SW, SE, E, NE;
-        private final Neighbor[] neighbors;
+        private final Neighbor[] index;
+        private final Neighbor[] nonNullNeighbors;
 
         Neighbors(Board.Coordinate NW,
                   Board.Coordinate W,
@@ -47,19 +50,20 @@ public class BoardUtil {
             this.SE = Neighbor.makeNeighbor(SE, Direction.SE);
             this.E = Neighbor.makeNeighbor(E, Direction.E);
             this.NE = Neighbor.makeNeighbor(NE, Direction.NE);
-            neighbors = new Neighbor[] {this.NW, this.W, this.SW, this.SE, this.E, this.NE};
+            index = new Neighbor[] {this.NW, this.W, this.SW, this.SE, this.E, this.NE};
+            nonNullNeighbors = Arrays.stream(index).filter(Objects::nonNull).toArray(Neighbor[]::new);
         }
 
         public Neighbor[] toArray() {
-            return neighbors;
+            return nonNullNeighbors;
         }
 
         public Neighbor fromDirection(Direction dir) {
-            return neighbors[dir.ordinal()];
+            return index[dir.ordinal()];
         }
 
         public Neighbor fromCoordinate(Board.Coordinate coord) {
-            for (Neighbor n : neighbors) {
+            for (Neighbor n : nonNullNeighbors) {
                 if (n.coordinate.equals(coord))
                     return n;
             }
