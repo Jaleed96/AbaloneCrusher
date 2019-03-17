@@ -1,6 +1,72 @@
 import java.util.HashMap;
+import java.util.Map;
 
 public class BoardUtil {
+
+    /// Cardinal directions
+    public enum Direction {
+        NW, W, SW, SE, E, NE
+    }
+
+    public static class Neighbor {
+        public final Board.Coordinate coordinate;
+        public final Direction direction;
+
+        public static Neighbor makeNeighbor(Board.Coordinate coordinate, Direction direction) {
+            if (coordinate == null || direction == null)
+                return null;
+            return new Neighbor(coordinate, direction);
+        }
+
+        private Neighbor(Board.Coordinate coordinate, Direction direction) {
+            this.coordinate = coordinate;
+            this.direction = direction;
+        }
+
+        public Neighbors neighbors() {
+            return neighborsOf(coordinate);
+        }
+    }
+
+    /// Maps neighboring cells to their coordinates and directions
+    /// A neighbor is null if it's out of bounds
+    public static class Neighbors {
+        public final Neighbor NW, W, SW, SE, E, NE;
+        private final Neighbor[] neighbors;
+
+        Neighbors(Board.Coordinate NW,
+                  Board.Coordinate W,
+                  Board.Coordinate SW,
+                  Board.Coordinate SE,
+                  Board.Coordinate E,
+                  Board.Coordinate NE)
+        {
+            this.NW = Neighbor.makeNeighbor(NW, Direction.NW);
+            this.W = Neighbor.makeNeighbor(W, Direction.W);
+            this.SW = Neighbor.makeNeighbor(SW, Direction.SW);
+            this.SE = Neighbor.makeNeighbor(SE, Direction.SE);
+            this.E = Neighbor.makeNeighbor(E, Direction.E);
+            this.NE = Neighbor.makeNeighbor(NE, Direction.NE);
+            neighbors = new Neighbor[] {this.NW, this.W, this.SW, this.SE, this.E, this.NE};
+        }
+
+        public Neighbor[] toArray() {
+            return neighbors;
+        }
+
+        public Neighbor fromDirection(Direction dir) {
+            return neighbors[dir.ordinal()];
+        }
+
+        public Neighbor fromCoordinate(Board.Coordinate coord) {
+            for (Neighbor n : neighbors) {
+                if (n.coordinate.equals(coord))
+                    return n;
+            }
+            return null;
+        }
+    }
+
     private static final byte E = Board.EMPTY, W = Board.WHITE, B = Board.BLACK;
 
     private static final byte[][] STANDARD_LAYOUT = {
@@ -51,19 +117,78 @@ public class BoardUtil {
                         {"A1", "A2", "A3", "A4", "A5"}
     };
 
-    private static final HashMap<String, Board.Coordinates> coordMap = initCoordMap();
+    /// Cached coordinates. Use this instead of making "new".
+    public static final Board.Coordinate[][] COORDINATES = initCoordinates(STANDARD_LAYOUT);
 
-    private static HashMap<String, Board.Coordinates> initCoordMap() {
-        HashMap<String, Board.Coordinates> cm = new HashMap<>();
-        for (int y = 0; y < CONFORMANCE_COORDINATES.length; ++y) {
-            for (int x = 0; x < CONFORMANCE_COORDINATES[y].length; ++x) {
-                cm.put(CONFORMANCE_COORDINATES[y][x], new Board.Coordinates(x, y));
+    /// Maps each coordinate to it's neighbors
+    private static final Neighbors[][] COORDINATE_NEIGHBORS = initNeighbors(STANDARD_LAYOUT, COORDINATES);
+
+    /// Maps requirements-conforming coordinates to our coordinates
+    private static final Map<String, Board.Coordinate> CONF_COORD_MAP = initCoordMap(CONFORMANCE_COORDINATES, COORDINATES);
+
+    private static Map<String, Board.Coordinate> initCoordMap(String[][] mapping, Board.Coordinate[][] coordCache) {
+        Map<String, Board.Coordinate> cm = new HashMap<>();
+        for (int row = 0; row < mapping.length; ++row) {
+            for (int col = 0; col < mapping[row].length; ++col) {
+                cm.put(mapping[row][col], coordCache[row][col]);
             }
         }
         return cm;
     }
 
-    public static String toConformanceCoord(Board.Coordinates coord) {
+    private static Neighbors[][] initNeighbors(byte[][] referenceBoard, Board.Coordinate[][] coordCache) {
+        Neighbors[][] neighbors = new Neighbors[referenceBoard.length][];
+        for (int row = 0; row < neighbors.length; ++row) {
+            neighbors[row] = new Neighbors[referenceBoard[row].length];
+            for (int col = 0; col < neighbors[row].length; ++col)
+                neighbors[row][col] = findNeighbors(referenceBoard, coordCache, coordCache[row][col]);
+        }
+        return neighbors;
+    }
+
+    private static Neighbors findNeighbors(byte[][] referenceBoard, Board.Coordinate[][] coordCache, Board.Coordinate center) {
+        Board.Coordinate[] coords = new Board.Coordinate[6]; // in order NW, W, SW, SE, E, NE
+        for (int row = Math.max(0, center.y - 1); row <= Math.min(center.y + 1, referenceBoard.length - 1); ++row) {
+            for (int col = Math.max(0, center.x - 1); col <= Math.min(center.x + 1, referenceBoard[row].length - 1); ++col) {
+                // in the top half, bottom half and the middle of the hexagon, we have to use different ways to exclude points that are too far
+                // e.g. (0,0) (0,1) (x,x) exclude from bottom left to top right
+                //      (1,0) (x,x) (1,2)
+                //      (x,x) (2,1) (2,2)
+                //-----------------------
+                //      (x,x) (5,2) (5,3) exclude from bottom right to top left
+                //      (6,1) (x,x) (6,3)
+                //      (7,1) (7,2) (x,x)
+                boolean notBLTRDiagonal = row - center.y + col - center.x != 0;
+                boolean notBRTLDiagonal = row - center.y !=  col - center.x;
+                boolean beforeMid = row < 4 || (row == 4 && center.y <= 4);
+                boolean afterMid  = row > 4 || (row == 4 && center.y > 4);
+                // simplify..?
+                if ((notBLTRDiagonal && beforeMid) || (notBRTLDiagonal && afterMid)) {
+                    boolean westSide = col < center.x || (col == center.x && (afterMid && row < center.y || beforeMid && row > center.y));
+                    if (row < center.y) {
+                        coords[westSide ? 0 : 5] = coordCache[row][col];
+                    } else if (row == center.y) {
+                        coords[westSide ? 1 : 4] = coordCache[row][col];
+                    } else /* row > coord.y */ {
+                        coords[westSide ? 2 : 3] = coordCache[row][col];
+                    }
+                }
+            }
+        }
+        return new Neighbors(coords[0], coords[1], coords[2], coords[3], coords[4], coords[5]);
+    }
+
+    private static Board.Coordinate[][] initCoordinates(byte[][] referenceBoard) {
+        Board.Coordinate[][] coordinates = new Board.Coordinate[referenceBoard.length][];
+        for (int row = 0; row < coordinates.length; ++row) {
+            coordinates[row] = new Board.Coordinate[referenceBoard[row].length];
+            for (int col = 0; col < coordinates[row].length; ++col)
+                coordinates[row][col] = new Board.Coordinate(col, row);
+        }
+        return coordinates;
+    }
+
+    public static String toConformanceCoord(Board.Coordinate coord) {
         return CONFORMANCE_COORDINATES[coord.y][coord.x];
     }
 
@@ -71,8 +196,12 @@ public class BoardUtil {
         return CONFORMANCE_COORDINATES[y][x];
     }
 
-    public static Board.Coordinates toCoord(String coord) {
-        return coordMap.get(coord);
+    public static Board.Coordinate toCoord(String coord) {
+        return CONF_COORD_MAP.get(coord);
+    }
+
+    public static Neighbors neighborsOf(Board.Coordinate coord) {
+        return COORDINATE_NEIGHBORS[coord.y][coord.x];
     }
 
     public static Board makeStandardLayout(double height) {
