@@ -197,6 +197,7 @@ public class BoardUtil {
 
         if (dy == 0)  return Math.abs(dx) == 1;
         if (dx == 0)  return Math.abs(dy) == 1;
+        if (Math.abs(dy) + Math.abs(dx) > 2) return false;
         if (dx == dy) return a.y < 4 | b.y < 4;
         else          return a.y > 4 | b.y > 4;
     }
