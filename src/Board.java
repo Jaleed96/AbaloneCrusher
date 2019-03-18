@@ -10,72 +10,6 @@ public class Board {
     public static final byte EMPTY = 'E', WHITE = 'W', BLACK = 'B';
     public static final int MAX_SIZE = 9; // vertically and horizontally
 
-    public static class Coordinate {
-        public final int x;
-        public final int y;
-
-        Coordinate(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        @Override
-        public String toString() {
-            return "(" + x + "," + y + ")";
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (!(o instanceof Coordinate))
-                return false;
-
-            Coordinate other = (Coordinate) o;
-            return x == other.x && y == other.y;
-        }
-    }
-
-    public static class Move {
-        public final Coordinate from;
-        public final BoardUtil.Neighbor to;
-        private final Board board;
-
-        Move(Board context, Coordinate from, BoardUtil.Neighbor to) {
-            this.from = from;
-            this.to = to;
-            board = context;
-        }
-
-        public boolean isLegal() {
-            // TODO side move
-            byte[][] repr = board.representation();
-            if (repr[from.y][from.x] != board.currentPlayer()) {
-                // Logic error. TODO throw error or remove this
-                return false;
-            }
-            int playerMarbleCnt = 1;
-            int opponentMarbleCnt = 0;
-
-            BoardUtil.Neighbor next = to;
-            while (repr[next.coordinate.y][next.coordinate.x] == board.currentPlayer()) {
-                playerMarbleCnt += 1;
-                next = next.neighbors().fromDirection(to.direction);
-                if (playerMarbleCnt == 4 || next == null)
-                    return false;
-            }
-
-            while (repr[next.coordinate.y][next.coordinate.x] == board.currentOpponent()) {
-                opponentMarbleCnt += 1;
-                next = next.neighbors().fromDirection(to.direction);
-                if (next == null)
-                    return playerMarbleCnt > opponentMarbleCnt;
-                if (playerMarbleCnt <= opponentMarbleCnt)
-                    return false;
-            }
-
-            return repr[next.coordinate.y][next.coordinate.x] == Board.EMPTY;
-        }
-    }
-
     private byte[][] board;
     private Cell[][] cells;
     private Pane pane;
@@ -123,8 +57,8 @@ public class Board {
         List<Move> moves = new ArrayList<>();
         BoardUtil.Neighbors neighbors = BoardUtil.neighborsOf(from);
         for (BoardUtil.Neighbor to : neighbors.toArray()) {
-            Move move = new Move(this, from, to);
-            if (move.isLegal()) {
+            Move move = new Move(new Push(from, to));
+            if (move.isLegalInline(this)) {
                 moves.add(move);
             }
         }
@@ -145,6 +79,27 @@ public class Board {
 
     private Cell boardCell(int x, int y) {
         return cells[y][x];
+    }
+
+    public void makeMove(Move move) throws Move.IllegalMoveException {
+        if (!move.isLegalInline(this) && !move.isLegalSideStep(this)) {
+            StringBuilder erroMsg = new StringBuilder().append("Illegal move:");
+            for (Push m : move.pushes()) {
+                erroMsg.append(String.format(" [%s to %s]", m.from.toString(), m.to.coordinate.toString()));
+            }
+            throw new Move.IllegalMoveException(erroMsg.toString());
+        }
+
+        applyMove(move);
+    }
+
+    private void applyMove(Move move) {
+        for (Push p : move.pushes())
+            pushPiece(p);
+    }
+
+    private void pushPiece(Push m) {
+        // TODO
     }
 
     public Node drawable() {

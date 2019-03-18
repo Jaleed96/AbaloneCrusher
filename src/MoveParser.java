@@ -8,7 +8,7 @@ public class MoveParser {
 
     /// Returns an array of parsed moves or throws a ParseException if failed to parse
     /// Does not check for legality of moves but ensures that source and destination coordinates are adjacent and not null
-    public static Board.Move[] parse(Board context, String input) throws Exception {
+    public static Move parse(String input) throws Exception {
         input = input.trim().toUpperCase();
 
         String[] fromTo = input.split(FROM_TO_SEPARATOR);
@@ -16,13 +16,13 @@ public class MoveParser {
         if (fromTo.length < 2)
             throw new Exception("Not enough arguments");
 
-        Board.Coordinate to = BoardUtil.toCoord(fromTo[1].trim());
+        Coordinate to = BoardUtil.toCoord(fromTo[1].trim());
         if (to == null)
             throw new Exception("Failed to parse destination coordinate");
 
         String[] maybeRange = fromTo[0].split(RANGE_SEPARATOR);
         if (maybeRange.length == 1) {
-            Board.Coordinate from = BoardUtil.toCoord(maybeRange[0].trim());
+            Coordinate from = BoardUtil.toCoord(maybeRange[0].trim());
             if (from == null)
                 throw new Exception("Failed to parse source coordinate");
 
@@ -30,13 +30,13 @@ public class MoveParser {
             if (toNeighbor == null)
                 throw new Exception("Destination coordinate is not adjacent to source coordinate");
 
-            return new Board.Move[] {new Board.Move(context, from, toNeighbor)};
+            return new Move(new Push(from, toNeighbor));
         } else if (maybeRange.length == 2) {
-            Board.Coordinate fromFirst = BoardUtil.toCoord(maybeRange[0].trim());
+            Coordinate fromFirst = BoardUtil.toCoord(maybeRange[0].trim());
             if (fromFirst == null)
                 throw new Exception("Failed to parse first range coordinate");
 
-            Board.Coordinate fromLast = BoardUtil.toCoord(maybeRange[1].trim());
+            Coordinate fromLast = BoardUtil.toCoord(maybeRange[1].trim());
             if (fromLast == null)
                 throw new Exception("Failed to parse last range coordinate");
 
@@ -48,12 +48,10 @@ public class MoveParser {
             BoardUtil.Neighbor toLastNeighbor = BoardUtil.neighborsOf(fromLast).fromDirection(moveDirection);
 
             if (BoardUtil.areNeighbors(fromFirst, fromLast)) // then it's a 2-piece side move
-                return new Board.Move[] {
-                        new Board.Move(context, fromFirst, toFirstNeighbor),
-                        new Board.Move(context, fromLast, toLastNeighbor)
-                };
+                return new Move(new Push(fromFirst, toFirstNeighbor),
+                                new Push(fromLast, toLastNeighbor));
             else {
-                Board.Coordinate between = BoardUtil.findCoordBetween(fromFirst, fromLast);
+                Coordinate between = BoardUtil.findCoordBetween(fromFirst, fromLast);
                 if (between == null)
                     throw new Exception("Failed to find coordinate between first and last");
 
@@ -61,11 +59,9 @@ public class MoveParser {
                 if (betweenNeighbor == null)
                     throw new Exception("Middle coordinate has nowhere to move"); // should never happen
 
-                return new Board.Move[] {
-                        new Board.Move(context, fromFirst, toFirstNeighbor),
-                        new Board.Move(context, between, betweenNeighbor),
-                        new Board.Move(context, fromLast, toLastNeighbor)
-                };
+                return new Move(new Push(fromFirst, toFirstNeighbor),
+                                new Push(between, betweenNeighbor),
+                                new Push(fromLast, toLastNeighbor));
             }
         }
 
