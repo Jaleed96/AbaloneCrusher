@@ -4,6 +4,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -65,10 +66,14 @@ public class Game {
 //        rootLayout.setCenter(centerPane);
 //        rootLayout.setRight(rightPane);
         rootLayout.getChildren().addAll(leftPane, centerPane, rightPane);
+        rootLayout.setSpacing((w+h)/40);
         centerPane.setAlignment(Pos.CENTER);
-        leftPane.setAlignment(Pos.TOP_LEFT);
-        rightPane.setAlignment(Pos.TOP_RIGHT);
+        leftPane.setAlignment(Pos.CENTER_LEFT);
+        leftPane.setStyle("-fx-padding: 20;");
+        rightPane.setAlignment(Pos.TOP_LEFT);
+        rightPane.setStyle("-fx-padding: 20");
         topRow.setAlignment(Pos.CENTER);
+        bottomRow.setAlignment(Pos.CENTER);
 
 
 
