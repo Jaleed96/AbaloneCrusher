@@ -154,28 +154,9 @@ public class BoardUtil {
         Board.Coordinate[] coords = new Board.Coordinate[6]; // in order NW, W, SW, SE, E, NE
         for (int row = Math.max(0, center.y - 1); row <= Math.min(center.y + 1, referenceBoard.length - 1); ++row) {
             for (int col = Math.max(0, center.x - 1); col <= Math.min(center.x + 1, referenceBoard[row].length - 1); ++col) {
-                // in the top half, bottom half and the middle of the hexagon, we have to use different ways to exclude points that are too far
-                // e.g. (0,0) (0,1) (x,x) exclude from bottom left to top right
-                //      (1,0) (x,x) (1,2)
-                //      (x,x) (2,1) (2,2)
-                //-----------------------
-                //      (x,x) (5,2) (5,3) exclude from bottom right to top left
-                //      (6,1) (x,x) (6,3)
-                //      (7,1) (7,2) (x,x)
-                boolean notBLTRDiagonal = row - center.y + col - center.x != 0;
-                boolean notBRTLDiagonal = row - center.y !=  col - center.x;
-                boolean beforeMid = row < 4 || (row == 4 && center.y <= 4);
-                boolean afterMid  = row > 4 || (row == 4 && center.y > 4);
-                // simplify..?
-                if ((notBLTRDiagonal && beforeMid) || (notBRTLDiagonal && afterMid)) {
-                    boolean westSide = col < center.x || (col == center.x && (afterMid && row < center.y || beforeMid && row > center.y));
-                    if (row < center.y) {
-                        coords[westSide ? 0 : 5] = coordCache[row][col];
-                    } else if (row == center.y) {
-                        coords[westSide ? 1 : 4] = coordCache[row][col];
-                    } else /* row > coord.y */ {
-                        coords[westSide ? 2 : 3] = coordCache[row][col];
-                    }
+                if (areNeighbors(coordCache[row][col], center)) {
+                    Direction dir = findNeighborDirection(center, coordCache[row][col]);
+                    coords[dir.ordinal()] = coordCache[row][col];
                 }
             }
         }
@@ -190,6 +171,56 @@ public class BoardUtil {
                 coordinates[row][col] = new Board.Coordinate(col, row);
         }
         return coordinates;
+    }
+
+    // Finds the coordinate between two other coordinates
+    // if can't find one (nothing in between, too far apart, not on the same axis), return null
+    public static Board.Coordinate findCoordBetween(Board.Coordinate a, Board.Coordinate b) {
+        int dx = Math.abs(a.x - b.x);
+        if (a.y == b.y && dx == 2) { // same row
+            return COORDINATES[a.y][Math.min(a.x, b.x) + 1];
+        } else if (Math.abs(a.y - b.y) == 2) { // different rows
+            int yBetween = Math.min(a.y, b.y) + 1;
+            if (a.x == b.x) // on the same diagonal, not crossing row 4
+                return COORDINATES[yBetween][a.x];
+            if (dx == 2) // also same diagonal, not crossing row 4
+                return COORDINATES[yBetween][Math.min(a.x, b.x) + 1];
+            if (dx == 1 && yBetween == 4) // crossing row 4
+                return COORDINATES[yBetween][Math.max(a.x, b.x)];
+        }
+        return null;
+    }
+
+    public static boolean areNeighbors(Board.Coordinate a, Board.Coordinate b) {
+        int dx = a.x - b.x;
+        int dy = a.y - b.y;
+
+        if (dy == 0)  return Math.abs(dx) == 1;
+        if (dx == 0)  return Math.abs(dy) == 1;
+        if (dx == dy) return a.y < 4 | b.y < 4;
+        else          return a.y > 4 | b.y > 4;
+    }
+
+    // Assumes the two coordinates are neighbors, does not do additional checking
+    public static Direction findNeighborDirection(Board.Coordinate from, Board.Coordinate to) {
+        if (from.y == to.y)
+            return from.x < to.x ? Direction.E : Direction.W;
+        if (from.y < 4) {
+            if (from.y < to.y)
+                return from.x == to.x ? Direction.SW : Direction.SE;
+            else
+                return from.x == to.x ? Direction.NE : Direction.NW;
+        }
+        if (from.y > 4) {
+            if (from.y < to.y)
+                return from.x == to.x ? Direction.SE : Direction.SW;
+            else
+                return from.x == to.x ? Direction.NW : Direction.NE;
+        }
+        if (from.y < to.y) // from.y == 4
+            return from.x == to.x ? Direction.SE : Direction.SW;
+        else
+            return from.x == to.x ? Direction.NE : Direction.NW;
     }
 
     public static String toConformanceCoord(Board.Coordinate coord) {
