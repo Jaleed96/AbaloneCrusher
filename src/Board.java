@@ -5,6 +5,7 @@ import javafx.scene.shape.Polygon;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Board {
     public static final byte EMPTY = 'E', WHITE = 'W', BLACK = 'B';
@@ -13,10 +14,15 @@ public class Board {
     private byte[][] board;
     private Cell[][] cells;
     private Pane pane;
+    private Player current;
+    private Player opponent;
 
     Board(byte[][] board, double height) {
         this.board = board;
         pane = new Pane();
+
+        current = new Player(Board.BLACK);
+        opponent = new Player(Board.WHITE);
 
         double width = height / Math.sin(Math.PI / 3);
         Polygon background = Hexagon.drawable(width / 2, height / 2 , width / 2, 0);
@@ -91,15 +97,65 @@ public class Board {
         }
 
         applyMove(move);
+        nextTurn();
     }
 
     private void applyMove(Move move) {
-        for (Push p : move.pushes())
-            pushPiece(p);
+        Optional<Byte> maybePushedOff = Optional.empty();
+        Marble pushedOff = null;
+        for (Push p : move.pushes()) {
+            maybePushedOff = pushPiece(p);
+            pushedOff = visualPushPiece(p);
+        }
+
+        final Marble finalPushedOff = pushedOff; // make compiler happy
+        maybePushedOff.ifPresent(pushedOffPiece -> {
+            // if the logic is right, pushedOff can never be null here;
+            assert finalPushedOff != null;
+            updateScore(pushedOffPiece);
+        });
     }
 
-    private void pushPiece(Push m) {
-        // TODO
+    /// Pushes the piece in the board representation only, to update gui use visualPushPiece after this
+    /// assumes that the move has been validated beforehand
+    private Optional<Byte> pushPiece(Push p) {
+        BoardUtil.Neighbor next = p.to;
+        byte currentPiece = board[p.from.y][p.from.x];
+        board[p.from.y][p.from.x] = Board.EMPTY;
+        while (next != null && currentPiece != Board.EMPTY) {
+            byte nextPiece = board[next.coordinate.y][next.coordinate.x];
+            board[next.coordinate.y][next.coordinate.x] = currentPiece;
+            next = next.neighbors().fromDirection(next.direction);
+            currentPiece = nextPiece;
+        }
+        /// If the piece has been pushed off the board, return it
+        return next == null ? Optional.of(currentPiece) : Optional.empty();
+    }
+
+    // this function is meant to be used right after pushPiece to update gui and retrieve the pushedOff marble if there's one
+    private Marble visualPushPiece(Push p) {
+        BoardUtil.Neighbor next = p.to;
+        Marble currentMarble = boardCell(p.from.x, p.from.y).removeMarble();
+        while (next != null && currentMarble != null) {
+            Marble nextMarble = boardCell(next.coordinate.x, next.coordinate.y).removeMarble();
+            boardCell(next.coordinate.x, next.coordinate.y).setMarble(currentMarble);
+            next = next.neighbors().fromDirection(next.direction);
+            currentMarble = nextMarble;
+        }
+        return next == null ? currentMarble : null;
+    }
+
+    private void updateScore(byte pushedOffPiece) {
+        if (currentOpponent().piece == pushedOffPiece)
+            currentPlayer().increaseScore();
+        else
+            currentOpponent().increaseScore();
+    }
+
+    private void nextTurn() {
+        Player t = current;
+        current = opponent;
+        opponent = t;
     }
 
     public Node drawable() {
@@ -110,13 +166,11 @@ public class Board {
         return board;
     }
 
-    public byte currentPlayer() {
-        // TODO
-        return Board.BLACK;
+    public Player currentPlayer() {
+        return current;
     }
 
-    public byte currentOpponent() {
-        // TODO
-        return Board.WHITE;
+    public Player currentOpponent() {
+        return opponent;
     }
 }

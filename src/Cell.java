@@ -28,15 +28,22 @@ public class Cell extends Group {
     }
 
     public void setMarble(Marble m) {
+        setEmpty();
         marble = m;
         marble.setCenterPos(centerX, centerY);
         marble.setRadius(side - side / 2.5);
         getChildren().add(marble);
     }
 
-    public void setEmpty() {
+    public Marble removeMarble() {
+        Marble m = marble;
         getChildren().remove(marble);
         marble = null;
+        return m;
+    }
+
+    public void setEmpty() {
+        removeMarble();
     }
 
     public void markOffTheBoard() {

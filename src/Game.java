@@ -36,9 +36,7 @@ public class Game {
         moveInput = new TextField();
         confirmBtn = new Button("Confirm");
 
-        confirmBtn.setOnAction(e -> {
-            // TODO: hook up to parser
-        });
+
 
         undoBtn = new Button("Undo last move");
         bottomRow.getChildren().addAll(moveInput, confirmBtn, undoBtn);
@@ -50,6 +48,25 @@ public class Game {
             case GermanDaisy:  b = BoardUtil.makeGermanDaisy(boardHeight);    break;
             case BelgianDaisy: b = BoardUtil.makeBelgianDaisy(boardHeight);   break;
         }
+
+        Board finalB = b;
+        confirmBtn.setOnAction(e -> {
+            Move move = null;
+            try {
+                move = MoveParser.parse(moveInput.getText());
+            } catch (Exception ex) {
+                // TODO display in a text field
+                System.out.println(ex.getMessage());
+                return;
+            }
+
+            try {
+                finalB.makeMove(move);
+            } catch (Move.IllegalMoveException ex) {
+                // TODO display in a text field
+                System.out.println(ex.getMessage());
+            }
+        });
 
         centerPane.getChildren().addAll(topRow, b.drawable(), bottomRow);
 
