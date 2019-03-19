@@ -173,6 +173,9 @@ public class BoardUtil {
         return coordinates;
     }
 
+    // translate x coordinate to match a square matrix (board padded on top left and bottom right)
+    private static int _trx(int x, int y) { return Math.max(4 - y + x, x); }
+
     // Finds the coordinate between two other coordinates
     // if can't find one (nothing in between, too far apart, not on the same axis), return null
     public static Coordinate findCoordBetween(Coordinate a, Coordinate b) {
@@ -192,36 +195,24 @@ public class BoardUtil {
     }
 
     public static boolean areNeighbors(Coordinate a, Coordinate b) {
-        int dx = a.x - b.x;
+        int dx = _trx(a.x, a.y) - _trx(b.x, b.y);
         int dy = a.y - b.y;
-
-        if (dy == 0)  return Math.abs(dx) == 1;
-        if (dx == 0)  return Math.abs(dy) == 1;
-        if (Math.abs(dy) + Math.abs(dx) > 2) return false;
-        if (dx == dy) return a.y < 4 | b.y < 4;
-        else          return a.y > 4 | b.y > 4;
+        int absDx = Math.abs(dx);
+        //     Manhattan dist = 1       OR (1 x away AND on bottom-left to top-right diagonal)
+        return absDx + Math.abs(dy) == 1 | absDx == 1 & dx + dy == 0;
     }
 
     // Assumes the two coordinates are neighbors, does not do additional checking
     public static Direction findNeighborDirection(Coordinate from, Coordinate to) {
-        if (from.y == to.y)
-            return from.x < to.x ? Direction.E : Direction.W;
-        if (from.y < 4) {
-            if (from.y < to.y)
-                return from.x == to.x ? Direction.SW : Direction.SE;
-            else
-                return from.x == to.x ? Direction.NE : Direction.NW;
-        }
-        if (from.y > 4) {
-            if (from.y < to.y)
-                return from.x == to.x ? Direction.SE : Direction.SW;
-            else
-                return from.x == to.x ? Direction.NW : Direction.NE;
-        }
-        if (from.y < to.y) // from.y == 4
-            return from.x == to.x ? Direction.SE : Direction.SW;
-        else
-            return from.x == to.x ? Direction.NE : Direction.NW;
+        int fromTrx = _trx(from.x, from.y);
+        int toTrx = _trx(to.x, to.y);
+
+        if (from.y < to.y)
+            return fromTrx == toTrx ? Direction.SE : Direction.SW;
+        if (from.y > to.y)
+            return fromTrx == toTrx ? Direction.NW : Direction.NE;
+
+        return fromTrx < toTrx ? Direction.E : Direction.W;
     }
 
     public static String toConformanceCoord(Coordinate coord) {
