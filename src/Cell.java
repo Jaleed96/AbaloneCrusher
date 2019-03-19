@@ -12,12 +12,17 @@ public class Cell extends Group {
     private double centerX;
     private double centerY;
     private double side;
+    private int coordX;
+    private int coordY;
 
     // assuming top left coordinates
-    public Cell(double size, double x, double y) {
+    public Cell(double size, double x, double y, int coordX, int coordY) {
         side = size / 2;
         centerX = x + side;
         centerY = y + side;
+        
+        this.coordX = coordX;
+        this.coordY = coordY;
 
         shape = Hexagon.drawable30Deg(centerX, centerY, side);
         shape.setStroke(BORDER_COLOR);
@@ -52,5 +57,9 @@ public class Cell extends Group {
 
     public Marble marble() {
         return marble;
+    }
+    
+    public Coordinate getCoordinate() {
+    	return new Coordinate(coordX, coordY);
     }
 }
