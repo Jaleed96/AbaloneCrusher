@@ -11,6 +11,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
@@ -18,10 +19,11 @@ public class Menu extends Application {
     
     GridPane gridpane = new GridPane();
     Label title = new Label("ABALONE");
+    Label error = new Label("");
     Label blackLabel = new Label("Black (P1): ");
     Label whiteLabel = new Label("White (P2): ");
     Label initialLayout = new Label("Initial Layout:");
-    Label timeLimit = new Label("Time Limit per move: ");
+    Label timeLimit = new Label("Time Limit per move (seconds): ");
     Label moveLimit = new Label("Move limit per game: ");
     TextField tbTimeLimit = new TextField("");
     TextField tbmoveLimit = new TextField("");
@@ -36,6 +38,7 @@ public class Menu extends Application {
     final ToggleGroup player1SelectionGroup = new ToggleGroup();
     final ToggleGroup player2SelectionGroup = new ToggleGroup();
     final ToggleGroup gameModeGroup = new ToggleGroup();
+  
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -57,8 +60,10 @@ public class Menu extends Application {
         
         humanRb.setToggleGroup(player1SelectionGroup);
         aiRb.setToggleGroup(player1SelectionGroup);
+        player1SelectionGroup.selectToggle(humanRb);    
         humanRb2.setToggleGroup(player2SelectionGroup);
         aiRb2.setToggleGroup(player2SelectionGroup);
+        player2SelectionGroup.selectToggle(humanRb2);
         standardRb.setToggleGroup(gameModeGroup);
         standardRb.setUserData(Config.InitialBoard.Standard);
         standardRb.setSelected(true);
@@ -81,6 +86,7 @@ public class Menu extends Application {
         GridPane.setConstraints(moveLimit, 24, 26);
         GridPane.setConstraints(tbTimeLimit, 25, 25);
         GridPane.setConstraints(tbmoveLimit, 25, 26);
+        GridPane.setConstraints(error, 25, 30);
         
         GridPane.setConstraints(startBtn, 25, 29);
         GridPane.setHalignment(title, HPos.RIGHT);
@@ -114,25 +120,35 @@ public class Menu extends Application {
             Config cfg = new Config();
             cfg.initialLayout = (Config.InitialBoard) gameModeGroup.getSelectedToggle().getUserData();
             if (tbTimeLimit.getText().isEmpty() || !tbTimeLimit.getText().matches("[0-9]+")) {
-                throw new IllegalArgumentException("Invalid Input");
+                error.setText("Invalid input for time limit.");
+                error.setTextFill(Color.RED);
+                return;
+               
             } else {
                 cfg.B_timeLimit = Integer.parseInt(tbTimeLimit.getText());
                 cfg.W_timeLimit = Integer.parseInt(tbTimeLimit.getText());
+                
             }
             if (tbmoveLimit.getText().isEmpty() || !tbmoveLimit.getText().matches("[0-9]+")) {
-                throw new IllegalArgumentException("Invalid Input");
+                error.setText("Invalid input for move limit.");
+                error.setTextFill(Color.RED);
+                return;
+              
             } else {
-                cfg.moveLimit = Integer.parseInt(tbmoveLimit.getText());
+                cfg.moveLimit = Integer.parseInt(tbmoveLimit.getText());              
             }
+           
             cfg.B_type = (Config.PlayerType) player1SelectionGroup.getSelectedToggle().getUserData();
             cfg.W_type = (Config.PlayerType) player2SelectionGroup.getSelectedToggle().getUserData();        
     
+            
             primaryStage.setScene(new Game(cfg, 1600, 900).getScene());
             primaryStage.show();
+            
         });
          
         gridpane.getChildren().addAll(title, standard, german, belgian, blackLabel, whiteLabel, humanRb, aiRb, initialLayout, humanRb2,
-                aiRb2, standardRb, germanRb, belgianRb, timeLimit, moveLimit, tbTimeLimit, tbmoveLimit, startBtn);
+                aiRb2, standardRb, germanRb, belgianRb, timeLimit, moveLimit, tbTimeLimit, tbmoveLimit, startBtn, error);
 
         Scene scene = new Scene(gridpane, appWidth, appHeight);
         primaryStage.setScene(scene);
