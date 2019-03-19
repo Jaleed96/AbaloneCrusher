@@ -127,7 +127,7 @@ public class Menu extends Application {
             cfg.B_type = (Config.PlayerType) player1SelectionGroup.getSelectedToggle().getUserData();
             cfg.W_type = (Config.PlayerType) player2SelectionGroup.getSelectedToggle().getUserData();        
     
-            primaryStage.setScene(new Game(cfg, 1000, 750).getScene());
+            primaryStage.setScene(new Game(cfg, 1600, 900).getScene());
             primaryStage.show();
         });
          
