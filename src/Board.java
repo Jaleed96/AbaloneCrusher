@@ -37,7 +37,7 @@ public class Board {
 		double yPadding = height / (MAX_SIZE + 5); // somewhat relative to cell height but mostly arbitrary
 		double innerBoardHeight = height - yPadding * 2;
 		double cellHeight = innerBoardHeight / 7; // Counting vertically: cell height * 5 + hex side * 4, where cell
-													// height = 2 * hex side
+		// height = 2 * hex side
 		double xPadding = (width - Hexagon.width30Deg(cellHeight / 2) * 9) / 2;
 
 		initCells(board, cellHeight, xPadding, yPadding);

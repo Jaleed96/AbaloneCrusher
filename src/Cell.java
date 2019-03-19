@@ -60,6 +60,6 @@ public class Cell extends Group {
     }
     
     public Coordinate getCoordinate() {
-    	return new Coordinate(coordX, coordY);
+    	return BoardUtil.COORDINATES[coordY][coordX];
     }
 }
