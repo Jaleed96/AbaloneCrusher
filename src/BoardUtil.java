@@ -11,16 +11,16 @@ public class BoardUtil {
     }
 
     public static class Neighbor {
-        public final Board.Coordinate coordinate;
+        public final Coordinate coordinate;
         public final Direction direction;
 
-        public static Neighbor makeNeighbor(Board.Coordinate coordinate, Direction direction) {
+        public static Neighbor makeNeighbor(Coordinate coordinate, Direction direction) {
             if (coordinate == null || direction == null)
                 return null;
             return new Neighbor(coordinate, direction);
         }
 
-        private Neighbor(Board.Coordinate coordinate, Direction direction) {
+        private Neighbor(Coordinate coordinate, Direction direction) {
             this.coordinate = coordinate;
             this.direction = direction;
         }
@@ -37,12 +37,12 @@ public class BoardUtil {
         private final Neighbor[] index;
         private final Neighbor[] nonNullNeighbors;
 
-        Neighbors(Board.Coordinate NW,
-                  Board.Coordinate W,
-                  Board.Coordinate SW,
-                  Board.Coordinate SE,
-                  Board.Coordinate E,
-                  Board.Coordinate NE)
+        Neighbors(Coordinate NW,
+                  Coordinate W,
+                  Coordinate SW,
+                  Coordinate SE,
+                  Coordinate E,
+                  Coordinate NE)
         {
             this.NW = Neighbor.makeNeighbor(NW, Direction.NW);
             this.W = Neighbor.makeNeighbor(W, Direction.W);
@@ -62,7 +62,7 @@ public class BoardUtil {
             return index[dir.ordinal()];
         }
 
-        public Neighbor fromCoordinate(Board.Coordinate coord) {
+        public Neighbor fromCoordinate(Coordinate coord) {
             for (Neighbor n : nonNullNeighbors) {
                 if (n.coordinate.equals(coord))
                     return n;
@@ -122,16 +122,16 @@ public class BoardUtil {
     };
 
     /// Cached coordinates. Use this instead of making "new".
-    public static final Board.Coordinate[][] COORDINATES = initCoordinates(STANDARD_LAYOUT);
+    public static final Coordinate[][] COORDINATES = initCoordinates(STANDARD_LAYOUT);
 
     /// Maps each coordinate to it's neighbors
     private static final Neighbors[][] COORDINATE_NEIGHBORS = initNeighbors(STANDARD_LAYOUT, COORDINATES);
 
     /// Maps requirements-conforming coordinates to our coordinates
-    private static final Map<String, Board.Coordinate> CONF_COORD_MAP = initCoordMap(CONFORMANCE_COORDINATES, COORDINATES);
+    private static final Map<String, Coordinate> CONF_COORD_MAP = initCoordMap(CONFORMANCE_COORDINATES, COORDINATES);
 
-    private static Map<String, Board.Coordinate> initCoordMap(String[][] mapping, Board.Coordinate[][] coordCache) {
-        Map<String, Board.Coordinate> cm = new HashMap<>();
+    private static Map<String, Coordinate> initCoordMap(String[][] mapping, Coordinate[][] coordCache) {
+        Map<String, Coordinate> cm = new HashMap<>();
         for (int row = 0; row < mapping.length; ++row) {
             for (int col = 0; col < mapping[row].length; ++col) {
                 cm.put(mapping[row][col], coordCache[row][col]);
@@ -140,7 +140,7 @@ public class BoardUtil {
         return cm;
     }
 
-    private static Neighbors[][] initNeighbors(byte[][] referenceBoard, Board.Coordinate[][] coordCache) {
+    private static Neighbors[][] initNeighbors(byte[][] referenceBoard, Coordinate[][] coordCache) {
         Neighbors[][] neighbors = new Neighbors[referenceBoard.length][];
         for (int row = 0; row < neighbors.length; ++row) {
             neighbors[row] = new Neighbors[referenceBoard[row].length];
@@ -150,8 +150,8 @@ public class BoardUtil {
         return neighbors;
     }
 
-    private static Neighbors findNeighbors(byte[][] referenceBoard, Board.Coordinate[][] coordCache, Board.Coordinate center) {
-        Board.Coordinate[] coords = new Board.Coordinate[6]; // in order NW, W, SW, SE, E, NE
+    private static Neighbors findNeighbors(byte[][] referenceBoard, Coordinate[][] coordCache, Coordinate center) {
+        Coordinate[] coords = new Coordinate[6]; // in order NW, W, SW, SE, E, NE
         for (int row = Math.max(0, center.y - 1); row <= Math.min(center.y + 1, referenceBoard.length - 1); ++row) {
             for (int col = Math.max(0, center.x - 1); col <= Math.min(center.x + 1, referenceBoard[row].length - 1); ++col) {
                 if (areNeighbors(coordCache[row][col], center)) {
@@ -163,19 +163,19 @@ public class BoardUtil {
         return new Neighbors(coords[0], coords[1], coords[2], coords[3], coords[4], coords[5]);
     }
 
-    private static Board.Coordinate[][] initCoordinates(byte[][] referenceBoard) {
-        Board.Coordinate[][] coordinates = new Board.Coordinate[referenceBoard.length][];
+    private static Coordinate[][] initCoordinates(byte[][] referenceBoard) {
+        Coordinate[][] coordinates = new Coordinate[referenceBoard.length][];
         for (int row = 0; row < coordinates.length; ++row) {
-            coordinates[row] = new Board.Coordinate[referenceBoard[row].length];
+            coordinates[row] = new Coordinate[referenceBoard[row].length];
             for (int col = 0; col < coordinates[row].length; ++col)
-                coordinates[row][col] = new Board.Coordinate(col, row);
+                coordinates[row][col] = new Coordinate(col, row);
         }
         return coordinates;
     }
 
     // Finds the coordinate between two other coordinates
     // if can't find one (nothing in between, too far apart, not on the same axis), return null
-    public static Board.Coordinate findCoordBetween(Board.Coordinate a, Board.Coordinate b) {
+    public static Coordinate findCoordBetween(Coordinate a, Coordinate b) {
         int dx = Math.abs(a.x - b.x);
         if (a.y == b.y && dx == 2) { // same row
             return COORDINATES[a.y][Math.min(a.x, b.x) + 1];
@@ -191,7 +191,7 @@ public class BoardUtil {
         return null;
     }
 
-    public static boolean areNeighbors(Board.Coordinate a, Board.Coordinate b) {
+    public static boolean areNeighbors(Coordinate a, Coordinate b) {
         int dx = a.x - b.x;
         int dy = a.y - b.y;
 
@@ -203,7 +203,7 @@ public class BoardUtil {
     }
 
     // Assumes the two coordinates are neighbors, does not do additional checking
-    public static Direction findNeighborDirection(Board.Coordinate from, Board.Coordinate to) {
+    public static Direction findNeighborDirection(Coordinate from, Coordinate to) {
         if (from.y == to.y)
             return from.x < to.x ? Direction.E : Direction.W;
         if (from.y < 4) {
@@ -224,7 +224,7 @@ public class BoardUtil {
             return from.x == to.x ? Direction.NE : Direction.NW;
     }
 
-    public static String toConformanceCoord(Board.Coordinate coord) {
+    public static String toConformanceCoord(Coordinate coord) {
         return CONFORMANCE_COORDINATES[coord.y][coord.x];
     }
 
@@ -232,11 +232,11 @@ public class BoardUtil {
         return CONFORMANCE_COORDINATES[y][x];
     }
 
-    public static Board.Coordinate toCoord(String coord) {
+    public static Coordinate toCoord(String coord) {
         return CONF_COORD_MAP.get(coord);
     }
 
-    public static Neighbors neighborsOf(Board.Coordinate coord) {
+    public static Neighbors neighborsOf(Coordinate coord) {
         return COORDINATE_NEIGHBORS[coord.y][coord.x];
     }
 
