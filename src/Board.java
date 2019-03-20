@@ -146,7 +146,7 @@ public class Board {
             currentPiece = nextPiece;
         }
         /// If the piece has been pushed off the board, return it
-        return next == null ? Optional.of(currentPiece) : Optional.empty();
+        return next == null && currentPiece != Board.EMPTY? Optional.of(currentPiece) : Optional.empty();
     }
 
     // this function is meant to be used right after pushPiece to update gui and
@@ -160,7 +160,7 @@ public class Board {
             next = next.neighbors().fromDirection(next.direction);
             currentMarble = nextMarble;
         }
-        return next == null ? currentMarble : null;
+        return next == null && currentMarble != null ? currentMarble : null;
     }
 
     private void updateScore(byte pushedOffPiece, Marble pushedOffMarble) {
@@ -168,6 +168,7 @@ public class Board {
             currentPlayer().increaseScore();
             scoreUpdateListener.scoreUpdate(currentPlayer(), pushedOffMarble, currentPlayer().score() == SCORE_TO_WIN);
         } else {
+            System.out.println("Board::updateScore - possible logic error. Verify that you meant to increase the opponent's score.");
             currentOpponent().increaseScore();
             scoreUpdateListener.scoreUpdate(currentOpponent(), pushedOffMarble, currentOpponent().score() == SCORE_TO_WIN);
         }
