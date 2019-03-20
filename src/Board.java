@@ -16,12 +16,17 @@ public class Board {
         void scoreUpdate(Player player, Marble pushedOff, boolean gameOver);
     }
 
+    interface CurrentPlayerChangedListener {
+        void onCurrentPlayerChanged(Player currentPlayer);
+    }
+
     private byte[][] board;
     private Cell[][] cells;
     private Pane pane;
     private Player current;
     private Player opponent;
     private ScoreUpdateListener scoreUpdateListener = (player, pushedOff, gameOver) -> {};
+    private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> {};
 
     private double width;
 
@@ -172,6 +177,8 @@ public class Board {
         Player t = current;
         current = opponent;
         opponent = t;
+
+        currentPlayerChangedListener.onCurrentPlayerChanged(current);
     }
 
     Cell[][] cells() {
@@ -200,5 +207,9 @@ public class Board {
 
     public void setScoreUpdateListener(ScoreUpdateListener listener) {
         scoreUpdateListener = listener;
+    }
+
+    public void setCurrentPlayerChangedListener(CurrentPlayerChangedListener listener) {
+        currentPlayerChangedListener = listener;
     }
 }
