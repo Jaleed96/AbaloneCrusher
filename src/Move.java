@@ -76,4 +76,8 @@ public class Move {
         // all are on the same diagonal
         return pushes.length != 3 || BoardUtil.findNeighborDirection(pushes[0].from, pushes[1].from) == BoardUtil.findNeighborDirection(pushes[1].from, pushes[2].from);
     }
+
+    public boolean isLegal(Board context) {
+        return isLegalInline(context) || isLegalSideStep(context);
+    }
 }

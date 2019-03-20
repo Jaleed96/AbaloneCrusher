@@ -49,7 +49,7 @@ public class Game {
             case BelgianDaisy: b = BoardUtil.makeBelgianDaisy(boardHeight);   break;
         }
 
-        Board finalB = b;
+        final Board finalB = b;
         confirmBtn.setOnAction(e -> {
             Move move = null;
             try {
@@ -65,6 +65,15 @@ public class Game {
             } catch (Move.IllegalMoveException ex) {
                 // TODO display in a text field
                 System.out.println(ex.getMessage());
+            }
+        });
+
+        MoveSelection moveSelection = new MoveSelection(b);
+        moveSelection.setOnMoveSelectedListener(move -> {
+            try {
+                finalB.makeMove(move);
+            } catch (Move.IllegalMoveException e) {
+                System.out.println(e.getMessage());
             }
         });
 
