@@ -39,13 +39,13 @@ public class Game {
         //HBox for white marble scoring
         HBox blackScoreRow = new HBox();
         blackScoreLabel = new Label("Black: ");
-        blackScore = new Label();
+        blackScore = new Label("0");
         blackScoreRow.getChildren().addAll(blackScoreLabel, blackScore);
 
         //VBox for black marble scoring
         HBox whiteScoreRow = new HBox();
         whiteScoreLabel = new Label("White: ");
-        whiteScore = new Label();
+        whiteScore = new Label("0");
         whiteScoreRow.getChildren().addAll(whiteScoreLabel, whiteScore);
 
         newGameBtn = new Button("New Game");
