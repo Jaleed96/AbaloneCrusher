@@ -17,6 +17,8 @@ public class Board {
     private Player current;
     private Player opponent;
 
+    private double width;
+
     Board(byte[][] board, double height) {
         this.board = board;
         pane = new Pane();
@@ -25,6 +27,7 @@ public class Board {
         opponent = new Player(Board.WHITE);
 
         double width = height / Math.sin(Math.PI / 3);
+        this.width = width;
         Polygon background = Hexagon.drawable(width / 2, height / 2, width / 2, 0);
         background.setFill(Color.DEEPSKYBLUE);
         pane.getChildren().add(background);
@@ -180,5 +183,9 @@ public class Board {
 
     public Player currentOpponent() {
         return opponent;
+    }
+
+    public double getWidth() {
+        return this.width;
     }
 }

@@ -9,9 +9,12 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 public class Game {
-    public static boolean GAME_IN_SESSION = false;
+    public static boolean GAME_STOPPED = true;
+    // USE GAME_PAUSED to check whether game is in session
+    public static boolean GAME_PAUSED = false;
     private Scene scene;
     private Stage stage;
     private Button newGameBtn, confirmBtn, resetBtn, stopBtn, undoBtn, pauseBtn;
@@ -19,7 +22,7 @@ public class Game {
     private TextField moveInput;
 
     Game(Config cfg, double w, double h, Scene menuScene, Stage stage) {
-        GAME_IN_SESSION = true;
+        GAME_STOPPED = false;
         this.stage = stage;
         //BorderPane rootLayout = new BorderPane();
         HBox rootLayout = new HBox();
@@ -34,7 +37,7 @@ public class Game {
         VBox centerPane = new VBox(50);
         HBox topRow = new HBox(50);
         timeLabel = new Label("20.000 ms");
-        pauseBtn = new Button("Pause");
+        pauseBtn = new Button("Resume/Pause");
         topRow.getChildren().addAll(timeLabel, pauseBtn);
 
         HBox bottomRow = new HBox(50);
@@ -56,8 +59,8 @@ public class Game {
 
         final Board finalB = b;
 
-        if (GAME_IN_SESSION) {
-            confirmBtn.setOnAction(e -> {
+        confirmBtn.setOnAction(e -> {
+            if (!GAME_PAUSED) {
                 Move move = null;
                 try {
                     move = MoveParser.parse(moveInput.getText());
@@ -73,18 +76,19 @@ public class Game {
                     // TODO display in a text field
                     System.out.println(ex.getMessage());
                 }
-            });
+            }
+        });
 
-            MoveSelection moveSelection = new MoveSelection(b);
-            moveSelection.setOnMoveSelectedListener(move -> {
+        MoveSelection moveSelection = new MoveSelection(b);
+        moveSelection.setOnMoveSelectedListener(move -> {
+            if (!GAME_PAUSED) {
                 try {
                     finalB.makeMove(move);
                 } catch (Move.IllegalMoveException e) {
                     System.out.println(e.getMessage());
                 }
-            });
-        }
-
+            }
+        });
 
         centerPane.getChildren().addAll(topRow, b.drawable(), bottomRow);
 
@@ -110,12 +114,18 @@ public class Game {
         scene = new Scene(rootLayout, w, h);
         stage.setScene(scene);
 
-        // TODO: Button listeners preferablly more atomic
+        // TODO: Button listeners preferably more atomic
         newGameBtn.setOnAction((e) -> {
             stage.setScene(menuScene);
         });
         stopBtn.setOnAction(e -> {
-            GAME_IN_SESSION = false;
+            GAME_STOPPED = true;
+            GAME_PAUSED = GAME_STOPPED;
+        });
+        pauseBtn.setOnAction(e -> {
+            if (!GAME_STOPPED) {
+                GAME_PAUSED = !GAME_PAUSED;
+            }
         });
     }
 
