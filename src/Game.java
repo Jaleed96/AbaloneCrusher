@@ -138,8 +138,8 @@ public class Game {
         VBox rightPane = new VBox(50);
         // TODO: Replace history box with formalized class that stores board history
         // These are dummy boxes
-        Label move1 = new Label("1. H1-H2 (B)");
-        Label move2 = new Label("2. I5-I2 (W)");
+        Label move1 = new Label("1. A3 to B3 (B)");
+        Label move2 = new Label("2. C3-C5 to D4 (W)");
 
         rightPane.getChildren().addAll(move1, move2);
 
