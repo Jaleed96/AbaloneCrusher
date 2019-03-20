@@ -11,6 +11,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class Game {
+    public static boolean GAME_IN_SESSION = false;
     private Scene scene;
     private Stage stage;
     private Button newGameBtn, confirmBtn, resetBtn, stopBtn, undoBtn, pauseBtn;
@@ -18,6 +19,7 @@ public class Game {
     private TextField moveInput;
 
     Game(Config cfg, double w, double h, Scene menuScene, Stage stage) {
+        GAME_IN_SESSION = true;
         this.stage = stage;
         //BorderPane rootLayout = new BorderPane();
         HBox rootLayout = new HBox();
@@ -53,32 +55,36 @@ public class Game {
         }
 
         final Board finalB = b;
-        confirmBtn.setOnAction(e -> {
-            Move move = null;
-            try {
-                move = MoveParser.parse(moveInput.getText());
-            } catch (Exception ex) {
-                // TODO display in a text field
-                System.out.println(ex.getMessage());
-                return;
-            }
 
-            try {
-                finalB.makeMove(move);
-            } catch (Move.IllegalMoveException ex) {
-                // TODO display in a text field
-                System.out.println(ex.getMessage());
-            }
-        });
+        if (GAME_IN_SESSION) {
+            confirmBtn.setOnAction(e -> {
+                Move move = null;
+                try {
+                    move = MoveParser.parse(moveInput.getText());
+                } catch (Exception ex) {
+                    // TODO display in a text field
+                    System.out.println(ex.getMessage());
+                    return;
+                }
 
-        MoveSelection moveSelection = new MoveSelection(b);
-        moveSelection.setOnMoveSelectedListener(move -> {
-            try {
-                finalB.makeMove(move);
-            } catch (Move.IllegalMoveException e) {
-                System.out.println(e.getMessage());
-            }
-        });
+                try {
+                    finalB.makeMove(move);
+                } catch (Move.IllegalMoveException ex) {
+                    // TODO display in a text field
+                    System.out.println(ex.getMessage());
+                }
+            });
+
+            MoveSelection moveSelection = new MoveSelection(b);
+            moveSelection.setOnMoveSelectedListener(move -> {
+                try {
+                    finalB.makeMove(move);
+                } catch (Move.IllegalMoveException e) {
+                    System.out.println(e.getMessage());
+                }
+            });
+        }
+
 
         centerPane.getChildren().addAll(topRow, b.drawable(), bottomRow);
 
@@ -91,9 +97,6 @@ public class Game {
 
         rightPane.getChildren().addAll(move1, move2);
 
-//        rootLayout.setLeft(leftPane);
-//        rootLayout.setCenter(centerPane);
-//        rootLayout.setRight(rightPane);
         rootLayout.getChildren().addAll(leftPane, centerPane, rightPane);
         rootLayout.setSpacing((w+h)/40);
         centerPane.setAlignment(Pos.CENTER);
@@ -105,24 +108,18 @@ public class Game {
         bottomRow.setAlignment(Pos.CENTER);
 
         scene = new Scene(rootLayout, w, h);
-
+        stage.setScene(scene);
 
         // TODO: Button listeners preferablly more atomic
         newGameBtn.setOnAction((e) -> {
-            startScene(menuScene);
+            stage.setScene(menuScene);
+        });
+        stopBtn.setOnAction(e -> {
+            GAME_IN_SESSION = false;
         });
     }
 
     public Scene getScene() {
         return this.scene;
-    }
-
-    public void startScene(Scene scene) {
-        stage.setScene(scene);
-        stage.show();
-    }
-    public void startScene() {
-        stage.setScene(this.scene);
-        stage.show();
     }
 }

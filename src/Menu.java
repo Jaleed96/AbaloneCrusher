@@ -148,7 +148,6 @@ public class Menu extends Application {
 
 
             Game game = new Game(cfg, MENU_SCENE_WIDTH, MENU_SCENE_HEIGHT, scene, primaryStage);
-            game.startScene();
         });
 
 
