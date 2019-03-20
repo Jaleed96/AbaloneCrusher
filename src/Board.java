@@ -89,10 +89,11 @@ public class Board {
     }
 
     public void makeMove(Move move) throws Move.IllegalMoveException {
-        if (!move.isLegalInline(this) && !move.isLegalSideStep(this)) {
+        if (!move.isLegal(this)) {
             StringBuilder erroMsg = new StringBuilder().append("Illegal move:");
             for (Push m : move.pushes()) {
-                erroMsg.append(String.format(" [%s to %s]", m.from.toString(), m.to.coordinate.toString()));
+                erroMsg.append(String.format(" [%s to %s, %s to %s]", m.from.toString(), m.to.coordinate.toString(),
+                        BoardUtil.toConformanceCoord(m.from), BoardUtil.toConformanceCoord(m.to.coordinate)));
             }
             throw new Move.IllegalMoveException(erroMsg.toString());
         }

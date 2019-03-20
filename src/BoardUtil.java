@@ -202,6 +202,18 @@ public class BoardUtil {
         return absDx + Math.abs(dy) == 1 | absDx == 1 & dx + dy == 0;
     }
 
+    public static boolean areNeighbors(Coordinate a, Coordinate b, Coordinate c) {
+        // this allows passing the same coordinate into two parameters, so for example
+        // if a == c, this will return true.. should it?
+        // perhaps we should check here if (a.equals(b) || a.equals(c) || b.equals(c))
+
+        if (areNeighbors(a, b)) // abc, bac, cab, cba
+            return areNeighbors(b, c) || areNeighbors(c, a);
+
+        // acb, bca
+        return areNeighbors(a, c) && areNeighbors(b, c);
+    }
+
     // Assumes the two coordinates are neighbors, does not do additional checking
     public static Direction findNeighborDirection(Coordinate from, Coordinate to) {
         int fromTrx = _trx(from.x, from.y);
@@ -213,6 +225,17 @@ public class BoardUtil {
             return fromTrx == toTrx ? Direction.NW : Direction.NE;
 
         return fromTrx < toTrx ? Direction.E : Direction.W;
+    }
+
+    // Checks if the 3 coordinates are on one of the 3 axes that are valid in the context of this game
+    public static boolean onSameAxis(Coordinate a, Coordinate b, Coordinate c) {
+        int trxA = _trx(a.x, a.y);
+        int trxB = _trx(b.x, b.y);
+        int trxC = _trx(c.x, c.y);
+
+        return trxA - trxB + a.y - b.y == 0 & trxA - trxC + a.y - c.y == 0
+             | trxA == trxB & trxA == trxC
+             | a.y == b.y & a.y == c.y;
     }
 
     public static String toConformanceCoord(Coordinate coord) {

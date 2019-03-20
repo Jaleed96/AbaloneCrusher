@@ -54,7 +54,6 @@ public class Move {
         return isLegalInline(context, pushes[0]);
     }
 
-    /// The in-between move cannot be the first or the last element of the array
     public boolean isLegalSideStep(Board context) {
         if (pushes.length == 0 || pushes.length > 3)
             // logic error
@@ -67,14 +66,15 @@ public class Move {
 
         BoardUtil.Direction stepDirection = pushes[0].to.direction;
         for (int i = 1; i < pushes.length; ++i) {
-            if (!BoardUtil.areNeighbors(pushes[i - 1].from, pushes[i].from)) // all from coordinates are neighbors
-                return false;
             if (pushes[i].to.direction != stepDirection) // all are moving in the same direction
                 return false;
         }
 
-        // all are on the same diagonal
-        return pushes.length != 3 || BoardUtil.findNeighborDirection(pushes[0].from, pushes[1].from) == BoardUtil.findNeighborDirection(pushes[1].from, pushes[2].from);
+        if (pushes.length == 3)
+            return BoardUtil.onSameAxis(pushes[0].from, pushes[1].from, pushes[2].from)
+                && BoardUtil.areNeighbors(pushes[0].from, pushes[1].from, pushes[2].from);
+
+        return pushes.length == 1 || BoardUtil.areNeighbors(pushes[0].from, pushes[1].from);
     }
 
     public boolean isLegal(Board context) {
