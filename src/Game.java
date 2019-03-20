@@ -8,6 +8,8 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
@@ -25,6 +27,7 @@ public class Game {
     private Label whiteScore;
     private Label timeLabel;
     private TextField moveInput;
+    private Label gameState;
 
     Game(Config cfg, double w, double h, Scene menuScene, Stage stage) {
         GAME_STOPPED = false;
@@ -57,7 +60,8 @@ public class Game {
         HBox topRow = new HBox(50);
         timeLabel = new Label(Integer.toString(cfg.timeLimit));
         pauseBtn = new Button("Resume/Pause");
-        topRow.getChildren().addAll(timeLabel, pauseBtn);
+        gameState = new Label();
+        topRow.getChildren().addAll(timeLabel, pauseBtn, gameState);
 
         HBox bottomRow = new HBox(50);
         moveInput = new TextField();
@@ -159,10 +163,13 @@ public class Game {
         stopBtn.setOnAction(e -> {
             GAME_STOPPED = true;
             GAME_PAUSED = GAME_STOPPED;
+            gameState.setText("Game Stopped");
         });
         pauseBtn.setOnAction(e -> {
             if (!GAME_STOPPED) {
                 GAME_PAUSED = !GAME_PAUSED;
+                if (GAME_PAUSED) gameState.setText("Game Paused");
+                else gameState.setText("");
             }
         });
     }
