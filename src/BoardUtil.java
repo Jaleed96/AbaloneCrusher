@@ -255,14 +255,23 @@ public class BoardUtil {
     }
 
     public static Board makeStandardLayout(double height) {
-        return new Board(STANDARD_LAYOUT, height);
+        return new Board(deepCopyRepresentation(STANDARD_LAYOUT), height);
     }
 
     public static Board makeGermanDaisy(double height) {
-        return new Board(GERMAN_DAISY_LAYOUT, height);
+        return new Board(deepCopyRepresentation(GERMAN_DAISY_LAYOUT), height);
     }
 
     public static Board makeBelgianDaisy(double height) {
-        return new Board(BELGIAN_DAISY_LAYOUT, height);
+        return new Board(deepCopyRepresentation(BELGIAN_DAISY_LAYOUT), height);
+    }
+
+    public static byte[][] deepCopyRepresentation(byte[][] original) {
+
+        final byte[][] result = new byte[original.length][];
+        for (int i = 0; i < original.length; i++) {
+            result[i] = Arrays.copyOf(original[i], original[i].length);
+        }
+        return result;
     }
 }

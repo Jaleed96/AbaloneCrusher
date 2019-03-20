@@ -12,9 +12,9 @@ import javafx.stage.Stage;
 import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 public class Game {
-    public static boolean GAME_STOPPED = true;
+    public boolean GAME_STOPPED = true;
     // USE GAME_PAUSED to check whether game is in session
-    public static boolean GAME_PAUSED = false;
+    public boolean GAME_PAUSED = false;
     private Scene scene;
     private Stage stage;
     private Button newGameBtn, confirmBtn, resetBtn, stopBtn, undoBtn, pauseBtn;
