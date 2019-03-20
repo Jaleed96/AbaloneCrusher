@@ -17,6 +17,7 @@ public class Marble extends Group {
         } else if (colorCode == Board.WHITE) {
             ellipse.setFill(Color.IVORY);
         }
+        setDefaultStroke();
         getChildren().add(ellipse);
     }
     
@@ -32,13 +33,19 @@ public class Marble extends Group {
     }
     
     public void highlightMarble() {
-        this.ellipse.setStrokeType(StrokeType.INSIDE);
-        this.ellipse.setStrokeWidth(4);
-        this.ellipse.setStroke(Color.ORANGE);
+        ellipse.setStrokeType(StrokeType.INSIDE);
+        ellipse.setStrokeWidth(4);
+        ellipse.setStroke(Color.ORANGE);
+    }
+
+    private void setDefaultStroke() {
+        ellipse.setStrokeType(StrokeType.INSIDE);
+        ellipse.setStrokeWidth(.6);
+        ellipse.setStroke(Color.BLACK);
     }
     
     public void dehighlightMarble() {
-        this.ellipse.setStroke(null);
+        setDefaultStroke();
     }
 
     public byte playerCode() { return playerCode; }
