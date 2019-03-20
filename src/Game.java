@@ -18,6 +18,10 @@ public class Game {
     private Scene scene;
     private Stage stage;
     private Button newGameBtn, confirmBtn, resetBtn, stopBtn, undoBtn, pauseBtn;
+    private Label blackScoreLabel;
+    private Label blackScore;
+    private Label whiteScoreLabel;
+    private Label whiteScore;
     private Label timeLabel;
     private TextField moveInput;
 
@@ -29,14 +33,27 @@ public class Game {
         rootLayout.setPrefSize(w, h);
         // VBOXButton pane on left
         VBox leftPane = new VBox(50);
+
+        //HBox for white marble scoring
+        HBox blackScoreRow = new HBox();
+        blackScoreLabel = new Label("Black: ");
+        blackScore = new Label();
+        blackScoreRow.getChildren().addAll(blackScoreLabel, blackScore);
+
+        //VBox for black marble scoring
+        HBox whiteScoreRow = new HBox();
+        whiteScoreLabel = new Label("White: ");
+        whiteScore = new Label();
+        whiteScoreRow.getChildren().addAll(whiteScoreLabel, whiteScore);
+
         newGameBtn = new Button("New Game");
         resetBtn = new Button("Reset Game");
         stopBtn = new Button("Stop");
-        leftPane.getChildren().addAll(newGameBtn,resetBtn, stopBtn);
+        leftPane.getChildren().addAll(blackScoreRow, whiteScoreRow, newGameBtn, resetBtn, stopBtn);
         // VBOX Board, clock and input field in the center
         VBox centerPane = new VBox(50);
         HBox topRow = new HBox(50);
-        timeLabel = new Label("20.000 ms");
+        timeLabel = new Label(Integer.toString(cfg.timeLimit));
         pauseBtn = new Button("Resume/Pause");
         topRow.getChildren().addAll(timeLabel, pauseBtn);
 
@@ -58,6 +75,14 @@ public class Game {
         }
 
         final Board finalB = b;
+
+        finalB.setScoreUpdateListener((player, piece, gameOver) -> {
+            if (player.piece == Board.WHITE) {
+                whiteScore.setText(Integer.toString(player.score()));
+            } else {
+                blackScore.setText(Integer.toString(player.score()));
+            }
+        });
 
         confirmBtn.setOnAction(e -> {
             if (!GAME_PAUSED) {
