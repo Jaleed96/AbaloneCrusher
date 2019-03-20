@@ -8,14 +8,17 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 public class Game {
     private Scene scene;
+    private Stage stage;
     private Button newGameBtn, confirmBtn, resetBtn, stopBtn, undoBtn, pauseBtn;
     private Label timeLabel;
     private TextField moveInput;
 
-    Game(Config cfg, double w, double h) {
+    Game(Config cfg, double w, double h, Scene menuScene, Stage stage) {
+        this.stage = stage;
         //BorderPane rootLayout = new BorderPane();
         HBox rootLayout = new HBox();
         rootLayout.setPrefSize(w, h);
@@ -101,12 +104,25 @@ public class Game {
         topRow.setAlignment(Pos.CENTER);
         bottomRow.setAlignment(Pos.CENTER);
 
-
-
         scene = new Scene(rootLayout, w, h);
+
+
+        // TODO: Button listeners preferablly more atomic
+        newGameBtn.setOnAction((e) -> {
+            startScene(menuScene);
+        });
     }
 
     public Scene getScene() {
         return this.scene;
+    }
+
+    public void startScene(Scene scene) {
+        stage.setScene(scene);
+        stage.show();
+    }
+    public void startScene() {
+        stage.setScene(this.scene);
+        stage.show();
     }
 }

@@ -112,6 +112,12 @@ public class Menu extends Application {
 
         GridPane.setHalignment(startBtn, HPos.CENTER);
 
+
+        gridpane.getChildren().addAll(title, standard.drawable(), german.drawable(), belgian.drawable(), blackLabel, whiteLabel, humanRb, aiRb, initialLayout, humanRb2,
+                aiRb2, standardRb, germanRb, belgianRb, timeLimit, moveLimit, tbTimeLimit, tbMoveLimit, startBtn, error);
+
+        Scene scene = new Scene(gridpane, MENU_SCENE_WIDTH, MENU_SCENE_HEIGHT);
+
         startBtn.setOnAction(e -> {
             Config cfg = new Config();
             String errorMsg = "";
@@ -140,15 +146,12 @@ public class Menu extends Application {
             cfg.B_type = (Config.PlayerType) player1SelectionGroup.getSelectedToggle().getUserData();
             cfg.W_type = (Config.PlayerType) player2SelectionGroup.getSelectedToggle().getUserData();
 
-            primaryStage.setScene(new Game(cfg, 1600, 900).getScene());
-            primaryStage.show();
 
+            Game game = new Game(cfg, MENU_SCENE_WIDTH, MENU_SCENE_HEIGHT, scene, primaryStage);
+            game.startScene();
         });
 
-        gridpane.getChildren().addAll(title, standard.drawable(), german.drawable(), belgian.drawable(), blackLabel, whiteLabel, humanRb, aiRb, initialLayout, humanRb2,
-                aiRb2, standardRb, germanRb, belgianRb, timeLimit, moveLimit, tbTimeLimit, tbMoveLimit, startBtn, error);
 
-        Scene scene = new Scene(gridpane, MENU_SCENE_WIDTH, MENU_SCENE_HEIGHT);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
