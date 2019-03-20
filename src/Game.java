@@ -21,6 +21,7 @@ public class Game {
     private Label blackScoreLabel;
     private Label blackScore;
     private Label whiteScoreLabel;
+    private Label currentPlayer;
     private Label whiteScore;
     private Label timeLabel;
     private TextField moveInput;
@@ -34,6 +35,7 @@ public class Game {
         // VBOXButton pane on left
         VBox leftPane = new VBox(50);
 
+        currentPlayer = new Label("Turn: Black");
         //HBox for white marble scoring
         HBox blackScoreRow = new HBox();
         blackScoreLabel = new Label("Black: ");
@@ -49,7 +51,7 @@ public class Game {
         newGameBtn = new Button("New Game");
         resetBtn = new Button("Reset Game");
         stopBtn = new Button("Stop");
-        leftPane.getChildren().addAll(blackScoreRow, whiteScoreRow, newGameBtn, resetBtn, stopBtn);
+        leftPane.getChildren().addAll(currentPlayer, blackScoreRow, whiteScoreRow, newGameBtn, resetBtn, stopBtn);
         // VBOX Board, clock and input field in the center
         VBox centerPane = new VBox(50);
         HBox topRow = new HBox(50);
@@ -81,6 +83,17 @@ public class Game {
                 whiteScore.setText(Integer.toString(player.score()));
             } else {
                 blackScore.setText(Integer.toString(player.score()));
+            }
+        });
+
+        finalB.setCurrentPlayerChangedListener(player -> {
+            switch(Character.toString( (char) player.piece)) {
+                case "W":
+                    currentPlayer.setText("Turn: White");
+                    break;
+                case "B":
+                    currentPlayer.setText("Turn: Black");
+                    break;
             }
         });
 
