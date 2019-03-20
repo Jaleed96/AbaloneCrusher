@@ -2,7 +2,6 @@ import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,12 +10,18 @@ import java.util.Optional;
 public class Board {
     public static final byte EMPTY = 'E', WHITE = 'W', BLACK = 'B';
     public static final int MAX_SIZE = 9; // vertically and horizontally
+    public static final int SCORE_TO_WIN = 6;
+
+    interface ScoreUpdateListener {
+        void scoreUpdate(Player player, Marble pushedOff, boolean gameOver);
+    }
 
     private byte[][] board;
     private Cell[][] cells;
     private Pane pane;
     private Player current;
     private Player opponent;
+    private ScoreUpdateListener scoreUpdateListener = (player, pushedOff, gameOver) -> {};
 
     private double width;
 
@@ -114,11 +119,11 @@ public class Board {
             pushedOff = visualPushPiece(p);
         }
 
-        final Marble finalPushedOff = pushedOff; // make compiler happy
+        final Marble pushedOffMarble = pushedOff; // make compiler happy
         maybePushedOff.ifPresent(pushedOffPiece -> {
             // if the logic is right, pushedOff can never be null here;
-            assert finalPushedOff != null;
-            updateScore(pushedOffPiece);
+            assert pushedOffMarble != null;
+            updateScore(pushedOffPiece, pushedOffMarble);
         });
     }
 
@@ -153,11 +158,14 @@ public class Board {
         return next == null ? currentMarble : null;
     }
 
-    private void updateScore(byte pushedOffPiece) {
-        if (currentOpponent().piece == pushedOffPiece)
+    private void updateScore(byte pushedOffPiece, Marble pushedOffMarble) {
+        if (currentOpponent().piece == pushedOffPiece) {
             currentPlayer().increaseScore();
-        else
+            scoreUpdateListener.scoreUpdate(currentPlayer(), pushedOffMarble, currentPlayer().score() == SCORE_TO_WIN);
+        } else {
             currentOpponent().increaseScore();
+            scoreUpdateListener.scoreUpdate(currentOpponent(), pushedOffMarble, currentOpponent().score() == SCORE_TO_WIN);
+        }
     }
 
     private void nextTurn() {
@@ -188,5 +196,9 @@ public class Board {
 
     public double getWidth() {
         return this.width;
+    }
+
+    public void setScoreUpdateListener(ScoreUpdateListener listener) {
+        scoreUpdateListener = listener;
     }
 }
