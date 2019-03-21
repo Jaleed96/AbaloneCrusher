@@ -2,6 +2,7 @@ import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -29,6 +30,7 @@ public class Game {
     private Label movesLeftW;
     private Label movesLeftB;
     private Timer timer;
+    private CheckBox toggleCoordOverlay;
     private int timeLimit;
     private int movesBlack;
     private int movesWhite;
@@ -64,7 +66,9 @@ public class Game {
         newGameBtn = new Button("New Game");
         resetBtn = new Button("Reset Game");
         stopBtn = new Button("Stop");
-        leftPane.getChildren().addAll(movesLeftB, movesLeftW, currentPlayer, blackScoreRow, whiteScoreRow, newGameBtn, resetBtn, stopBtn);
+        toggleCoordOverlay = new CheckBox("Show coordinates");
+        toggleCoordOverlay.setSelected(true);
+        leftPane.getChildren().addAll(movesLeftB, movesLeftW, currentPlayer, blackScoreRow, whiteScoreRow, newGameBtn, resetBtn, stopBtn, toggleCoordOverlay);
         // VBOX Board, clock and input field in the center
         VBox centerPane = new VBox(50);
         HBox topRow = new HBox(50);
@@ -113,6 +117,10 @@ public class Game {
         }
 
         final Board finalB = b;
+        finalB.setTextCoordVisibility(toggleCoordOverlay.isSelected());
+        toggleCoordOverlay.selectedProperty().addListener((observable, wasChecked, isChecked) -> {
+            finalB.setTextCoordVisibility(isChecked);
+        });
 
         finalB.setScoreUpdateListener((player, piece, gameOver) -> {
             if (player.piece == Board.WHITE) {

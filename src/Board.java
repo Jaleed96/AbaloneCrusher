@@ -50,7 +50,7 @@ public class Board {
         double xPadding = (width - Hexagon.width30Deg(cellHeight / 2) * 9) / 2;
 
         initCells(board, cellHeight, xPadding, yPadding);
-        setupBoard(board);
+        setupMarbles(board);
     }
 
     private void initCells(byte[][] board, double cellHeight, double xOffset, double yOffset) {
@@ -67,7 +67,7 @@ public class Board {
             for (int col = 0; col < cells[row].length; ++col) {
                 double x = cellWidth * (col + (MAX_SIZE - cells[row].length) / 2.0) + xWidthOffset + xOffset;
                 double y = row * (cellHeight - verticalHexOffset) + yOffset;
-                Cell c = new Cell(cellHeight, x, y, col, row);
+                Cell c = new Cell(cellHeight, x, y, BoardUtil.COORDINATES[row][col]);
                 cells[row][col] = c;
                 pane.getChildren().add(c);
             }
@@ -86,7 +86,7 @@ public class Board {
         return moves;
     }
 
-    private void setupBoard(byte[][] board) {
+    private void setupMarbles(byte[][] board) {
         for (int row = 0; row < board.length; ++row) {
             for (int col = 0; col < board[row].length; ++col) {
                 Cell c = boardCell(col, row);
@@ -184,6 +184,13 @@ public class Board {
 
     Cell[][] cells() {
         return cells;
+    }
+
+    public void setTextCoordVisibility(boolean visible) {
+        for (Cell[] row : cells) {
+            for (Cell c : row)
+                c.setTextCoordVisibility(visible);
+        }
     }
 
     public Node drawable() {
