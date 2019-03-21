@@ -32,8 +32,12 @@ public class Game {
     private Label timeLabel;
     private TextField moveInput;
     private Label gameState;
+    private Label movesLeftW;
+    private Label movesLeftB;
     private Timer timer;
-    int timeLimit;
+    private int timeLimit;
+    private int movesBlack;
+    private int movesWhite;
 
     Game(Config cfg, double w, double h, Scene menuScene, Stage stage) {
         GAME_STOPPED = false;
@@ -45,6 +49,12 @@ public class Game {
         VBox leftPane = new VBox(50);
 
         currentPlayer = new Label("Turn: Black");
+
+        movesBlack = cfg.moveLimit;
+        movesLeftB = new Label("Moves Left (Black): " + cfg.moveLimit);
+        movesWhite = cfg.moveLimit;
+        movesLeftW = new Label("Moves Left (White): " + cfg.moveLimit);
+
         // HBox for white marble scoring
         HBox blackScoreRow = new HBox();
         blackScoreLabel = new Label("Black: ");
@@ -60,7 +70,7 @@ public class Game {
         newGameBtn = new Button("New Game");
         resetBtn = new Button("Reset Game");
         stopBtn = new Button("Stop");
-        leftPane.getChildren().addAll(currentPlayer, blackScoreRow, whiteScoreRow, newGameBtn, resetBtn, stopBtn);
+        leftPane.getChildren().addAll(movesLeftB, movesLeftW, currentPlayer, blackScoreRow, whiteScoreRow, newGameBtn, resetBtn, stopBtn);
         // VBOX Board, clock and input field in the center
         VBox centerPane = new VBox(50);
         HBox topRow = new HBox(50);
@@ -121,10 +131,14 @@ public class Game {
         finalB.setCurrentPlayerChangedListener(player -> {
             switch (Character.toString((char) player.piece)) {
             case "W":
+                movesBlack--;
+                movesLeftB.setText("Moves Left (Black): " + Integer.toString(movesBlack));
                 currentPlayer.setText("Turn: White");
                 timeLimit  = cfg.timeLimit * 1000;
                 break;
             case "B":
+                movesWhite--;
+                movesLeftW.setText("Moves Left (White): " + Integer.toString(movesWhite));
                 currentPlayer.setText("Turn: Black");
                 timeLimit  = cfg.timeLimit * 1000;
                 break;
@@ -168,8 +182,8 @@ public class Game {
         VBox rightPane = new VBox(50);
         // TODO: Replace history box with formalized class that stores board history
         // These are dummy boxes
-        Label move1 = new Label("1. H1-H2 (B)");
-        Label move2 = new Label("2. I5-I2 (W)");
+        Label move1 = new Label("1. A3 to B3 (B) - 3.435 s");
+        Label move2 = new Label("2. C3-C5 to D4 (W) - 1.214 s");
 
         rightPane.getChildren().addAll(move1, move2);
 
