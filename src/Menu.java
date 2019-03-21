@@ -13,8 +13,8 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 public class Menu extends Application {
-    private static final int MENU_SCENE_WIDTH = 1100;
-    private static final int MENU_SCENE_HEIGHT = 690;
+    public static final int MENU_SCENE_WIDTH = 1100;
+    public static final int MENU_SCENE_HEIGHT = 690;
 
     private GridPane gridpane = new GridPane();
     private Label title = new Label("ABALONE");
