@@ -10,7 +10,8 @@ public class Config {
     public PlayerType B_type;
     public PlayerType W_type;
 
-    public int timeLimit;
+    public int p1timeLimit;
+    public int p2timeLimit;
     public int moveLimit;
 
     InitialBoard initialLayout;

@@ -13,7 +13,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 public class Menu extends Application {
-    public static final int MENU_SCENE_WIDTH = 1100;
+    public static final int MENU_SCENE_WIDTH = 1300;
     public static final int MENU_SCENE_HEIGHT = 690;
 
     private GridPane gridpane = new GridPane();
@@ -22,9 +22,11 @@ public class Menu extends Application {
     private Label blackLabel = new Label("Black (P1): ");
     private Label whiteLabel = new Label("White (P2): ");
     private Label initialLayout = new Label("Initial Layout:");
-    private Label timeLimit = new Label("Time Limit per move (seconds): ");
+    private Label p1timelimit = new Label("P1 Time Limit:");
+    private Label p2timelimit = new Label("P2 Time Limit:");
     private Label moveLimit = new Label("Move limit per game: ");
-    private TextField tbTimeLimit = new TextField("");
+    private TextField tbp1timelimit = new TextField("");
+    private TextField tbp2timelimit = new TextField("");
     private TextField tbMoveLimit = new TextField("");
     private RadioButton humanRb = new RadioButton("Human");
     private RadioButton aiRb = new RadioButton("AI");
@@ -55,7 +57,7 @@ public class Menu extends Application {
 
         // set default values
         tbMoveLimit.setText("150");
-        tbTimeLimit.setText("60");
+        tbp1timelimit.setText("60");
 
         humanRb.setToggleGroup(player1SelectionGroup);
         aiRb.setToggleGroup(player1SelectionGroup);
@@ -81,9 +83,11 @@ public class Menu extends Application {
         GridPane.setConstraints(standardRb, 24, 22);
         GridPane.setConstraints(germanRb, 25, 22);
         GridPane.setConstraints(belgianRb, 26, 22);
-        GridPane.setConstraints(timeLimit, 24, 25);
+        GridPane.setConstraints(p1timelimit, 23, 13);
+        GridPane.setConstraints(p2timelimit, 25, 13);
         GridPane.setConstraints(moveLimit, 24, 26);
-        GridPane.setConstraints(tbTimeLimit, 25, 25);
+        GridPane.setConstraints(tbp1timelimit, 24, 13);
+        GridPane.setConstraints(tbp2timelimit, 26, 13);
         GridPane.setConstraints(tbMoveLimit, 25, 26);
         GridPane.setConstraints(error, 25, 30);
 
@@ -109,23 +113,30 @@ public class Menu extends Application {
         GridPane.setHalignment(standardRb, HPos.CENTER);
         GridPane.setHalignment(germanRb, HPos.CENTER);
         GridPane.setHalignment(belgianRb, HPos.CENTER);
+        
+        GridPane.setHalignment(tbp1timelimit, HPos.LEFT);
+        GridPane.setHalignment(tbp2timelimit, HPos.LEFT);
+        
+        GridPane.setHalignment(p1timelimit, HPos.RIGHT);
+        GridPane.setHalignment(p2timelimit, HPos.RIGHT);
+      
 
         GridPane.setHalignment(startBtn, HPos.CENTER);
 
 
         gridpane.getChildren().addAll(title, standard.drawable(), german.drawable(), belgian.drawable(), blackLabel, whiteLabel, humanRb, aiRb, initialLayout, humanRb2,
-                aiRb2, standardRb, germanRb, belgianRb, timeLimit, moveLimit, tbTimeLimit, tbMoveLimit, startBtn, error);
+                aiRb2, standardRb, germanRb, belgianRb, p1timelimit, p2timelimit, moveLimit, tbp1timelimit, tbp2timelimit, tbMoveLimit, startBtn, error);
 
         Scene scene = new Scene(gridpane, MENU_SCENE_WIDTH, MENU_SCENE_HEIGHT);
 
         startBtn.setOnAction(e -> {
             Config cfg = new Config();
             String errorMsg = "";
-            String timeLimitTxt = tbTimeLimit.getText().trim();
-            if (!timeLimitTxt.matches("[0-9]+")) {
+            String p1timelimitTxt = tbp1timelimit.getText().trim();
+            if (!p1timelimitTxt.matches("[0-9]+")) {
                 errorMsg += "Invalid input for time limit.";
             } else {
-                cfg.timeLimit = Integer.parseInt(timeLimitTxt);
+                cfg.p1timeLimit = Integer.parseInt(p1timelimitTxt);
             }
 
             String moveLimitTxt = tbMoveLimit.getText().trim();

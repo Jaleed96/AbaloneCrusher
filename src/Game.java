@@ -70,9 +70,9 @@ public class Game {
         HBox topRow = new HBox(50);
 
         // TODO: Export timing functionality into an inner class
-        timeLabel = new Label(Integer.toString(cfg.timeLimit) + " s");
+        timeLabel = new Label(Integer.toString(cfg.p1timeLimit) + " s");
         int timeRes = 10;
-        timeLimit  = cfg.timeLimit * 1000;
+        timeLimit  = cfg.p1timeLimit * 1000;
         timer = new Timer();
         timer.schedule(new TimerTask() {
             public void run() {
@@ -128,13 +128,13 @@ public class Game {
                 movesBlack--;
                 movesLeftB.setText("Moves Left (Black): " + Integer.toString(movesBlack));
                 currentPlayer.setText("Turn: White");
-                timeLimit  = cfg.timeLimit * 1000;
+                timeLimit  = cfg.p1timeLimit * 1000;
                 break;
             case "B":
                 movesWhite--;
                 movesLeftW.setText("Moves Left (White): " + Integer.toString(movesWhite));
                 currentPlayer.setText("Turn: Black");
-                timeLimit  = cfg.timeLimit * 1000;
+                timeLimit  = cfg.p1timeLimit * 1000;
                 break;
             }
         });
