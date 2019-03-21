@@ -161,12 +161,12 @@ public class Game {
         stage.setScene(scene);
 
         // TODO: Button listeners preferably more atomic
-        newGameBtn.setOnAction((e) -> {
-            stage.setScene(menuScene);
+        newGameBtn.setOnAction((e) -> {          
+            this.stage.setScene(menuScene);
         });
 
         resetBtn.setOnAction((e) -> {
-            new Game(cfg, Menu.MENU_SCENE_WIDTH, Menu.MENU_SCENE_HEIGHT, scene, this.stage);
+           new Game(cfg, Menu.MENU_SCENE_WIDTH, Menu.MENU_SCENE_HEIGHT, menuScene, this.stage);
         });
 
         stopBtn.setOnAction(e -> {
