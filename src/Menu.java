@@ -58,6 +58,7 @@ public class Menu extends Application {
         // set default values
         tbMoveLimit.setText("150");
         tbp1timelimit.setText("60");
+        tbp2timelimit.setText("60");
 
         humanRb.setToggleGroup(player1SelectionGroup);
         aiRb.setToggleGroup(player1SelectionGroup);
@@ -73,10 +74,10 @@ public class Menu extends Application {
         belgianRb.setToggleGroup(gameModeGroup);
         belgianRb.setUserData(Config.InitialBoard.BelgianDaisy);
         GridPane.setConstraints(title, 25, 3);
-        GridPane.setConstraints(blackLabel, 24, 10);
+        GridPane.setConstraints(blackLabel, 23, 10);
         GridPane.setConstraints(whiteLabel, 25, 10);
-        GridPane.setConstraints(humanRb, 25, 10);
-        GridPane.setConstraints(aiRb, 25, 11);
+        GridPane.setConstraints(humanRb, 24, 10);
+        GridPane.setConstraints(aiRb, 24, 11);
         GridPane.setConstraints(humanRb2, 26, 10);
         GridPane.setConstraints(aiRb2, 26, 11);
         GridPane.setConstraints(initialLayout, 25, 18);
