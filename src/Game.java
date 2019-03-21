@@ -1,3 +1,4 @@
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -12,6 +13,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Game {
     public boolean GAME_STOPPED = true;
@@ -28,6 +32,8 @@ public class Game {
     private Label timeLabel;
     private TextField moveInput;
     private Label gameState;
+    private Timer timer;
+    int timeLimit;
 
     Game(Config cfg, double w, double h, Scene menuScene, Stage stage) {
         GAME_STOPPED = false;
@@ -58,7 +64,25 @@ public class Game {
         // VBOX Board, clock and input field in the center
         VBox centerPane = new VBox(50);
         HBox topRow = new HBox(50);
-        timeLabel = new Label(Integer.toString(cfg.timeLimit));
+
+        // TODO: Export timing functionality into an inner class
+        timeLabel = new Label(Integer.toString(cfg.timeLimit) + " s");
+        int timeRes = 10;
+        timeLimit  = cfg.timeLimit * 1000;
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            public void run() {
+                Platform.runLater(new Runnable() {
+                    public void run() {
+                        if (timeLimit>=0 && !GAME_PAUSED) {
+                            timeLabel.setText(String.format("%d.%03d s", timeLimit / 1000, timeLimit % 1000));
+                            timeLimit -= timeRes;
+                        }
+                    }
+                });
+            }
+        }, 0, timeRes);
+
         pauseBtn = new Button("Resume/Pause");
         gameState = new Label();
         topRow.getChildren().addAll(timeLabel, pauseBtn, gameState);
@@ -98,9 +122,11 @@ public class Game {
             switch (Character.toString((char) player.piece)) {
             case "W":
                 currentPlayer.setText("Turn: White");
+                timeLimit  = cfg.timeLimit * 1000;
                 break;
             case "B":
                 currentPlayer.setText("Turn: Black");
+                timeLimit  = cfg.timeLimit * 1000;
                 break;
             }
         });
@@ -189,3 +215,5 @@ public class Game {
         return this.scene;
     }
 }
+
+
