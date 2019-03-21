@@ -32,20 +32,20 @@ public class Game {
     Game(Config cfg, double w, double h, Scene menuScene, Stage stage) {
         GAME_STOPPED = false;
         this.stage = stage;
-        //BorderPane rootLayout = new BorderPane();
+        // BorderPane rootLayout = new BorderPane();
         HBox rootLayout = new HBox();
         rootLayout.setPrefSize(w, h);
         // VBOXButton pane on left
         VBox leftPane = new VBox(50);
 
         currentPlayer = new Label("Turn: Black");
-        //HBox for white marble scoring
+        // HBox for white marble scoring
         HBox blackScoreRow = new HBox();
         blackScoreLabel = new Label("Black: ");
         blackScore = new Label("0");
         blackScoreRow.getChildren().addAll(blackScoreLabel, blackScore);
 
-        //VBox for black marble scoring
+        // VBox for black marble scoring
         HBox whiteScoreRow = new HBox();
         whiteScoreLabel = new Label("White: ");
         whiteScore = new Label("0");
@@ -67,17 +67,21 @@ public class Game {
         moveInput = new TextField();
         confirmBtn = new Button("Confirm");
 
-
-
         undoBtn = new Button("Undo last move");
         bottomRow.getChildren().addAll(moveInput, confirmBtn, undoBtn);
 
         Board b = null;
         double boardHeight = 500;
         switch (cfg.initialLayout) {
-            case Standard:     b = BoardUtil.makeStandardLayout(boardHeight); break;
-            case GermanDaisy:  b = BoardUtil.makeGermanDaisy(boardHeight);    break;
-            case BelgianDaisy: b = BoardUtil.makeBelgianDaisy(boardHeight);   break;
+        case Standard:
+            b = BoardUtil.makeStandardLayout(boardHeight);
+            break;
+        case GermanDaisy:
+            b = BoardUtil.makeGermanDaisy(boardHeight);
+            break;
+        case BelgianDaisy:
+            b = BoardUtil.makeBelgianDaisy(boardHeight);
+            break;
         }
 
         final Board finalB = b;
@@ -91,13 +95,13 @@ public class Game {
         });
 
         finalB.setCurrentPlayerChangedListener(player -> {
-            switch(Character.toString( (char) player.piece)) {
-                case "W":
-                    currentPlayer.setText("Turn: White");
-                    break;
-                case "B":
-                    currentPlayer.setText("Turn: Black");
-                    break;
+            switch (Character.toString((char) player.piece)) {
+            case "W":
+                currentPlayer.setText("Turn: White");
+                break;
+            case "B":
+                currentPlayer.setText("Turn: Black");
+                break;
             }
         });
 
@@ -138,13 +142,13 @@ public class Game {
         VBox rightPane = new VBox(50);
         // TODO: Replace history box with formalized class that stores board history
         // These are dummy boxes
-        Label move1 = new Label("1. A3 to B3 (B)");
-        Label move2 = new Label("2. C3-C5 to D4 (W)");
+        Label move1 = new Label("1. H1-H2 (B)");
+        Label move2 = new Label("2. I5-I2 (W)");
 
         rightPane.getChildren().addAll(move1, move2);
 
         rootLayout.getChildren().addAll(leftPane, centerPane, rightPane);
-        rootLayout.setSpacing((w+h)/40);
+        rootLayout.setSpacing((w + h) / 40);
         centerPane.setAlignment(Pos.CENTER);
         leftPane.setAlignment(Pos.CENTER_LEFT);
         leftPane.setStyle("-fx-padding: 20;");
@@ -160,6 +164,11 @@ public class Game {
         newGameBtn.setOnAction((e) -> {
             stage.setScene(menuScene);
         });
+
+        resetBtn.setOnAction((e) -> {
+            new Game(cfg, Menu.MENU_SCENE_WIDTH, Menu.MENU_SCENE_HEIGHT, scene, this.stage);
+        });
+
         stopBtn.setOnAction(e -> {
             GAME_STOPPED = true;
             GAME_PAUSED = GAME_STOPPED;
@@ -168,8 +177,10 @@ public class Game {
         pauseBtn.setOnAction(e -> {
             if (!GAME_STOPPED) {
                 GAME_PAUSED = !GAME_PAUSED;
-                if (GAME_PAUSED) gameState.setText("Game Paused");
-                else gameState.setText("");
+                if (GAME_PAUSED)
+                    gameState.setText("Game Paused");
+                else
+                    gameState.setText("");
             }
         });
     }
