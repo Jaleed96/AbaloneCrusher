@@ -28,20 +28,23 @@ public class MoveSelection {
             for (Cell c : row) {
                 c.addEventHandler(MouseEvent.MOUSE_CLICKED, me -> {
                     dehighlightAllMarbles();
-                    if (c.marble() != null && c.marble().playerCode() == context.currentPlayer().piece) {
+                });
+                c.addEventHandler(MouseEvent.MOUSE_PRESSED, me -> {
+                    if (hasCurrentPlayersMarble(c))
                         handleMarbleSelect(c);
-                    }
                 });
                 c.addEventHandler(MouseEvent.DRAG_DETECTED, me -> {
                     c.startFullDrag();
                 });
                 c.addEventHandler(MouseDragEvent.MOUSE_DRAG_ENTERED, me -> {
-                    if (c.marble() != null && c.marble().playerCode() == context.currentPlayer().piece) {
+                    if (hasCurrentPlayersMarble(c)) {
                         handleMarbleSelect(c);
                     }
                 });
                 c.addEventHandler(MouseDragEvent.MOUSE_DRAG_RELEASED, me -> {
-                    if (c.marble() == null || c.marble().playerCode() == context.currentOpponent().piece) {
+                    if (selectedCells.size() == 1 && selectedCells.get(0) == c) {
+                        deselectCell(c);
+                    } else if (c.marble() == null || c.marble().playerCode() == context.currentOpponent().piece) {
                         Optional<Move> maybeMove = handleDestinationSelect(c);
                         maybeMove.ifPresent(move -> selectionListener.moveSelected(move));
                     } else {
@@ -59,11 +62,9 @@ public class MoveSelection {
     }
 
     private void handleMarbleSelect(Cell c) {
-        if (selectedCells.contains(c)) { // Already selected, deselect
-            deselectCell(c);
-        } else if (selectedCells.isEmpty()) { // No marbles selected, select one marble
+        if (selectedCells.isEmpty()) { // No marbles selected, select one marble
             selectCell(c);
-        } else if (selectedCells.size() == 1) { // One marble selected, select if neighbour
+        } else if (selectedCells.size() == 1 && selectedCells.get(0) != c) { // One marble selected, select if neighbour
             Coordinate existing = selectedCells.get(0).getCoordinate();
             if (BoardUtil.areNeighbors(existing, c.getCoordinate())) {
                 selectCell(c);
@@ -74,6 +75,10 @@ public class MoveSelection {
                     selectCell(c);
                 }
             }
+        } else if (selectedCells.size() > 1 && selectedCells.subList(0, selectedCells.size() - 1).contains(c)) {
+            int cIndex = selectedCells.indexOf(c);
+            while (selectedCells.size() != cIndex + 1)
+                deselectCell(selectedCells.get(selectedCells.size() - 1));
         } else if (selectedCells.size() == 2) { // Two marbles selected, select if new marble creates valid group of 3
             Coordinate existingOne = selectedCells.get(0).getCoordinate();
             Coordinate existingTwo = selectedCells.get(1).getCoordinate();
@@ -160,6 +165,10 @@ public class MoveSelection {
                                         new Push(middleMarble, toMiddleNeighbor),
                                         new Push(lastMarble, toLastNeighbor)));
         }
+    }
+
+    private boolean hasCurrentPlayersMarble(Cell c) {
+        return c.marble() != null && c.marble().playerCode() == context.currentPlayer().piece;
     }
 
     public void setOnMoveSelectedListener(OnMoveSelectionListener listen) {
