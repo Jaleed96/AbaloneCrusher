@@ -1,10 +1,9 @@
+import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Collections;
 
 public class MoveSelection {
 
@@ -27,12 +26,26 @@ public class MoveSelection {
     private void initSelectListeners(Cell[][] cells) {
         for (Cell[] row : cells) {
             for (Cell c : row) {
-                c.addEventHandler(MouseEvent.MOUSE_PRESSED, me -> {
+                c.addEventHandler(MouseEvent.MOUSE_CLICKED, me -> {
+                    dehighlightAllMarbles();
                     if (c.marble() != null && c.marble().playerCode() == context.currentPlayer().piece) {
-                        handleMarbleClick(c);
-                    } else {
-                        Optional<Move> maybeMove = handleEmptyClick(c);
+                        handleMarbleSelect(c);
+                    }
+                });
+                c.addEventHandler(MouseEvent.DRAG_DETECTED, me -> {
+                    c.startFullDrag();
+                });
+                c.addEventHandler(MouseDragEvent.MOUSE_DRAG_ENTERED, me -> {
+                    if (c.marble() != null && c.marble().playerCode() == context.currentPlayer().piece) {
+                        handleMarbleSelect(c);
+                    }
+                });
+                c.addEventHandler(MouseDragEvent.MOUSE_DRAG_RELEASED, me -> {
+                    if (c.marble() == null || c.marble().playerCode() == context.currentOpponent().piece) {
+                        Optional<Move> maybeMove = handleDestinationSelect(c);
                         maybeMove.ifPresent(move -> selectionListener.moveSelected(move));
+                    } else {
+                        dehighlightAllMarbles();
                     }
                 });
             }
@@ -45,7 +58,7 @@ public class MoveSelection {
         selectedCells.clear();
     }
 
-    private void handleMarbleClick(Cell c) {
+    private void handleMarbleSelect(Cell c) {
         if (selectedCells.contains(c)) { // Already selected, deselect
             deselectCell(c);
         } else if (selectedCells.isEmpty()) { // No marbles selected, select one marble
@@ -85,36 +98,25 @@ public class MoveSelection {
         highlightedMarbles.remove(c.marble());
     }
 
-    class sortByY implements Comparator<Cell> {
-        // Used for sorting in ascending order of
-        // roll number
-        public int compare(Cell a, Cell b) {
-            return a.getCoordinate().y - b.getCoordinate().y;
-        }
-    }
-
-    class sortByX implements Comparator<Cell> {
-        // Used for sorting in ascending order of
-        // roll number
-        public int compare(Cell a, Cell b) {
-            return a.getCoordinate().x - b.getCoordinate().x;
-        }
-    }
-
-    private Optional<Move> handleEmptyClick(Cell c) {
+    private Optional<Move> handleDestinationSelect(Cell c) {
         Optional<Move> maybeMove = Optional.empty();
         if (selectedCells.size() == 1) {
             maybeMove = moveOneMarble(c);
-        } else if (!selectedCells.isEmpty()){
+        } else if (!selectedCells.isEmpty()) {
             Coordinate cCoord = c.getCoordinate();
-            Coordinate firstMarbleCoord = selectedCells.get(0).getCoordinate();
-            Coordinate secondMarbleCoord = selectedCells.get(1).getCoordinate();
-            boolean horizontalInline = cCoord.y == firstMarbleCoord.y;
-            boolean verticalInline = firstMarbleCoord.y != secondMarbleCoord.y;
-            if (horizontalInline || verticalInline) {
-                maybeMove = moveInline(c, horizontalInline);
-            } else {
-                maybeMove = moveBroadside(c);
+            Coordinate frontMarbleCoord = selectedCells.get(selectedCells.size() - 1).getCoordinate();
+            Coordinate nextMarbleCoord = selectedCells.get(selectedCells.size() - 2).getCoordinate();
+            BoardUtil.Neighbor frontCellNeighbor = BoardUtil.neighborsOf(frontMarbleCoord).fromCoordinate(cCoord);
+            if (frontCellNeighbor != null) {
+                BoardUtil.Direction moveDirection = frontCellNeighbor.direction;
+                BoardUtil.Neighbor marbleNeighbor = BoardUtil.neighborsOf(nextMarbleCoord)
+                        .fromCoordinate(frontMarbleCoord);
+                if (marbleNeighbor != null) {
+                    BoardUtil.Direction marbleDirection = marbleNeighbor.direction;
+                    boolean broadside = moveDirection != marbleDirection;
+                    boolean horizontalInline = !broadside && cCoord.y == nextMarbleCoord.y;
+                    maybeMove = broadside ? moveBroadside(c) : moveInline(c, horizontalInline);
+                }
             }
         }
         dehighlightAllMarbles();
@@ -130,14 +132,7 @@ public class MoveSelection {
     }
 
     private Optional<Move> moveInline(Cell c, boolean horizontalInline) {
-        Comparator<Cell> compare = horizontalInline ? new sortByX() : new sortByY();
-        selectedCells.sort(compare);
         Coordinate marble = selectedCells.get(0).getCoordinate();
-        boolean cIsSmaller = horizontalInline ? c.getCoordinate().x < marble.x : c.getCoordinate().y < marble.y;
-        if (cIsSmaller) {
-            Collections.swap(selectedCells, 0, selectedCells.size() - 1);
-            marble = selectedCells.get(0).getCoordinate();
-        }
         Coordinate lastMarble = selectedCells.get(selectedCells.size() - 1).getCoordinate();
         BoardUtil.Neighbor nextMarble = BoardUtil.neighborsOf(marble)
                 .fromCoordinate(selectedCells.get(1).getCoordinate());
@@ -148,23 +143,22 @@ public class MoveSelection {
     }
 
     private Optional<Move> moveBroadside(Cell c) {
-        selectedCells.sort(new sortByX());
-        Coordinate rightMarble = selectedCells.get(0).getCoordinate();
-        BoardUtil.Neighbor toFirstNeighbor = BoardUtil.neighborsOf(rightMarble).fromCoordinate(c.getCoordinate());
+        Coordinate firstMarble = selectedCells.get(selectedCells.size() - 1).getCoordinate();
+        BoardUtil.Neighbor toFirstNeighbor = BoardUtil.neighborsOf(firstMarble).fromCoordinate(c.getCoordinate());
         if (toFirstNeighbor == null)
             return Optional.empty();
         BoardUtil.Direction moveDirection = toFirstNeighbor.direction;
-        Coordinate secondMarble = selectedCells.get(1).getCoordinate();
-        BoardUtil.Neighbor toSecondNeighbor = BoardUtil.neighborsOf(secondMarble).fromDirection(moveDirection);
+        Coordinate lastMarble = selectedCells.get(0).getCoordinate();
+        BoardUtil.Neighbor toLastNeighbor = BoardUtil.neighborsOf(lastMarble).fromDirection(moveDirection);
         if (selectedCells.size() == 2) {
-            return Optional.of(new Move(new Push(rightMarble, toFirstNeighbor),
-                                        new Push(secondMarble, toSecondNeighbor)));
+            return Optional.of(new Move(new Push(firstMarble, toFirstNeighbor),
+                                        new Push(lastMarble, toLastNeighbor)));
         } else {
-            Coordinate thirdMarble = selectedCells.get(2).getCoordinate();
-            BoardUtil.Neighbor toThirdNeighbor = BoardUtil.neighborsOf(thirdMarble).fromDirection(moveDirection);
-            return Optional.of(new Move(new Push(rightMarble, toFirstNeighbor),
-                                        new Push(secondMarble, toSecondNeighbor),
-                                        new Push(thirdMarble, toThirdNeighbor)));
+            Coordinate middleMarble = selectedCells.get(1).getCoordinate();
+            BoardUtil.Neighbor toMiddleNeighbor = BoardUtil.neighborsOf(middleMarble).fromDirection(moveDirection);
+            return Optional.of(new Move(new Push(firstMarble, toFirstNeighbor),
+                                        new Push(middleMarble, toMiddleNeighbor),
+                                        new Push(lastMarble, toLastNeighbor)));
         }
     }
 
