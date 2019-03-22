@@ -43,6 +43,7 @@ public class Cell extends StackPane {
         txtCoord.setVisible(false);
         txtCoord.setMouseTransparent(true);
 
+        setPickOnBounds(false); // ensure that only the geometric shape of the cell catches mouse events
         getChildren().addAll(shape, txtCoord);
     }
 
