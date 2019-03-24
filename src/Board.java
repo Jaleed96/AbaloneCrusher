@@ -1,11 +1,10 @@
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class Board {
     public static final byte EMPTY = 'E', WHITE = 'W', BLACK = 'B';
@@ -20,22 +19,40 @@ public class Board {
         void onCurrentPlayerChanged(Player currentPlayer);
     }
 
+    interface TimeUpdatedListener {
+        void onTimeUpdated(Player currentPlayer, int timeLeftForPlayer);
+    }
+
     private byte[][] board;
     private Cell[][] cells;
     private Pane pane;
     private Player current;
     private Player opponent;
+    public int blackMovesLeft;
+    public int whiteMovesLeft;
+    private int blackTurnTimeLeft;
+    private int whiteTurnTimeLeft;
+    private Timer gameTimer;
     private ScoreUpdateListener scoreUpdateListener = (player, pushedOff, gameOver) -> {};
     private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> {};
+    private TimeUpdatedListener timeUpdatedListener = (currentPlayer, timeLeftForPlayer) -> {};
 
     private double width;
 
-    Board(byte[][] board, double height) {
+    Board(byte[][] board, double height, int moveLimit, int p1TimeLimit, int p2TimeLimit) {
         this.board = board;
         pane = new Pane();
 
-        current = new Player(Board.BLACK);
-        opponent = new Player(Board.WHITE);
+        current = new Player(Board.BLACK, moveLimit, p1TimeLimit);
+        opponent = new Player(Board.WHITE, moveLimit, p2TimeLimit);
+
+        blackMovesLeft = moveLimit;
+        whiteMovesLeft = moveLimit;
+        blackTurnTimeLeft = current.getTimeLimit();
+        whiteTurnTimeLeft = opponent.getTimeLimit();
+
+        gameTimer = new Timer();
+        gameTimer.schedule(new Countdown(), 0, 1000);
 
         double width = height / Math.sin(Math.PI / 3);
         this.width = width;
@@ -178,8 +195,22 @@ public class Board {
         Player t = current;
         current = opponent;
         opponent = t;
+        refreshTurnData();
 
         currentPlayerChangedListener.onCurrentPlayerChanged(current);
+    }
+
+    private void refreshTurnData() {
+        switch (currentPlayer().piece) {
+            case 'W' :
+                blackMovesLeft--;
+                whiteTurnTimeLeft = currentPlayer().getTimeLimit();
+                break;
+            case 'B' :
+                whiteMovesLeft--;
+                blackTurnTimeLeft = currentPlayer().getTimeLimit();
+                break;
+        }
     }
 
     Cell[][] cells() {
@@ -219,5 +250,29 @@ public class Board {
 
     public void setCurrentPlayerChangedListener(CurrentPlayerChangedListener listener) {
         currentPlayerChangedListener = listener;
+    }
+
+    public void setTimeUpdatedListener(TimeUpdatedListener listener) {
+        timeUpdatedListener = listener;
+    }
+
+    private class Countdown extends TimerTask {
+        public void run() {
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    switch (currentPlayer().piece) {
+                        case 'W':
+                            whiteTurnTimeLeft--;
+                            timeUpdatedListener.onTimeUpdated(current, whiteTurnTimeLeft);
+                            break;
+                        case 'B':
+                            blackTurnTimeLeft--;
+                            timeUpdatedListener.onTimeUpdated(current, blackTurnTimeLeft);
+                            break;
+                    }
+                }
+            });
+        }
     }
 }

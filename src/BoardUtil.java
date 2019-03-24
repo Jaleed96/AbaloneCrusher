@@ -254,16 +254,16 @@ public class BoardUtil {
         return COORDINATE_NEIGHBORS[coord.y][coord.x];
     }
 
-    public static Board makeStandardLayout(double height) {
-        return new Board(deepCopyRepresentation(STANDARD_LAYOUT), height);
+    public static Board makeStandardLayout(double height, int moveLimit, int p1TimeLimit, int p2TimeLimit) {
+        return new Board(deepCopyRepresentation(STANDARD_LAYOUT), height, moveLimit, p1TimeLimit, p2TimeLimit);
     }
 
-    public static Board makeGermanDaisy(double height) {
-        return new Board(deepCopyRepresentation(GERMAN_DAISY_LAYOUT), height);
+    public static Board makeGermanDaisy(double height, int moveLimit, int p1TimeLimit, int p2TimeLimit) {
+        return new Board(deepCopyRepresentation(GERMAN_DAISY_LAYOUT), height, moveLimit, p1TimeLimit, p2TimeLimit);
     }
 
-    public static Board makeBelgianDaisy(double height) {
-        return new Board(deepCopyRepresentation(BELGIAN_DAISY_LAYOUT), height);
+    public static Board makeBelgianDaisy(double height, int moveLimit, int p1TimeLimit, int p2TimeLimit) {
+        return new Board(deepCopyRepresentation(BELGIAN_DAISY_LAYOUT), height, moveLimit, p1TimeLimit, p2TimeLimit);
     }
 
     public static byte[][] deepCopyRepresentation(byte[][] original) {
