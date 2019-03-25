@@ -1,4 +1,3 @@
-import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -8,14 +7,12 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
 import java.util.Timer;
-import java.util.TimerTask;
 
 public class Game {
-    public boolean GAME_STOPPED = true;
+    private boolean GAME_STOPPED;
     // USE GAME_PAUSED to check whether game is in session
-    public boolean GAME_PAUSED = false;
+    private boolean GAME_PAUSED;
     private Scene scene;
     private Stage stage;
     private Button newGameBtn, confirmBtn, resetBtn, stopBtn, undoBtn, pauseBtn;
@@ -34,7 +31,6 @@ public class Game {
     private int timeLimit;
 
     Game(Config cfg, double w, double h, Scene menuScene, Stage stage) {
-        GAME_STOPPED = false;
         this.stage = stage;
         // BorderPane rootLayout = new BorderPane();
         HBox rootLayout = new HBox();
@@ -85,7 +81,6 @@ public class Game {
         switch (cfg.initialLayout) {
         case Standard:
             b = BoardUtil.makeStandardLayout(boardHeight, cfg.moveLimit, cfg.p1timeLimit, cfg.p2timeLimit);
-            System.out.println(cfg.p2timeLimit);
             break;
         case GermanDaisy:
             b = BoardUtil.makeGermanDaisy(boardHeight, cfg.moveLimit, cfg.p1timeLimit, cfg.p2timeLimit);
@@ -96,25 +91,8 @@ public class Game {
         }
 
         final Board finalB = b;
-
-        // TODO: Export timing functionality into an inner class
-//        timeLabel = new Label(Integer.toString(cfg.p1timeLimit) + " s");
-//        int timeRes = 10;
-//        timeLimit  = cfg.p1timeLimit * 1000;
-//        timer = new Timer();
-//        timer.schedule(new TimerTask() {
-//            public void run() {
-//                Platform.runLater(new Runnable() {
-//                    public void run() {
-//                        if (timeLimit>=0 && !GAME_PAUSED) {
-//                            timeLabel.setText(String.format("%d.%03d s", timeLimit / 1000, timeLimit % 1000));
-//                            timeLimit -= timeRes;
-//                        }
-//                    }
-//                });
-//            }
-//        }, 0, timeRes);
-
+        GAME_PAUSED = finalB.GAME_PAUSED;
+        GAME_STOPPED = finalB.GAME_STOPPED;
 
         finalB.setTimeUpdatedListener((player, timeLeft) -> {
             timeLabel.setText(String.format("%d.%03d s", timeLeft / 1000, timeLeft % 1000));
@@ -217,14 +195,17 @@ public class Game {
         });
 
         stopBtn.setOnAction(e -> {
-            GAME_STOPPED = true;
-            GAME_PAUSED = GAME_STOPPED;
+            finalB.GAME_STOPPED = true;
+            finalB.GAME_PAUSED = finalB.GAME_STOPPED;
+            GAME_STOPPED = finalB.GAME_STOPPED;
+            GAME_PAUSED = finalB.GAME_PAUSED;
             gameState.setText("Game Stopped");
         });
         pauseBtn.setOnAction(e -> {
-            if (!GAME_STOPPED) {
-                GAME_PAUSED = !GAME_PAUSED;
-                if (GAME_PAUSED)
+            if (!finalB.GAME_STOPPED) {
+                finalB.GAME_PAUSED = !finalB.GAME_PAUSED;
+                GAME_PAUSED = finalB.GAME_PAUSED;
+                if (finalB.GAME_PAUSED)
                     gameState.setText("Game Paused");
                 else
                     gameState.setText("");

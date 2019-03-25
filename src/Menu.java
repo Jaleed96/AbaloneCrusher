@@ -98,7 +98,7 @@ public class Menu extends Application {
         GridPane.setHalignment(whiteLabel, HPos.RIGHT);
 
         double boardDisplayHeight = 191;
-        Board standard = BoardUtil.makeStandardLayout(boardDisplayHeight, 0, 0, 10);
+        Board standard = BoardUtil.makeStandardLayout(boardDisplayHeight, 0, 0, 0);
         GridPane.setConstraints(standard.drawable(), 24, 21);
 
         Board german = BoardUtil.makeGermanDaisy(boardDisplayHeight, 0, 0, 0);

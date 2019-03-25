@@ -30,6 +30,8 @@ public class Board {
     private Player opponent;
     public int blackMovesLeft;
     public int whiteMovesLeft;
+    public boolean GAME_STOPPED = false;
+    public boolean GAME_PAUSED = false;
     private int blackTurnTimeLeft;
     private int whiteTurnTimeLeft;
     private Timer gameTimer;
@@ -261,15 +263,17 @@ public class Board {
             Platform.runLater(new Runnable() {
                 @Override
                 public void run() {
-                    switch (currentPlayer().piece) {
-                        case 'W':
-                            whiteTurnTimeLeft -= 10;
-                            timeUpdatedListener.onTimeUpdated(current, whiteTurnTimeLeft);
-                            break;
-                        case 'B':
-                            blackTurnTimeLeft -= 10;
-                            timeUpdatedListener.onTimeUpdated(current, blackTurnTimeLeft);
-                            break;
+                    if (!GAME_PAUSED) {
+                        switch (currentPlayer().piece) {
+                            case 'W':
+                                whiteTurnTimeLeft -= 10;
+                                timeUpdatedListener.onTimeUpdated(current, whiteTurnTimeLeft);
+                                break;
+                            case 'B':
+                                blackTurnTimeLeft -= 10;
+                                timeUpdatedListener.onTimeUpdated(current, blackTurnTimeLeft);
+                                break;
+                        }
                     }
                 }
             });
