@@ -14,4 +14,6 @@ public class Player {
     public int score() { return score; }
     public int increaseScore() { return ++score; }
     public int getTimeLimit() { return timeLimit; }
+    public int getMoveLimit() {return moveLimit;}
+    
 }
