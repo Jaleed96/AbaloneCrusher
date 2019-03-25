@@ -98,13 +98,13 @@ public class Menu extends Application {
         GridPane.setHalignment(whiteLabel, HPos.RIGHT);
 
         double boardDisplayHeight = 191;
-        Board standard = BoardUtil.makeStandardLayout(boardDisplayHeight);
+        Board standard = BoardUtil.makeStandardLayout(boardDisplayHeight, 0, 0, 0);
         GridPane.setConstraints(standard.drawable(), 24, 21);
 
-        Board german = BoardUtil.makeGermanDaisy(boardDisplayHeight);
+        Board german = BoardUtil.makeGermanDaisy(boardDisplayHeight, 0, 0, 0);
         GridPane.setConstraints(german.drawable(), 25, 21);
 
-        Board belgian = BoardUtil.makeBelgianDaisy(boardDisplayHeight);
+        Board belgian = BoardUtil.makeBelgianDaisy(boardDisplayHeight, 0, 0, 0);
         GridPane.setConstraints(belgian.drawable(), 26, 21);
 
         GridPane.setHalignment(standard.drawable(), HPos.CENTER);
@@ -134,10 +134,12 @@ public class Menu extends Application {
             Config cfg = new Config();
             String errorMsg = "";
             String p1timelimitTxt = tbp1timelimit.getText().trim();
-            if (!p1timelimitTxt.matches("[0-9]+")) {
+            String p2timelimitTxt = tbp2timelimit.getText().trim();
+            if (!p1timelimitTxt.matches("[0-9]+") && !p2timelimitTxt.matches("[0-9]+")) {
                 errorMsg += "Invalid input for time limit.";
             } else {
                 cfg.p1timeLimit = Integer.parseInt(p1timelimitTxt);
+                cfg.p2timeLimit = Integer.parseInt(p2timelimitTxt);
             }
 
             String moveLimitTxt = tbMoveLimit.getText().trim();

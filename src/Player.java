@@ -5,10 +5,13 @@ public class Player {
     private int moveLimit;
     
 
-    Player(byte piece) {
+    Player(byte piece, int moveLimit, int timeLimit) {
         this.piece = piece;
+        this.timeLimit = timeLimit;
+        this.moveLimit = moveLimit;
     }
 
     public int score() { return score; }
     public int increaseScore() { return ++score; }
+    public int getTimeLimit() { return timeLimit; }
 }

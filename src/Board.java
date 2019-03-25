@@ -1,11 +1,10 @@
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class Board {
     public static final byte EMPTY = 'E', WHITE = 'W', BLACK = 'B';
@@ -20,22 +19,42 @@ public class Board {
         void onCurrentPlayerChanged(Player currentPlayer);
     }
 
+    interface TimeUpdatedListener {
+        void onTimeUpdated(Player currentPlayer, int timeLeftForPlayer);
+    }
+
     private byte[][] board;
     private Cell[][] cells;
     private Pane pane;
     private Player current;
     private Player opponent;
+    public int blackMovesLeft;
+    public int whiteMovesLeft;
+    public boolean GAME_STOPPED = false;
+    public boolean GAME_PAUSED = false;
+    private int blackTurnTimeLeft;
+    private int whiteTurnTimeLeft;
+    private Timer gameTimer;
     private ScoreUpdateListener scoreUpdateListener = (player, pushedOff, gameOver) -> {};
     private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> {};
+    private TimeUpdatedListener timeUpdatedListener = (currentPlayer, timeLeftForPlayer) -> {};
 
     private double width;
 
-    Board(byte[][] board, double height) {
+    Board(byte[][] board, double height, int moveLimit, int p1TimeLimit, int p2TimeLimit) {
         this.board = board;
         pane = new Pane();
 
-        current = new Player(Board.BLACK);
-        opponent = new Player(Board.WHITE);
+        current = new Player(Board.BLACK, moveLimit, p1TimeLimit* 1000);
+        opponent = new Player(Board.WHITE, moveLimit, p2TimeLimit * 1000);
+
+        blackMovesLeft = moveLimit;
+        whiteMovesLeft = moveLimit;
+        blackTurnTimeLeft = current.getTimeLimit();
+        whiteTurnTimeLeft = opponent.getTimeLimit();
+
+        gameTimer = new Timer();
+        gameTimer.schedule(new Countdown(), 0, 10);
 
         double width = height / Math.sin(Math.PI / 3);
         this.width = width;
@@ -74,18 +93,6 @@ public class Board {
         }
     }
 
-    public List<Move> inlineLegalMoves(Coordinate from) {
-        List<Move> moves = new ArrayList<>();
-        BoardUtil.Neighbors neighbors = BoardUtil.neighborsOf(from);
-        for (BoardUtil.Neighbor to : neighbors.toArray()) {
-            Move move = new Move(new Push(from, to));
-            if (move.isLegalInline(this)) {
-                moves.add(move);
-            }
-        }
-        return moves;
-    }
-
     private void setupMarbles(byte[][] board) {
         for (int row = 0; row < board.length; ++row) {
             for (int col = 0; col < board[row].length; ++col) {
@@ -117,36 +124,16 @@ public class Board {
     }
 
     private void applyMove(Move move) {
-        Optional<Byte> maybePushedOff = Optional.empty();
+        Optional<Byte> maybePushedOff = move.apply(board);
         Marble pushedOff = null;
         for (Push p : move.pushes()) {
-            maybePushedOff = pushPiece(p);
             pushedOff = visualPushPiece(p);
         }
 
         final Marble pushedOffMarble = pushedOff; // make compiler happy
         maybePushedOff.ifPresent(pushedOffPiece -> {
-            // if the logic is right, pushedOff can never be null here;
-            assert pushedOffMarble != null;
             updateScore(pushedOffPiece, pushedOffMarble);
         });
-    }
-
-    /// Pushes the piece in the board representation only, to update gui use
-    /// visualPushPiece after this
-    /// assumes that the move has been validated beforehand
-    private Optional<Byte> pushPiece(Push p) {
-        BoardUtil.Neighbor next = p.to;
-        byte currentPiece = board[p.from.y][p.from.x];
-        board[p.from.y][p.from.x] = Board.EMPTY;
-        while (next != null && currentPiece != Board.EMPTY) {
-            byte nextPiece = board[next.coordinate.y][next.coordinate.x];
-            board[next.coordinate.y][next.coordinate.x] = currentPiece;
-            next = next.neighbors().fromDirection(next.direction);
-            currentPiece = nextPiece;
-        }
-        /// If the piece has been pushed off the board, return it
-        return next == null && currentPiece != Board.EMPTY? Optional.of(currentPiece) : Optional.empty();
     }
 
     // this function is meant to be used right after pushPiece to update gui and
@@ -178,8 +165,22 @@ public class Board {
         Player t = current;
         current = opponent;
         opponent = t;
+        refreshTurnData();
 
         currentPlayerChangedListener.onCurrentPlayerChanged(current);
+    }
+
+    private void refreshTurnData() {
+        switch (currentPlayer().piece) {
+            case 'W' :
+                blackMovesLeft--;
+                whiteTurnTimeLeft = currentPlayer().getTimeLimit();
+                break;
+            case 'B' :
+                whiteMovesLeft--;
+                blackTurnTimeLeft = currentPlayer().getTimeLimit();
+                break;
+        }
     }
 
     Cell[][] cells() {
@@ -219,5 +220,31 @@ public class Board {
 
     public void setCurrentPlayerChangedListener(CurrentPlayerChangedListener listener) {
         currentPlayerChangedListener = listener;
+    }
+
+    public void setTimeUpdatedListener(TimeUpdatedListener listener) {
+        timeUpdatedListener = listener;
+    }
+
+    private class Countdown extends TimerTask {
+        public void run() {
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    if (!GAME_PAUSED) {
+                        switch (currentPlayer().piece) {
+                            case 'W':
+                                whiteTurnTimeLeft -= 10;
+                                timeUpdatedListener.onTimeUpdated(current, whiteTurnTimeLeft);
+                                break;
+                            case 'B':
+                                blackTurnTimeLeft -= 10;
+                                timeUpdatedListener.onTimeUpdated(current, blackTurnTimeLeft);
+                                break;
+                        }
+                    }
+                }
+            });
+        }
     }
 }

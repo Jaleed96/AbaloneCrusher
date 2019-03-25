@@ -1,4 +1,3 @@
-import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -8,14 +7,12 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
 import java.util.Timer;
-import java.util.TimerTask;
 
 public class Game {
-    public boolean GAME_STOPPED = true;
+    private boolean GAME_STOPPED;
     // USE GAME_PAUSED to check whether game is in session
-    public boolean GAME_PAUSED = false;
+    private boolean GAME_PAUSED;
     private Scene scene;
     private Stage stage;
     private Button newGameBtn, confirmBtn, resetBtn, stopBtn, undoBtn, pauseBtn;
@@ -32,11 +29,8 @@ public class Game {
     private Timer timer;
     private CheckBox toggleCoordOverlay;
     private int timeLimit;
-    private int movesBlack;
-    private int movesWhite;
 
     Game(Config cfg, double w, double h, Scene menuScene, Stage stage) {
-        GAME_STOPPED = false;
         this.stage = stage;
         // BorderPane rootLayout = new BorderPane();
         HBox rootLayout = new HBox();
@@ -45,11 +39,6 @@ public class Game {
         VBox leftPane = new VBox(50);
 
         currentPlayer = new Label("Turn: Black");
-
-        movesBlack = cfg.moveLimit;
-        movesLeftB = new Label("Moves Left (Black): " + cfg.moveLimit);
-        movesWhite = cfg.moveLimit;
-        movesLeftW = new Label("Moves Left (White): " + cfg.moveLimit);
 
         // HBox for white marble scoring
         HBox blackScoreRow = new HBox();
@@ -68,31 +57,16 @@ public class Game {
         stopBtn = new Button("Stop");
         toggleCoordOverlay = new CheckBox("Show coordinates");
         toggleCoordOverlay.setSelected(true);
-        leftPane.getChildren().addAll(movesLeftB, movesLeftW, currentPlayer, blackScoreRow, whiteScoreRow, newGameBtn, resetBtn, stopBtn, toggleCoordOverlay);
+
         // VBOX Board, clock and input field in the center
         VBox centerPane = new VBox(50);
         HBox topRow = new HBox(50);
 
-        // TODO: Export timing functionality into an inner class
-        timeLabel = new Label(Integer.toString(cfg.p1timeLimit) + " s");
-        int timeRes = 10;
-        timeLimit  = cfg.p1timeLimit * 1000;
-        timer = new Timer();
-        timer.schedule(new TimerTask() {
-            public void run() {
-                Platform.runLater(new Runnable() {
-                    public void run() {
-                        if (timeLimit>=0 && !GAME_PAUSED) {
-                            timeLabel.setText(String.format("%d.%03d s", timeLimit / 1000, timeLimit % 1000));
-                            timeLimit -= timeRes;
-                        }
-                    }
-                });
-            }
-        }, 0, timeRes);
+
 
         pauseBtn = new Button("Resume/Pause");
         gameState = new Label();
+        timeLabel = new Label(Integer.toString(cfg.p1timeLimit));
         topRow.getChildren().addAll(timeLabel, pauseBtn, gameState);
 
         HBox bottomRow = new HBox(50);
@@ -106,17 +80,28 @@ public class Game {
         double boardHeight = 500;
         switch (cfg.initialLayout) {
         case Standard:
-            b = BoardUtil.makeStandardLayout(boardHeight);
+            b = BoardUtil.makeStandardLayout(boardHeight, cfg.moveLimit, cfg.p1timeLimit, cfg.p2timeLimit);
             break;
         case GermanDaisy:
-            b = BoardUtil.makeGermanDaisy(boardHeight);
+            b = BoardUtil.makeGermanDaisy(boardHeight, cfg.moveLimit, cfg.p1timeLimit, cfg.p2timeLimit);
             break;
         case BelgianDaisy:
-            b = BoardUtil.makeBelgianDaisy(boardHeight);
+            b = BoardUtil.makeBelgianDaisy(boardHeight, cfg.moveLimit, cfg.p1timeLimit, cfg.p2timeLimit);
             break;
         }
 
         final Board finalB = b;
+        GAME_PAUSED = finalB.GAME_PAUSED;
+        GAME_STOPPED = finalB.GAME_STOPPED;
+
+        finalB.setTimeUpdatedListener((player, timeLeft) -> {
+            timeLabel.setText(String.format("%d.%03d s", timeLeft / 1000, timeLeft % 1000));
+        });
+
+        movesLeftB = new Label("Moves Left (Black): " + finalB.blackMovesLeft);
+        movesLeftW = new Label("Moves Left (White): " + finalB.whiteMovesLeft);
+        leftPane.getChildren().addAll(movesLeftB, movesLeftW, currentPlayer, blackScoreRow, whiteScoreRow, newGameBtn, resetBtn, stopBtn, toggleCoordOverlay);
+
         finalB.setTextCoordVisibility(toggleCoordOverlay.isSelected());
         toggleCoordOverlay.selectedProperty().addListener((observable, wasChecked, isChecked) -> {
             finalB.setTextCoordVisibility(isChecked);
@@ -131,18 +116,16 @@ public class Game {
         });
 
         finalB.setCurrentPlayerChangedListener(player -> {
-            switch (Character.toString((char) player.piece)) {
-            case "W":
-                movesBlack--;
-                movesLeftB.setText("Moves Left (Black): " + Integer.toString(movesBlack));
+            switch (player.piece) {
+            case 'W':
+                movesLeftB.setText("Moves Left (Black): " + Integer.toString(finalB.blackMovesLeft));
                 currentPlayer.setText("Turn: White");
-                timeLimit  = cfg.p1timeLimit * 1000;
+                //timeLimit  = cfg.p1timeLimit * 1000;
                 break;
-            case "B":
-                movesWhite--;
-                movesLeftW.setText("Moves Left (White): " + Integer.toString(movesWhite));
+            case 'B':
+                movesLeftW.setText("Moves Left (White): " + Integer.toString(finalB.whiteMovesLeft));
                 currentPlayer.setText("Turn: Black");
-                timeLimit  = cfg.p1timeLimit * 1000;
+                //timeLimit  = cfg.p1timeLimit * 1000;
                 break;
             }
         });
@@ -212,14 +195,17 @@ public class Game {
         });
 
         stopBtn.setOnAction(e -> {
-            GAME_STOPPED = true;
-            GAME_PAUSED = GAME_STOPPED;
+            finalB.GAME_STOPPED = true;
+            finalB.GAME_PAUSED = finalB.GAME_STOPPED;
+            GAME_STOPPED = finalB.GAME_STOPPED;
+            GAME_PAUSED = finalB.GAME_PAUSED;
             gameState.setText("Game Stopped");
         });
         pauseBtn.setOnAction(e -> {
-            if (!GAME_STOPPED) {
-                GAME_PAUSED = !GAME_PAUSED;
-                if (GAME_PAUSED)
+            if (!finalB.GAME_STOPPED) {
+                finalB.GAME_PAUSED = !finalB.GAME_PAUSED;
+                GAME_PAUSED = finalB.GAME_PAUSED;
+                if (finalB.GAME_PAUSED)
                     gameState.setText("Game Paused");
                 else
                     gameState.setText("");
