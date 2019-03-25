@@ -5,7 +5,7 @@ import java.util.Optional;
 // Generates legal moves for a given game state
 public class MoveGenerator {
 
-    // assumes the given coordinates contain player's pieces and assesses if a side step in the given direction is legal
+    // Assesses if a side step in the given direction is legal
     private static Optional<Move> maybeSideStep(byte[][] board, BoardUtil.Direction side, Coordinate... coords) {
         Push[] pushes = new Push[coords.length];
         for (int i = 0; i < coords.length; ++i) {
@@ -17,6 +17,7 @@ public class MoveGenerator {
         return Optional.of(new Move(pushes));
     }
 
+    // Finds all legal sidesteps for coordinates in the forward direction (only 2 possible)
     private static List<Move> legalForwardSideSteps(byte[][] board, BoardUtil.Direction dir, Coordinate... coords) {
         List<Move> moves = new ArrayList<>();
         maybeSideStep(board, dir.forwardLeft(), coords).ifPresent(moves::add);
@@ -24,10 +25,9 @@ public class MoveGenerator {
         return moves;
     }
 
+    // Collects all the legal moves from a coordinate in a given direction
     private static List<Move> collectFromDirection(byte[][] board, byte playerPiece, byte opponentPiece, Coordinate from, BoardUtil.Direction dir) {
         List<Move> moves = new ArrayList<>();
-        if (board[from.y][from.x] != playerPiece)
-            return moves;
 
         int playerMarbleCnt = 1;
         int opponentMarbleCnt = 0;
@@ -50,19 +50,25 @@ public class MoveGenerator {
                 return moves;
         }
 
-        while (board[next.coordinate.y][next.coordinate.x] == opponentPiece && playerMarbleCnt > opponentMarbleCnt) {
+        boolean canPush;
+        while (board[next.coordinate.y][next.coordinate.x] == opponentPiece) {
             opponentMarbleCnt += 1;
             next = next.neighbors().fromDirection(dir);
-            if (next == null || playerMarbleCnt <= opponentMarbleCnt)
+            canPush = playerMarbleCnt > opponentMarbleCnt;
+            if (next == null || !canPush) {
+                if (canPush)
+                    moves.add(new Move(new Push(from, to)));
                 return moves;
+            }
         }
 
-        if (playerMarbleCnt > opponentMarbleCnt || board[next.coordinate.y][next.coordinate.x] == Board.EMPTY)
+        if (board[next.coordinate.y][next.coordinate.x] == Board.EMPTY)
             moves.add(new Move(new Push(from, to)));
 
         return moves;
     }
 
+    // Collects all the legal moves starting at a given coordinate
     private static List<Move> collectFromCoord(byte[][] board, byte playerPiece, byte opponentPiece, Coordinate from) {
         List<Move> moves = new ArrayList<>();
         BoardUtil.Neighbors neighbors = BoardUtil.neighborsOf(from);
@@ -77,7 +83,9 @@ public class MoveGenerator {
         List<Move> moves = new ArrayList<>();
         for (Coordinate[] row : BoardUtil.COORDINATES) {
             for (Coordinate coord : row)
-                moves.addAll(collectFromCoord(board, playerPiece, opponentPiece, coord));
+                // All the private functions assume that the given coordinates contain the current player's piece
+                if (board[coord.y][coord.x] == playerPiece)
+                    moves.addAll(collectFromCoord(board, playerPiece, opponentPiece, coord));
         }
         return moves;
     }
