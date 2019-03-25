@@ -1,24 +1,31 @@
+import java.util.Arrays;
+
+import org.omg.CORBA.Current;
+
+import javafx.scene.control.Label;
 
 public class Gamestate {
     
-    private Player p1;
-    private Player p2;
+
+    Player currentPlayer;
+    Player current;
+    Player opponent;
+    public byte[][] board;
+    public Label currentTurn;
+    int movesLeftW;
+    int movesLeftB;
     
-    private byte[][] board;
-    private Player currentPlayer;
-    private Player currentOpponent;
-    
-    public Gamestate(Player p1, Player p2, byte[][] board, Player currentPlayer, Player currentOpponent) {
+ 
+    public Gamestate(byte[][] board, Player currentPlayer, Player opponentPlayer, int movesLeftB, int movesLeftW) {
         
-        this.p1 = p1;
-        this.p2 = p2;
-        this.board = board;
-        this.currentPlayer = currentPlayer;
-        this.currentOpponent = currentOpponent;
+        this.board = BoardUtil.deepCopyRepresentation(board); 
+        this.currentPlayer = new Player(currentPlayer.piece, currentPlayer.getMoveLimit(), currentPlayer.getTimeLimit());      
+        this.opponent = new Player(opponentPlayer.piece, opponentPlayer.getMoveLimit(), opponentPlayer.getTimeLimit());      
+        this.movesLeftB = movesLeftB;
+        this.movesLeftW = movesLeftW;
+       
+        
     }
-    
-    
-    
 
 
 }

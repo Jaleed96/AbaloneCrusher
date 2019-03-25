@@ -6,6 +6,12 @@ import javafx.scene.shape.Polygon;
 
 import java.util.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+
 public class Board {
     public static final byte EMPTY = 'E', WHITE = 'W', BLACK = 'B';
     public static final int MAX_SIZE = 9; // vertically and horizontally
@@ -212,6 +218,30 @@ public class Board {
 
     public double getWidth() {
         return this.width;
+    }
+    
+    
+
+    /**
+     * @param board the board to set
+     */
+    public void setBoard(byte[][] board) {
+        this.board = board;
+        setupMarbles(board);
+    }
+
+    /**
+     * @param current the current to set
+     */
+    public void setCurrent(Player current) {
+        this.current = current;
+    }
+
+    /**
+     * @param opponent the opponent to set
+     */
+    public void setOpponent(Player opponent) {
+        this.opponent = opponent;
     }
 
     public void setScoreUpdateListener(ScoreUpdateListener listener) {
