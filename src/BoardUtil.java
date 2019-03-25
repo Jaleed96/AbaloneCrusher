@@ -1,13 +1,31 @@
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class BoardUtil {
 
     /// Cardinal directions
     public enum Direction {
-        NW, W, SW, SE, E, NE
+        NW, W, SW, SE, E, NE;
+
+        private Direction opposite;
+        private Direction forwardLeft;
+        private Direction forwardRight;
+        private int xDelta;
+        private int yDelta;
+
+        public Direction opposite() { return opposite; }
+        public Direction forwardLeft() { return forwardLeft; }
+        public Direction forwardRight() { return forwardRight; }
+
+        static {
+            // forward left/right is if you were travelling in this direction, which direction is on your left/right
+            // xDelta assumes x adjusted for square representation (i.e. translated with _trx)
+            NW.opposite = SE; NW.forwardLeft =  W; NW.forwardRight = NE; NW.xDelta =  0; NW.yDelta = -1;
+             W.opposite = E;   W.forwardLeft = SW;  W.forwardRight = NW;  W.xDelta = -1;  W.yDelta =  0;
+            SW.opposite = NE; SW.forwardLeft = SE; SW.forwardRight =  W; SW.xDelta = -1; SW.yDelta =  1;
+            SE.opposite = NW; SE.forwardLeft =  E; SE.forwardRight = SW; SE.xDelta =  0; SE.yDelta =  1;
+             E.opposite = W;   E.forwardLeft = NE;  E.forwardRight = SE;  E.xDelta =  1;  E.yDelta =  0;
+            NE.opposite = SW; NE.forwardLeft = NW; NE.forwardRight =  E; NE.xDelta =  1; NE.yDelta = -1;
+        }
     }
 
     public static class Neighbor {
@@ -175,6 +193,8 @@ public class BoardUtil {
 
     // translate x coordinate to match a square matrix (board padded on top left and bottom right)
     private static int _trx(int x, int y) { return Math.max(4 - y + x, x); }
+    // translates x back to our system, reversing the _trx operation
+    private static int _rtrx(int x, int y) { return Math.min(y - 4 + x, x); }
 
     // Finds the coordinate between two other coordinates
     // if can't find one (nothing in between, too far apart, not on the same axis), return null
@@ -236,6 +256,19 @@ public class BoardUtil {
         return trxA - trxB + a.y - b.y == 0 & trxA - trxC + a.y - c.y == 0
              | trxA == trxB & trxA == trxC
              | a.y == b.y & a.y == c.y;
+    }
+
+    // Finds coordinate n positions away in the given direction
+    // n == 1 is a neighbor, n == 0 will return the coordinate itself
+    // Return none if the resulting coordinate is out of range
+    public static Coordinate nAway(Coordinate from, int n, Direction dir) {
+        int newY = from.y + dir.yDelta * n;
+        int newX = _rtrx(_trx(from.x, from.y) + dir.xDelta * n, newY);
+
+        if (0 <= newY && newY < COORDINATES.length && 0 <= newX && newX < COORDINATES[newY].length)
+            return COORDINATES[newY][newX];
+
+        return null;
     }
 
     public static String toConformanceCoord(Coordinate coord) {

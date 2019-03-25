@@ -93,18 +93,6 @@ public class Board {
         }
     }
 
-    public List<Move> inlineLegalMoves(Coordinate from) {
-        List<Move> moves = new ArrayList<>();
-        BoardUtil.Neighbors neighbors = BoardUtil.neighborsOf(from);
-        for (BoardUtil.Neighbor to : neighbors.toArray()) {
-            Move move = new Move(new Push(from, to));
-            if (move.isLegalInline(this)) {
-                moves.add(move);
-            }
-        }
-        return moves;
-    }
-
     private void setupMarbles(byte[][] board) {
         for (int row = 0; row < board.length; ++row) {
             for (int col = 0; col < board[row].length; ++col) {

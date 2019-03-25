@@ -15,28 +15,27 @@ public class Move {
         return pushes;
     }
 
-    private static boolean isLegalOneStep(Board context, Push m) {
-        byte[][] repr = context.representation();
-        return repr[m.to.coordinate.y][m.to.coordinate.x] == Board.EMPTY && repr[m.from.y][m.from.x] == context.currentPlayer().piece;
+    private static boolean isLegalOneStep(byte[][] board, byte playerPiece, Push m) {
+        return board[m.to.coordinate.y][m.to.coordinate.x] == Board.EMPTY && board[m.from.y][m.from.x] == playerPiece;
     }
 
-    public static boolean isLegalInline(Board context, Push m) {
-        byte[][] repr = context.representation();
-        if (repr[m.from.y][m.from.x] != context.currentPlayer().piece) {
+    public static boolean isLegalInline(byte[][] board, byte playerPiece, byte opponentPiece, Push m) {
+        if (board[m.from.y][m.from.x] != playerPiece) {
             return false;
         }
+
         int playerMarbleCnt = 1;
         int opponentMarbleCnt = 0;
 
         BoardUtil.Neighbor next = m.to;
-        while (repr[next.coordinate.y][next.coordinate.x] == context.currentPlayer().piece) {
+        while (board[next.coordinate.y][next.coordinate.x] == playerPiece) {
             playerMarbleCnt += 1;
             next = next.neighbors().fromDirection(m.to.direction);
             if (playerMarbleCnt == 4 || next == null)
                 return false;
         }
 
-        while (repr[next.coordinate.y][next.coordinate.x] == context.currentOpponent().piece) {
+        while (board[next.coordinate.y][next.coordinate.x] == opponentPiece) {
             opponentMarbleCnt += 1;
             next = next.neighbors().fromDirection(m.to.direction);
             if (next == null)
@@ -45,24 +44,30 @@ public class Move {
                 return false;
         }
 
-        return repr[next.coordinate.y][next.coordinate.x] == Board.EMPTY;
+        return board[next.coordinate.y][next.coordinate.x] == Board.EMPTY;
     }
 
-    public boolean isLegalInline(Board context) {
+    public boolean hasValidOneSteps(byte[][] board, byte playerPiece) {
+        for (Push m : pushes) {
+            if (!isLegalOneStep(board, playerPiece, m)) // each individual move is legal
+                return false;
+        }
+        return true;
+    }
+
+    public boolean isLegalInline(byte[][] board, byte playerPiece, byte opponentPiece) {
         if (pushes.length != 1)
             return false;
-        return isLegalInline(context, pushes[0]);
+        return isLegalInline(board, playerPiece, opponentPiece, pushes[0]);
     }
 
-    public boolean isLegalSideStep(Board context) {
+    public boolean isLegalSideStep(byte[][] board, byte playerPiece) {
         if (pushes.length == 0 || pushes.length > 3)
             // logic error
             return false;
 
-        for (Push m : pushes) {
-            if (!isLegalOneStep(context, m)) // each individual move is legal
-                return false;
-        }
+        if (!hasValidOneSteps(board, playerPiece))
+            return false;
 
         BoardUtil.Direction stepDirection = pushes[0].to.direction;
         for (int i = 1; i < pushes.length; ++i) {
@@ -78,6 +83,7 @@ public class Move {
     }
 
     public boolean isLegal(Board context) {
-        return isLegalInline(context) || isLegalSideStep(context);
+        return isLegalInline(context.representation(), context.currentPlayer().piece, context.currentOpponent().piece)
+                || isLegalSideStep(context.representation(), context.currentPlayer().piece);
     }
 }
