@@ -91,13 +91,13 @@ public class Game {
         double boardHeight = 500;
         switch (cfg.initialLayout) {
         case Standard:
-            b = BoardUtil.makeStandardLayout(boardHeight, cfg.moveLimit, cfg.p1timeLimit, cfg.p2timeLimit);
+            b = BoardUtil.makeStandardLayout(boardHeight, cfg);
             break;
         case GermanDaisy:
-            b = BoardUtil.makeGermanDaisy(boardHeight, cfg.moveLimit, cfg.p1timeLimit, cfg.p2timeLimit);
+            b = BoardUtil.makeGermanDaisy(boardHeight, cfg);
             break;
         case BelgianDaisy:
-            b = BoardUtil.makeBelgianDaisy(boardHeight, cfg.moveLimit, cfg.p1timeLimit, cfg.p2timeLimit);
+            b = BoardUtil.makeBelgianDaisy(boardHeight, cfg);
             break;
         }
         
