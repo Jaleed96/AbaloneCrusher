@@ -48,11 +48,12 @@ public class TestUtil {
     /**
      * reads the test file and maps test board configuration to TEST_CONFIG
      * sets the current player W or B to a byte
-     * @param i the test file number as a string
+     * @param fileName the test file number as a string
      */
-    public static void readFile(String i) {
+    public static void readInputFile(String fileName) {
+        //fills TEST_CONFIG with all E
         copyEmptyBoard();
-        File file = new File("src/test/Test" + i + ".input");
+        File file = new File("src/test/" + fileName );
         try {
             Scanner scan = new Scanner(file);
             while (scan.hasNext()) {
@@ -107,6 +108,35 @@ public class TestUtil {
             }
             System.out.println("");
         }
+    }
+
+    public static boolean compareBoardConfigs(byte[][] testBoard1, byte[][] testBoard2) {
+        //checks equality of each element in testBoard1 and testBoard2
+        for (int i = 0; i < testBoard1.length; i++) {
+            for (int j = 0; j < testBoard1[i].length; j++) {
+                if (testBoard1[i][j] != testBoard2[i][j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public static String boardConfigToStringRep(byte[][] board) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++){
+            }
+        }
+        return "test";
+    }
+
+    public static void main(String[] args) {
+        Scanner userInput = new Scanner(System.in);
+        System.out.println("Enter an input file name to test Ex: Test1.input");
+        String testFile = userInput.nextLine();
+        readInputFile(testFile);
+        TestUtil.printTestConfigBoard();
     }
 
     public static byte[][] getTestConfigBoard(){
