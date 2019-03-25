@@ -1,15 +1,12 @@
+import java.util.Optional;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
-
-import java.util.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 
 
 public class Board {
@@ -29,6 +26,10 @@ public class Board {
         void onTimeUpdated(Player currentPlayer, int timeLeftForPlayer);
     }
 
+    interface PastGameStateListener {
+        void onPastGameState(Gamestate gamestate, Move move);
+    }
+
     private byte[][] board;
     private Cell[][] cells;
     private Pane pane;
@@ -44,6 +45,8 @@ public class Board {
     private ScoreUpdateListener scoreUpdateListener = (player, pushedOff, gameOver) -> {};
     private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> {};
     private TimeUpdatedListener timeUpdatedListener = (currentPlayer, timeLeftForPlayer) -> {};
+    private PastGameStateListener pastGameStateListener = (gamestate, move) -> {
+    };
 
     private double width;
 
@@ -124,7 +127,9 @@ public class Board {
             }
             throw new Move.IllegalMoveException(erroMsg.toString());
         }
-
+        Gamestate gamestate = new Gamestate(this.representation(), this.currentPlayer(),
+                            this.currentOpponent(), this.blackMovesLeft, this.whiteMovesLeft);
+        pastGameStateListener.onPastGameState(gamestate, move);
         applyMove(move);
         nextTurn();
     }
@@ -219,8 +224,26 @@ public class Board {
     public double getWidth() {
         return this.width;
     }
-    
-    
+
+    public String getMoveCoordinates(Move move) {
+        String moveCoordinates = "";
+        for (Push m : move.pushes()) {
+            moveCoordinates += (String.format(" [%s to %s]", BoardUtil.toConformanceCoord(m.from),
+                    BoardUtil.toConformanceCoord(m.to.coordinate)));
+        }
+
+        return moveCoordinates;
+
+    }
+
+    public double getWhiteTimeLeft() {
+        return (whiteTurnTimeLeft);
+    }
+
+    public double getBlackTimeLeft() {
+        return (blackTurnTimeLeft);
+    }
+
 
     /**
      * @param board the board to set
@@ -252,11 +275,17 @@ public class Board {
         currentPlayerChangedListener = listener;
     }
 
+
     public void setTimeUpdatedListener(TimeUpdatedListener listener) {
         timeUpdatedListener = listener;
     }
 
+    public void setPastGameStateListener(PastGameStateListener listener) {
+        pastGameStateListener = listener;
+    }
+
     private class Countdown extends TimerTask {
+        @Override
         public void run() {
             Platform.runLater(new Runnable() {
                 @Override
