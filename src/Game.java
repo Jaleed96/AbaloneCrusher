@@ -117,7 +117,7 @@ public class Game {
 
 
         finalB.setTimeUpdatedListener((player, timeLeft) -> {
-            timeLabel.setText(Integer.toString(timeLeft));
+            timeLabel.setText(String.format("%d.%03d s", timeLeft / 1000, timeLeft % 1000));
         });
 
         movesLeftB = new Label("Moves Left (Black): " + finalB.blackMovesLeft);

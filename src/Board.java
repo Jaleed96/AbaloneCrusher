@@ -43,8 +43,8 @@ public class Board {
         this.board = board;
         pane = new Pane();
 
-        current = new Player(Board.BLACK, moveLimit, p1TimeLimit);
-        opponent = new Player(Board.WHITE, moveLimit, p2TimeLimit);
+        current = new Player(Board.BLACK, moveLimit, p1TimeLimit* 1000);
+        opponent = new Player(Board.WHITE, moveLimit, p2TimeLimit * 1000);
 
         blackMovesLeft = moveLimit;
         whiteMovesLeft = moveLimit;
@@ -52,7 +52,7 @@ public class Board {
         whiteTurnTimeLeft = opponent.getTimeLimit();
 
         gameTimer = new Timer();
-        gameTimer.schedule(new Countdown(), 0, 1000);
+        gameTimer.schedule(new Countdown(), 0, 10);
 
         double width = height / Math.sin(Math.PI / 3);
         this.width = width;
@@ -263,11 +263,11 @@ public class Board {
                 public void run() {
                     switch (currentPlayer().piece) {
                         case 'W':
-                            whiteTurnTimeLeft--;
+                            whiteTurnTimeLeft -= 10;
                             timeUpdatedListener.onTimeUpdated(current, whiteTurnTimeLeft);
                             break;
                         case 'B':
-                            blackTurnTimeLeft--;
+                            blackTurnTimeLeft -= 10;
                             timeUpdatedListener.onTimeUpdated(current, blackTurnTimeLeft);
                             break;
                     }
