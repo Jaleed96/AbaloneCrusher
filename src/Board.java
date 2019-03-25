@@ -124,36 +124,16 @@ public class Board {
     }
 
     private void applyMove(Move move) {
-        Optional<Byte> maybePushedOff = Optional.empty();
+        Optional<Byte> maybePushedOff = move.apply(board);
         Marble pushedOff = null;
         for (Push p : move.pushes()) {
-            maybePushedOff = pushPiece(p);
             pushedOff = visualPushPiece(p);
         }
 
         final Marble pushedOffMarble = pushedOff; // make compiler happy
         maybePushedOff.ifPresent(pushedOffPiece -> {
-            // if the logic is right, pushedOff can never be null here;
-            assert pushedOffMarble != null;
             updateScore(pushedOffPiece, pushedOffMarble);
         });
-    }
-
-    /// Pushes the piece in the board representation only, to update gui use
-    /// visualPushPiece after this
-    /// assumes that the move has been validated beforehand
-    private Optional<Byte> pushPiece(Push p) {
-        BoardUtil.Neighbor next = p.to;
-        byte currentPiece = board[p.from.y][p.from.x];
-        board[p.from.y][p.from.x] = Board.EMPTY;
-        while (next != null && currentPiece != Board.EMPTY) {
-            byte nextPiece = board[next.coordinate.y][next.coordinate.x];
-            board[next.coordinate.y][next.coordinate.x] = currentPiece;
-            next = next.neighbors().fromDirection(next.direction);
-            currentPiece = nextPiece;
-        }
-        /// If the piece has been pushed off the board, return it
-        return next == null && currentPiece != Board.EMPTY? Optional.of(currentPiece) : Optional.empty();
     }
 
     // this function is meant to be used right after pushPiece to update gui and

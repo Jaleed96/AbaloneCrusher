@@ -1,3 +1,5 @@
+import java.util.Optional;
+
 public class Move {
     private final Push[] pushes;
 
@@ -17,6 +19,30 @@ public class Move {
 
     private static boolean isLegalOneStep(byte[][] board, byte playerPiece, Push m) {
         return board[m.to.coordinate.y][m.to.coordinate.x] == Board.EMPTY && board[m.from.y][m.from.x] == playerPiece;
+    }
+
+    /// Pushes the piece in the board representation only, to update gui use
+    /// visualPushPiece after this
+    /// assumes that the move has been validated beforehand
+    private Optional<Byte> pushPiece(byte[][] board, Push p) {
+        BoardUtil.Neighbor next = p.to;
+        byte currentPiece = board[p.from.y][p.from.x];
+        board[p.from.y][p.from.x] = Board.EMPTY;
+        while (next != null && currentPiece != Board.EMPTY) {
+            byte nextPiece = board[next.coordinate.y][next.coordinate.x];
+            board[next.coordinate.y][next.coordinate.x] = currentPiece;
+            next = next.neighbors().fromDirection(next.direction);
+            currentPiece = nextPiece;
+        }
+        /// If the piece has been pushed off the board, return it
+        return next == null && currentPiece != Board.EMPTY? Optional.of(currentPiece) : Optional.empty();
+    }
+
+    public Optional<Byte> apply(byte[][] board) {
+        Optional<Byte> maybePushedOff = Optional.empty();
+        for (Push p : pushes())
+            maybePushedOff = pushPiece(board, p);
+        return maybePushedOff;
     }
 
     public static boolean isLegalInline(byte[][] board, byte playerPiece, byte opponentPiece, Push m) {
