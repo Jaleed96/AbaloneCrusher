@@ -47,15 +47,15 @@ public class Board {
 
     private double width;
 
-    Board(byte[][] board, double height, int moveLimit, int p1TimeLimit, int p2TimeLimit) {
+    Board(byte[][] board, double height, Config config) {
         this.board = board;
         pane = new Pane();
 
-        current = new Player(Board.BLACK, moveLimit, p1TimeLimit* 1000);
-        opponent = new Player(Board.WHITE, moveLimit, p2TimeLimit * 1000);
+        current = new Player(Board.BLACK, config.moveLimit, config.p1timeLimit* 1000);
+        opponent = new Player(Board.WHITE, config.moveLimit, config.p2timeLimit * 1000);
 
-        blackMovesLeft = moveLimit;
-        whiteMovesLeft = moveLimit;
+        blackMovesLeft = config.moveLimit;
+        whiteMovesLeft = config.moveLimit;
         blackTurnTimeLeft = current.getTimeLimit();
         whiteTurnTimeLeft = opponent.getTimeLimit();
 
