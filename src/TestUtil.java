@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class TestUtil {
@@ -48,11 +49,11 @@ public class TestUtil {
     /**
      * reads the test file and maps test board configuration to TEST_CONFIG
      * sets the current player W or B to a byte
-     * @param i the test file number as a string
+     * @param inputFile the test file number as a string
      */
-    public static void readFile(String i) {
+    public static void readInputFile(String inputFile) {
         copyEmptyBoard();
-        File file = new File("src/test/Test" + i + ".input");
+        File file = new File("src/test/" + inputFile);
         try {
             Scanner scan = new Scanner(file);
             while (scan.hasNext()) {
@@ -107,6 +108,48 @@ public class TestUtil {
             }
             System.out.println("");
         }
+    }
+
+    public static boolean compareBoardConfigs(byte[][] testBoard1, byte[][] testBoard2) {
+        //checks equality of each element in testBoard1 and testBoard2
+        for (int i = 0; i < testBoard1.length; i++) {
+            for (int j = 0; j < testBoard1[i].length; j++) {
+                if (testBoard1[i][j] != testBoard2[i][j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public static String boardConfigToStringRep(byte[][] board) {
+        StringBuilder whites = new StringBuilder();
+        StringBuilder blacks = new StringBuilder();
+        //loop from rows 8 -> 0 for alphabetical ordering
+        for (int i = board.length-1; i >= 0; i--) {
+            for (int j = 0; j < board[i].length; j++){
+                switch(board[i][j]) {
+                    case E:
+                        //skips because board file has no empty representation
+                        break;
+                    case W:
+                        whites.append(BoardUtil.toConformanceCoord(j,i)+"w,");
+                        break;
+                    case B:
+                        blacks.append(BoardUtil.toConformanceCoord(j,i)+"b,");
+                        break;
+                    default:
+                }
+            }
+        }
+        blacks.append(whites.toString());
+        //removes comma at the end
+        return blacks.substring(0,blacks.length()-1);
+    }
+
+    public static void main(String[] args) {
+        TestUtil.readInputFile("Test1.input");
+        TestUtil.boardConfigToStringRep(getTestConfigBoard());
     }
 
     public static byte[][] getTestConfigBoard(){
