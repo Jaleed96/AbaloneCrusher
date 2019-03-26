@@ -67,4 +67,19 @@ public class MoveParser {
 
         throw new Exception("Failed to parse input");
     }
+
+    // Does no validation
+    public static String toText(Move move) {
+        StringBuilder moveText = new StringBuilder();
+        Push[] pushes = move.pushes();
+        moveText.append(BoardUtil.toConformanceCoord(pushes[0].from));
+        if (pushes.length > 1) {
+            moveText.append(RANGE_SEPARATOR);
+            moveText.append(BoardUtil.toConformanceCoord(pushes[pushes.length - 1].from));
+        }
+        moveText.append(FROM_TO_SEPARATOR.toLowerCase());
+        moveText.append(BoardUtil.toConformanceCoord(pushes[0].to.coordinate));
+
+        return moveText.toString();
+    }
 }

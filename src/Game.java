@@ -117,8 +117,8 @@ public class Game {
 
         finalB.setPastGameStateListener((gamestate, move) -> {
             lastGamestate = gamestate;
-            history.setText(history.getText() + "\n" + turn + "." + "(" + currentPlayerHistory.getText() + ")"
-                    + finalB.getMoveCoordinates(move) + "  (" + (finalB.currentPlayer().getTimeLimit()));
+            history.setText(history.getText() + "\n" + turn + ". " + "(" + currentPlayerHistory.getText() + ") "
+                    + MoveParser.toText(move) + " (" + (finalB.currentPlayer().getTimeLimit()) + ")");
         });
 
         finalB.setScoreUpdateListener((player, piece, gameOver) -> {

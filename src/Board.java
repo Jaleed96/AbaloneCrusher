@@ -45,8 +45,7 @@ public class Board {
     private ScoreUpdateListener scoreUpdateListener = (player, pushedOff, gameOver) -> {};
     private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> {};
     private TimeUpdatedListener timeUpdatedListener = (currentPlayer, timeLeftForPlayer) -> {};
-    private PastGameStateListener pastGameStateListener = (gamestate, move) -> {
-    };
+    private PastGameStateListener pastGameStateListener = (gamestate, move) -> {};
 
     private double width;
 
@@ -225,17 +224,6 @@ public class Board {
         return this.width;
     }
 
-    public String getMoveCoordinates(Move move) {
-        String moveCoordinates = "";
-        for (Push m : move.pushes()) {
-            moveCoordinates += (String.format(" [%s to %s]", BoardUtil.toConformanceCoord(m.from),
-                    BoardUtil.toConformanceCoord(m.to.coordinate)));
-        }
-
-        return moveCoordinates;
-
-    }
-
     public double getWhiteTimeLeft() {
         return (whiteTurnTimeLeft);
     }
@@ -243,7 +231,6 @@ public class Board {
     public double getBlackTimeLeft() {
         return (blackTurnTimeLeft);
     }
-
 
     /**
      * @param board the board to set
@@ -274,7 +261,6 @@ public class Board {
     public void setCurrentPlayerChangedListener(CurrentPlayerChangedListener listener) {
         currentPlayerChangedListener = listener;
     }
-
 
     public void setTimeUpdatedListener(TimeUpdatedListener listener) {
         timeUpdatedListener = listener;
