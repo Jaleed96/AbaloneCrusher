@@ -158,10 +158,14 @@ public class TestUtil {
                     System.out.println(files[i].getName());
                     TestUtil.readInputFile(args[0]+files[i].getName());
                     System.out.println("Processing "+files[i].getName());
-                    // Add movegenerator call here to populate the curOutput file
-                    String curOutput = TestUtil.boardConfigToStringRep(getTestConfigBoard());
+                    // Add movegenerator call here for BOARD to populate the curOutput field
+                    String boardConf = TestUtil.boardConfigToStringRep(getTestConfigBoard());
+
+                    // Add movegenerator call here for MOVE to populate the curOutput field
+                    String moveConf = TestUtil.boardConfigToStringRep(getTestConfigBoard());
                     try {
-                        generateBoardFile(args[0]+files[i].getName(), curOutput);
+                        generateBoardFile(args[0]+files[i].getName(), boardConf);
+                        generateMoveFile(args[0]+files[i].getName(), moveConf);
                     } catch(IOException e) {
                         System.out.println(e.getMessage());
                     }
@@ -179,7 +183,17 @@ public class TestUtil {
         } catch(IOException e) {
             System.out.println(e.getMessage());
         }
+    }
 
+    public static void generateMoveFile(String testFileName, String contents) {
+        String newFileName = testFileName.split("\\.")[0];
+        try {
+            FileWriter fout = new FileWriter(newFileName+".move");
+            fout.write(contents);
+            fout.close();
+        } catch(IOException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public static byte[][] getTestConfigBoard(){
