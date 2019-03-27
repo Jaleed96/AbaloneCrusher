@@ -8,7 +8,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 
-
 public class Board {
     public static final byte EMPTY = 'E', WHITE = 'W', BLACK = 'B';
     public static final int MAX_SIZE = 9; // vertically and horizontally
@@ -42,10 +41,14 @@ public class Board {
     private int blackTurnTimeLeft;
     private int whiteTurnTimeLeft;
     private Timer gameTimer;
-    private ScoreUpdateListener scoreUpdateListener = (player, pushedOff, gameOver) -> {};
-    private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> {};
-    private TimeUpdatedListener timeUpdatedListener = (currentPlayer, timeLeftForPlayer) -> {};
-    private PastGameStateListener pastGameStateListener = (gamestate, move) -> {};
+    private ScoreUpdateListener scoreUpdateListener = (player, pushedOff, gameOver) -> {
+    };
+    private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> {
+    };
+    private TimeUpdatedListener timeUpdatedListener = (currentPlayer, timeLeftForPlayer) -> {
+    };
+    private PastGameStateListener pastGameStateListener = (gamestate, move) -> {
+    };
 
     private double width;
 
@@ -53,7 +56,7 @@ public class Board {
         this.board = board;
         pane = new Pane();
 
-        current = new Player(Board.BLACK, config.moveLimit, config.p1timeLimit* 1000);
+        current = new Player(Board.BLACK, config.moveLimit, config.p1timeLimit * 1000);
         opponent = new Player(Board.WHITE, config.moveLimit, config.p2timeLimit * 1000);
 
         blackMovesLeft = config.moveLimit;
@@ -126,8 +129,8 @@ public class Board {
             }
             throw new Move.IllegalMoveException(erroMsg.toString());
         }
-        Gamestate gamestate = new Gamestate(this.representation(), this.currentPlayer(),
-                            this.currentOpponent(), this.blackMovesLeft, this.whiteMovesLeft);
+        Gamestate gamestate = new Gamestate(this.representation(), this.currentPlayer(), this.currentOpponent(),
+                this.blackMovesLeft, this.whiteMovesLeft);
         pastGameStateListener.onPastGameState(gamestate, move);
         applyMove(move);
         nextTurn();
@@ -165,9 +168,11 @@ public class Board {
             currentPlayer().increaseScore();
             scoreUpdateListener.scoreUpdate(currentPlayer(), pushedOffMarble, currentPlayer().score() == SCORE_TO_WIN);
         } else {
-            System.out.println("Board::updateScore - possible logic error. Verify that you meant to increase the opponent's score.");
+            System.out.println(
+                    "Board::updateScore - possible logic error. Verify that you meant to increase the opponent's score.");
             currentOpponent().increaseScore();
-            scoreUpdateListener.scoreUpdate(currentOpponent(), pushedOffMarble, currentOpponent().score() == SCORE_TO_WIN);
+            scoreUpdateListener.scoreUpdate(currentOpponent(), pushedOffMarble,
+                    currentOpponent().score() == SCORE_TO_WIN);
         }
     }
 
@@ -182,14 +187,14 @@ public class Board {
 
     private void refreshTurnData() {
         switch (currentPlayer().piece) {
-            case 'W' :
-                blackMovesLeft--;
-                whiteTurnTimeLeft = currentPlayer().getTimeLimit();
-                break;
-            case 'B' :
-                whiteMovesLeft--;
-                blackTurnTimeLeft = currentPlayer().getTimeLimit();
-                break;
+        case 'W':
+            blackMovesLeft--;
+            whiteTurnTimeLeft = currentPlayer().getTimeLimit();
+            break;
+        case 'B':
+            whiteMovesLeft--;
+            blackTurnTimeLeft = currentPlayer().getTimeLimit();
+            break;
         }
     }
 
@@ -224,6 +229,23 @@ public class Board {
         return this.width;
     }
 
+    public String getMoveCoordinates(Move move) {
+        String moveCoordinates = "";
+        String formattedString[];
+        for (Push m : move.pushes()) {
+            moveCoordinates += (String.format("%s %s ", BoardUtil.toConformanceCoord(m.from),
+                    BoardUtil.toConformanceCoord(m.to.coordinate)));
+        }
+        System.out.println(moveCoordinates);
+        formattedString = moveCoordinates.split(" ");
+        if (formattedString.length > 3) {
+            return String.format("%s-%s to %s", formattedString[formattedString.length - 2], formattedString[0],
+                    formattedString[formattedString.length - 1]);
+        } else {
+            return String.format("%s to %s", formattedString[0], formattedString[1]);
+        }
+    }
+
     public double getWhiteTimeLeft() {
         return (whiteTurnTimeLeft);
     }
@@ -233,7 +255,8 @@ public class Board {
     }
 
     /**
-     * @param board the board to set
+     * @param board
+     *            the board to set
      */
     public void setBoard(byte[][] board) {
         this.board = board;
@@ -241,14 +264,16 @@ public class Board {
     }
 
     /**
-     * @param current the current to set
+     * @param current
+     *            the current to set
      */
     public void setCurrent(Player current) {
         this.current = current;
     }
 
     /**
-     * @param opponent the opponent to set
+     * @param opponent
+     *            the opponent to set
      */
     public void setOpponent(Player opponent) {
         this.opponent = opponent;
@@ -278,14 +303,14 @@ public class Board {
                 public void run() {
                     if (!GAME_PAUSED) {
                         switch (currentPlayer().piece) {
-                            case 'W':
-                                whiteTurnTimeLeft -= 10;
-                                timeUpdatedListener.onTimeUpdated(current, whiteTurnTimeLeft);
-                                break;
-                            case 'B':
-                                blackTurnTimeLeft -= 10;
-                                timeUpdatedListener.onTimeUpdated(current, blackTurnTimeLeft);
-                                break;
+                        case 'W':
+                            whiteTurnTimeLeft -= 10;
+                            timeUpdatedListener.onTimeUpdated(current, whiteTurnTimeLeft);
+                            break;
+                        case 'B':
+                            blackTurnTimeLeft -= 10;
+                            timeUpdatedListener.onTimeUpdated(current, blackTurnTimeLeft);
+                            break;
                         }
                     }
                 }

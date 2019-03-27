@@ -36,6 +36,7 @@ public class Game {
     private int turn = 1;
     private int movesBlack;
     private int movesWhite;
+    private int timeLeftCount;
     Board b;
     private Gamestate lastGamestate;
 
@@ -102,6 +103,7 @@ public class Game {
         GAME_STOPPED = finalB.GAME_STOPPED;
 
         finalB.setTimeUpdatedListener((player, timeLeft) -> {
+            timeLeftCount = timeLeft;
             timeLabel.setText(String.format("%d.%03d s", timeLeft / 1000, timeLeft % 1000));
         });
 
@@ -109,7 +111,6 @@ public class Game {
         movesLeftW = new Label("Moves Left (White): " + finalB.whiteMovesLeft);
         leftPane.getChildren().addAll(movesLeftB, movesLeftW, currentPlayer, blackScoreRow, whiteScoreRow, newGameBtn,
                 resetBtn, stopBtn, toggleCoordOverlay);
-
         finalB.setTextCoordVisibility(toggleCoordOverlay.isSelected());
         toggleCoordOverlay.selectedProperty().addListener((observable, wasChecked, isChecked) -> {
             finalB.setTextCoordVisibility(isChecked);
@@ -117,8 +118,10 @@ public class Game {
 
         finalB.setPastGameStateListener((gamestate, move) -> {
             lastGamestate = gamestate;
-            history.setText(history.getText() + "\n" + turn + ". " + "(" + currentPlayerHistory.getText() + ") "
-                    + MoveParser.toText(move) + " (" + (finalB.currentPlayer().getTimeLimit()) + ")");
+            history.setText(String.format(("%s%s.(%s) %s (%3.2fs)\n"), history.getText(), String.valueOf(turn),
+                    currentPlayerHistory.getText(), finalB.getMoveCoordinates(move),
+                    ((double) (finalB.currentPlayer().getTimeLimit() - timeLeftCount) / 1000)));
+            turn++;
         });
 
         finalB.setScoreUpdateListener((player, piece, gameOver) -> {
@@ -217,19 +220,24 @@ public class Game {
 
         // reverts to the saved state of the board
         undoBtn.setOnAction((e) -> {
-            if (lastGamestate != null) {
-                finalB.setBoard(lastGamestate.board);
-                finalB.setCurrent(lastGamestate.currentPlayer);
-                finalB.setOpponent(lastGamestate.opponent);
-                finalB.blackMovesLeft = lastGamestate.movesLeftB;
-                finalB.whiteMovesLeft = lastGamestate.movesLeftW;
-                movesLeftB.setText("Moves Left (Black): " + Integer.toString(lastGamestate.movesLeftB));
-                movesLeftW.setText("Moves Left (White): " + Integer.toString(lastGamestate.movesLeftW));
-                if (finalB.currentPlayer().piece == 'W') {
-                    currentPlayer.setText("Turn: White");
-                } else {
-                    currentPlayer.setText("Turn: Black");
-                }
+            if (lastGamestate != null && lastGamestate.board != finalB.representation()) {
+            finalB.setBoard(lastGamestate.board);
+            finalB.setCurrent(lastGamestate.currentPlayer);
+            finalB.setOpponent(lastGamestate.opponent);
+            finalB.blackMovesLeft = lastGamestate.movesLeftB;
+            finalB.whiteMovesLeft = lastGamestate.movesLeftW;
+            movesLeftB.setText("Moves Left (Black): " + Integer.toString(lastGamestate.movesLeftB));
+            movesLeftW.setText("Moves Left (White): " + Integer.toString(lastGamestate.movesLeftW));
+            turn--;
+            if (finalB.currentPlayer().piece == 'W') {
+                currentPlayer.setText("Turn: White");
+                currentPlayerHistory.setText("White");
+            } else {
+                currentPlayer.setText("Turn: Black");
+                currentPlayerHistory.setText("Black");
+            }
+                history.setText(
+                        history.getText() + currentPlayerHistory.getText() + " has undone their last move!" + "\n");
             }
         });
 
