@@ -1,5 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -53,7 +55,7 @@ public class TestUtil {
      */
     public static void readInputFile(String inputFile) {
         copyEmptyBoard();
-        File file = new File("src/test/" + inputFile);
+        File file = new File(inputFile);
         try {
             Scanner scan = new Scanner(file);
             while (scan.hasNext()) {
@@ -148,8 +150,36 @@ public class TestUtil {
     }
 
     public static void main(String[] args) {
-        TestUtil.readInputFile("Test1.input");
-        TestUtil.boardConfigToStringRep(getTestConfigBoard());
+        if (args.length!=0) {
+            System.out.println(args[0]);
+            File[] files = new File(args[0]).listFiles();
+            for (int i = 0; i<files.length; i++) {
+                if (files[i].getName().split("\\.")[1].equals("input")) {
+                    System.out.println(files[i].getName());
+                    TestUtil.readInputFile(args[0]+files[i].getName());
+                    System.out.println("Processing "+files[i].getName());
+                    // Add movegenerator call here to populate the curOutput file
+                    String curOutput = TestUtil.boardConfigToStringRep(getTestConfigBoard());
+                    try {
+                        generateBoardFile(args[0]+files[i].getName(), curOutput);
+                    } catch(IOException e) {
+                        System.out.println(e.getMessage());
+                    }
+                }
+            }
+        }
+    }
+
+    public static void generateBoardFile(String testFileName, String contents) throws IOException {
+        String newFileName = testFileName.split("\\.")[0];
+        try {
+            FileWriter fout = new FileWriter(newFileName+".board");
+            fout.write(contents);
+            fout.close();
+        } catch(IOException e) {
+            System.out.println(e.getMessage());
+        }
+
     }
 
     public static byte[][] getTestConfigBoard(){
