@@ -119,7 +119,7 @@ public class Game {
         finalB.setPastGameStateListener((gamestate, move) -> {
             lastGamestate = gamestate;
             history.setText(String.format(("%s%s.(%s) %s (%3.2fs)\n"), history.getText(), String.valueOf(turn),
-                    currentPlayerHistory.getText(), finalB.getMoveCoordinates(move),
+                    currentPlayerHistory.getText(), MoveParser.toText(move),
                     ((double) (finalB.currentPlayer().getTimeLimit() - timeLeftCount) / 1000)));
             turn++;
         });

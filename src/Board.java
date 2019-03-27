@@ -229,23 +229,6 @@ public class Board {
         return this.width;
     }
 
-    public String getMoveCoordinates(Move move) {
-        String moveCoordinates = "";
-        String formattedString[];
-        for (Push m : move.pushes()) {
-            moveCoordinates += (String.format("%s %s ", BoardUtil.toConformanceCoord(m.from),
-                    BoardUtil.toConformanceCoord(m.to.coordinate)));
-        }
-        System.out.println(moveCoordinates);
-        formattedString = moveCoordinates.split(" ");
-        if (formattedString.length > 3) {
-            return String.format("%s-%s to %s", formattedString[formattedString.length - 2], formattedString[0],
-                    formattedString[formattedString.length - 1]);
-        } else {
-            return String.format("%s to %s", formattedString[0], formattedString[1]);
-        }
-    }
-
     public double getWhiteTimeLeft() {
         return (whiteTurnTimeLeft);
     }
