@@ -271,6 +271,14 @@ public class BoardUtil {
         return null;
     }
 
+    // Copies the board representation and applies a move to it
+    // Does not know about the legality of the move
+    public static byte[][] copyThenApply(byte[][] board, Move move) {
+        byte[][] boardCopy = deepCopyRepresentation(board);
+        move.apply(boardCopy);
+        return boardCopy;
+    }
+
     public static String toConformanceCoord(Coordinate coord) {
         return CONFORMANCE_COORDINATES[coord.y][coord.x];
     }
