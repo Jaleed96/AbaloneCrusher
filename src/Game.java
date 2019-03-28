@@ -1,3 +1,5 @@
+import java.util.Timer;
+
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -8,9 +10,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.scene.control.ScrollPane;
-
-import java.util.Timer;
 
 public class Game {
     private boolean GAME_STOPPED;
@@ -25,19 +24,21 @@ public class Game {
     private Label currentPlayer;
     private Label whiteScore;
     private Label timeLabel;
+    private Label currentPlayerHistory = new Label("Black");
     private TextField moveInput;
     private Label gameState;
     private Label movesLeftW;
     private Label movesLeftB;
-    private Label history;
+    public Label history;
     private Timer timer;
     private CheckBox toggleCoordOverlay;
     private int timeLimit;
-
+    private int turn = 1;
     private int movesBlack;
     private int movesWhite;
-    private Gamestate lastGamestate;
+    private int timeLeftCount;
     Board b;
+    private Gamestate lastGamestate;
 
     Game(Config cfg, double w, double h, Scene menuScene, Stage stage) {
         this.stage = stage;
@@ -71,10 +72,6 @@ public class Game {
         VBox centerPane = new VBox(50);
         HBox topRow = new HBox(50);
 
-     
-        
-
-
         pauseBtn = new Button("Resume/Pause");
         gameState = new Label();
         timeLabel = new Label(Integer.toString(cfg.p1timeLimit));
@@ -91,32 +88,40 @@ public class Game {
         double boardHeight = 500;
         switch (cfg.initialLayout) {
         case Standard:
-            b = BoardUtil.makeStandardLayout(boardHeight, cfg.moveLimit, cfg.p1timeLimit, cfg.p2timeLimit);
+            b = BoardUtil.makeStandardLayout(boardHeight, cfg);
             break;
         case GermanDaisy:
-            b = BoardUtil.makeGermanDaisy(boardHeight, cfg.moveLimit, cfg.p1timeLimit, cfg.p2timeLimit);
+            b = BoardUtil.makeGermanDaisy(boardHeight, cfg);
             break;
         case BelgianDaisy:
-            b = BoardUtil.makeBelgianDaisy(boardHeight, cfg.moveLimit, cfg.p1timeLimit, cfg.p2timeLimit);
+            b = BoardUtil.makeBelgianDaisy(boardHeight, cfg);
             break;
         }
-        
-             
+
         final Board finalB = b;
         GAME_PAUSED = finalB.GAME_PAUSED;
         GAME_STOPPED = finalB.GAME_STOPPED;
 
         finalB.setTimeUpdatedListener((player, timeLeft) -> {
+            timeLeftCount = timeLeft;
             timeLabel.setText(String.format("%d.%03d s", timeLeft / 1000, timeLeft % 1000));
         });
 
         movesLeftB = new Label("Moves Left (Black): " + finalB.blackMovesLeft);
         movesLeftW = new Label("Moves Left (White): " + finalB.whiteMovesLeft);
-        leftPane.getChildren().addAll(movesLeftB, movesLeftW, currentPlayer, blackScoreRow, whiteScoreRow, newGameBtn, resetBtn, stopBtn, toggleCoordOverlay);
-
+        leftPane.getChildren().addAll(movesLeftB, movesLeftW, currentPlayer, blackScoreRow, whiteScoreRow, newGameBtn,
+                resetBtn, stopBtn, toggleCoordOverlay);
         finalB.setTextCoordVisibility(toggleCoordOverlay.isSelected());
         toggleCoordOverlay.selectedProperty().addListener((observable, wasChecked, isChecked) -> {
             finalB.setTextCoordVisibility(isChecked);
+        });
+
+        finalB.setPastGameStateListener((gamestate, move) -> {
+            lastGamestate = gamestate;
+            history.setText(String.format(("%s%s.(%s) %s (%3.2fs)\n"), history.getText(), String.valueOf(turn),
+                    currentPlayerHistory.getText(), MoveParser.toText(move),
+                    ((double) (finalB.currentPlayer().getTimeLimit() - timeLeftCount) / 1000)));
+            turn++;
         });
 
         finalB.setScoreUpdateListener((player, piece, gameOver) -> {
@@ -132,12 +137,14 @@ public class Game {
             case 'W':
                 movesLeftB.setText("Moves Left (Black): " + Integer.toString(finalB.blackMovesLeft));
                 currentPlayer.setText("Turn: White");
-                //timeLimit  = cfg.p1timeLimit * 1000;
+                currentPlayerHistory.setText("White");
+                // timeLimit = cfg.p1timeLimit * 1000;
                 break;
             case 'B':
                 movesLeftW.setText("Moves Left (White): " + Integer.toString(finalB.whiteMovesLeft));
                 currentPlayer.setText("Turn: Black");
-                //timeLimit  = cfg.p1timeLimit * 1000;
+                currentPlayerHistory.setText("Black");
+                // timeLimit = cfg.p1timeLimit * 1000;
                 break;
             }
         });
@@ -167,8 +174,7 @@ public class Game {
             if (!GAME_PAUSED) {
                 try {
                     System.out.println("Saving state");
-                    //saves the current state of board before a move is made
-                    lastGamestate = new Gamestate(finalB.representation(), finalB.currentPlayer(), finalB.currentOpponent(), finalB.blackMovesLeft, finalB.whiteMovesLeft);
+                    // saves the current state of board before a move is made
                     finalB.makeMove(move);
                 } catch (Move.IllegalMoveException e) {
                     System.out.println(e.getMessage());
@@ -184,11 +190,11 @@ public class Game {
         // These are dummy boxes
         Label move1 = new Label("1. A3 to B3 (B) - 3.435 s");
         Label move2 = new Label("2. C3-C5 to D4 (W) - 1.214 s");
-        
+        history = new Label();
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setContent(rightPane);
         scrollPane.setPannable(true);
-        rightPane.getChildren().addAll(move1, move2);
+        rightPane.getChildren().addAll(history);
 
         rootLayout.getChildren().addAll(leftPane, centerPane, scrollPane);
         rootLayout.setSpacing((w + h) / 40);
@@ -209,27 +215,31 @@ public class Game {
         });
 
         resetBtn.setOnAction((e) -> {
-           new Game(cfg, Menu.MENU_SCENE_WIDTH, Menu.MENU_SCENE_HEIGHT, menuScene, this.stage);
+            new Game(cfg, Menu.MENU_SCENE_WIDTH, Menu.MENU_SCENE_HEIGHT, menuScene, this.stage);
         });
-        
-        //reverts to the saved state of the board
+
+        // reverts to the saved state of the board
         undoBtn.setOnAction((e) -> {
-            
-            finalB.setBoard(lastGamestate.board);           
+            if (lastGamestate != null && lastGamestate.board != finalB.representation()) {
+            finalB.setBoard(lastGamestate.board);
             finalB.setCurrent(lastGamestate.currentPlayer);
             finalB.setOpponent(lastGamestate.opponent);
             finalB.blackMovesLeft = lastGamestate.movesLeftB;
             finalB.whiteMovesLeft = lastGamestate.movesLeftW;
             movesLeftB.setText("Moves Left (Black): " + Integer.toString(lastGamestate.movesLeftB));
             movesLeftW.setText("Moves Left (White): " + Integer.toString(lastGamestate.movesLeftW));
+            turn--;
             if (finalB.currentPlayer().piece == 'W') {
                 currentPlayer.setText("Turn: White");
+                currentPlayerHistory.setText("White");
             } else {
                 currentPlayer.setText("Turn: Black");
+                currentPlayerHistory.setText("Black");
             }
-            
-                             
-         });
+                history.setText(
+                        history.getText() + currentPlayerHistory.getText() + " has undone their last move!" + "\n");
+            }
+        });
 
         stopBtn.setOnAction(e -> {
             finalB.GAME_STOPPED = true;
@@ -254,5 +264,3 @@ public class Game {
         return this.scene;
     }
 }
-
-

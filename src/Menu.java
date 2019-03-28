@@ -98,13 +98,13 @@ public class Menu extends Application {
         GridPane.setHalignment(whiteLabel, HPos.RIGHT);
 
         double boardDisplayHeight = 191;
-        Board standard = BoardUtil.makeStandardLayout(boardDisplayHeight, 0, 0, 0);
+        Board standard = BoardUtil.makeStandardLayout(boardDisplayHeight, new Config());
         GridPane.setConstraints(standard.drawable(), 24, 21);
 
-        Board german = BoardUtil.makeGermanDaisy(boardDisplayHeight, 0, 0, 0);
+        Board german = BoardUtil.makeGermanDaisy(boardDisplayHeight, new Config());
         GridPane.setConstraints(german.drawable(), 25, 21);
 
-        Board belgian = BoardUtil.makeBelgianDaisy(boardDisplayHeight, 0, 0, 0);
+        Board belgian = BoardUtil.makeBelgianDaisy(boardDisplayHeight, new Config());
         GridPane.setConstraints(belgian.drawable(), 26, 21);
 
         GridPane.setHalignment(standard.drawable(), HPos.CENTER);

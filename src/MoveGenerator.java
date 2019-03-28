@@ -5,10 +5,11 @@ import java.util.Optional;
 // Generates legal moves for a given game state
 public class MoveGenerator {
 
-    // assumes the given coordinates contain player's pieces and assesses if a side step in the given direction is legal
+    // Assesses if a side step in the given direction is legal
     private static Optional<Move> maybeSideStep(byte[][] board, BoardUtil.Direction side, Coordinate... coords) {
         Push[] pushes = new Push[coords.length];
         for (int i = 0; i < coords.length; ++i) {
+            // Check if all the marbles can be moved in the same direction
             BoardUtil.Neighbor neighbor = BoardUtil.neighborsOf(coords[i]).fromDirection(side);
             if (neighbor == null || board[neighbor.coordinate.y][neighbor.coordinate.x] != Board.EMPTY)
                 return Optional.empty();
@@ -17,6 +18,7 @@ public class MoveGenerator {
         return Optional.of(new Move(pushes));
     }
 
+    // Finds all legal sidesteps in the forward left/right directions
     private static List<Move> legalForwardSideSteps(byte[][] board, BoardUtil.Direction dir, Coordinate... coords) {
         List<Move> moves = new ArrayList<>();
         maybeSideStep(board, dir.forwardLeft(), coords).ifPresent(moves::add);
@@ -24,10 +26,9 @@ public class MoveGenerator {
         return moves;
     }
 
+    // Collects all the legal moves from a coordinate in a given direction
     private static List<Move> collectFromDirection(byte[][] board, byte playerPiece, byte opponentPiece, Coordinate from, BoardUtil.Direction dir) {
         List<Move> moves = new ArrayList<>();
-        if (board[from.y][from.x] != playerPiece)
-            return moves;
 
         int playerMarbleCnt = 1;
         int opponentMarbleCnt = 0;
@@ -36,33 +37,48 @@ public class MoveGenerator {
         // Save to destination for making inline moves
         BoardUtil.Neighbor to = BoardUtil.neighborsOf(from).fromDirection(dir);
         BoardUtil.Neighbor next = to;
+        // Count player's pieces
         while (board[next.coordinate.y][next.coordinate.x] == playerPiece) {
             playerMarbleCnt += 1;
+            // At most this will add 4 side steps, because we only inspect 2-marble and 3-marble lines starting from the "from" coordinate
+            // and we only consider the forward left/right directions.
+            // This is enough because every player's marble on the board and every direction gets the same treatment.
             if (playerMarbleCnt == 2) {
                 middle = next.coordinate;
+                // potential 2-marble side steps
                 moves.addAll(legalForwardSideSteps(board, dir, from, middle));
             } else if (playerMarbleCnt == 3) {
+                // potential 3-marble side steps
                 moves.addAll(legalForwardSideSteps(board, dir, from, middle, next.coordinate));
             }
             next = next.neighbors().fromDirection(dir);
-            // illegal inline move
+            // illegal inline move; next==null (off of board) may be changed to legal if we want to self-eliminate
             if (next == null || playerMarbleCnt == 4)
                 return moves;
         }
 
-        while (board[next.coordinate.y][next.coordinate.x] == opponentPiece && playerMarbleCnt > opponentMarbleCnt) {
+        boolean canPush;
+        // Count opponents pieces. At this point we are deciding if (from, to) is a legal inline move.
+        while (board[next.coordinate.y][next.coordinate.x] == opponentPiece) {
             opponentMarbleCnt += 1;
             next = next.neighbors().fromDirection(dir);
-            if (next == null || playerMarbleCnt <= opponentMarbleCnt)
+            canPush = playerMarbleCnt > opponentMarbleCnt;
+            if (next == null || !canPush) {
+                if (canPush)
+                    // Pushing opponent's marbles
+                    moves.add(new Move(new Push(from, to)));
                 return moves;
+            }
         }
 
-        if (playerMarbleCnt > opponentMarbleCnt || board[next.coordinate.y][next.coordinate.x] == Board.EMPTY)
+        // Inline move ending with an empty cell
+        if (board[next.coordinate.y][next.coordinate.x] == Board.EMPTY)
             moves.add(new Move(new Push(from, to)));
 
         return moves;
     }
 
+    // Collects all the legal moves starting at a given coordinate
     private static List<Move> collectFromCoord(byte[][] board, byte playerPiece, byte opponentPiece, Coordinate from) {
         List<Move> moves = new ArrayList<>();
         BoardUtil.Neighbors neighbors = BoardUtil.neighborsOf(from);
@@ -77,7 +93,9 @@ public class MoveGenerator {
         List<Move> moves = new ArrayList<>();
         for (Coordinate[] row : BoardUtil.COORDINATES) {
             for (Coordinate coord : row)
-                moves.addAll(collectFromCoord(board, playerPiece, opponentPiece, coord));
+                // All the private functions assume that the given coordinates contain the current player's piece
+                if (board[coord.y][coord.x] == playerPiece)
+                    moves.addAll(collectFromCoord(board, playerPiece, opponentPiece, coord));
         }
         return moves;
     }

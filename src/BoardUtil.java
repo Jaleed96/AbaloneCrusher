@@ -271,6 +271,14 @@ public class BoardUtil {
         return null;
     }
 
+    // Copies the board representation and applies a move to it
+    // Does not know about the legality of the move
+    public static byte[][] copyThenApply(byte[][] board, Move move) {
+        byte[][] boardCopy = deepCopyRepresentation(board);
+        move.apply(boardCopy);
+        return boardCopy;
+    }
+
     public static String toConformanceCoord(Coordinate coord) {
         return CONFORMANCE_COORDINATES[coord.y][coord.x];
     }
@@ -287,16 +295,16 @@ public class BoardUtil {
         return COORDINATE_NEIGHBORS[coord.y][coord.x];
     }
 
-    public static Board makeStandardLayout(double height, int moveLimit, int p1TimeLimit, int p2TimeLimit) {
-        return new Board(deepCopyRepresentation(STANDARD_LAYOUT), height, moveLimit, p1TimeLimit, p2TimeLimit);
+    public static Board makeStandardLayout(double height, Config config) {
+        return new Board(deepCopyRepresentation(STANDARD_LAYOUT), height, config);
     }
 
-    public static Board makeGermanDaisy(double height, int moveLimit, int p1TimeLimit, int p2TimeLimit) {
-        return new Board(deepCopyRepresentation(GERMAN_DAISY_LAYOUT), height, moveLimit, p1TimeLimit, p2TimeLimit);
+    public static Board makeGermanDaisy(double height, Config config) {
+        return new Board(deepCopyRepresentation(GERMAN_DAISY_LAYOUT), height, config);
     }
 
-    public static Board makeBelgianDaisy(double height, int moveLimit, int p1TimeLimit, int p2TimeLimit) {
-        return new Board(deepCopyRepresentation(BELGIAN_DAISY_LAYOUT), height, moveLimit, p1TimeLimit, p2TimeLimit);
+    public static Board makeBelgianDaisy(double height, Config config) {
+        return new Board(deepCopyRepresentation(BELGIAN_DAISY_LAYOUT), height, config);
     }
 
     public static byte[][] deepCopyRepresentation(byte[][] original) {
