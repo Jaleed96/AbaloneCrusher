@@ -195,7 +195,6 @@ public class Game {
         scrollPane.setContent(rightPane);
         scrollPane.setPannable(true);
         rightPane.getChildren().addAll(history);
-
         rootLayout.getChildren().addAll(leftPane, centerPane, scrollPane);
         rootLayout.setSpacing((w + h) / 40);
         centerPane.setAlignment(Pos.CENTER);
@@ -226,6 +225,7 @@ public class Game {
             finalB.setOpponent(lastGamestate.opponent);
             finalB.blackMovesLeft = lastGamestate.movesLeftB;
             finalB.whiteMovesLeft = lastGamestate.movesLeftW;
+                finalB.setTurnTimeLeft(finalB.currentPlayer());
             movesLeftB.setText("Moves Left (Black): " + Integer.toString(lastGamestate.movesLeftB));
             movesLeftW.setText("Moves Left (White): " + Integer.toString(lastGamestate.movesLeftW));
             turn--;

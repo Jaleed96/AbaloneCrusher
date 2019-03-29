@@ -274,6 +274,15 @@ public class Board {
         timeUpdatedListener = listener;
     }
 
+    public void setTurnTimeLeft(Player player) {
+        if (player.piece == 'W') {
+            whiteTurnTimeLeft = player.getTimeLimit();
+        } else {
+            blackTurnTimeLeft = player.getTimeLimit();
+        }
+
+    }
+
     public void setPastGameStateListener(PastGameStateListener listener) {
         pastGameStateListener = listener;
     }
