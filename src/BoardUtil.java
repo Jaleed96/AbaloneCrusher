@@ -91,7 +91,7 @@ public class BoardUtil {
 
     private static final byte E = Board.EMPTY, W = Board.WHITE, B = Board.BLACK;
 
-    private static final byte[][] STANDARD_LAYOUT = {
+    static final byte[][] STANDARD_LAYOUT = {
                 {W,W,W,W,W},
                {W,W,W,W,W,W},
               {E,E,W,W,W,E,E},
@@ -103,7 +103,7 @@ public class BoardUtil {
                 {B,B,B,B,B}
     };
 
-    private static final byte[][] GERMAN_DAISY_LAYOUT = {
+    static final byte[][] GERMAN_DAISY_LAYOUT = {
                 {E,E,E,E,E},
                {W,W,E,E,B,B},
               {W,W,W,E,B,B,B},
@@ -115,7 +115,7 @@ public class BoardUtil {
                 {E,E,E,E,E}
     };
 
-    private static final byte[][] BELGIAN_DAISY_LAYOUT = {
+    static final byte[][] BELGIAN_DAISY_LAYOUT = {
                 {W,W,E,B,B},
                {W,W,W,B,B,B},
               {E,W,W,E,B,B,E},

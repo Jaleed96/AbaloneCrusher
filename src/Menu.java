@@ -98,18 +98,18 @@ public class Menu extends Application {
         GridPane.setHalignment(whiteLabel, HPos.RIGHT);
 
         double boardDisplayHeight = 191;
-        Board standard = BoardUtil.makeStandardLayout(boardDisplayHeight, new Config());
-        GridPane.setConstraints(standard.drawable(), 24, 21);
+        GuiBoard standard = new GuiBoard(BoardUtil.STANDARD_LAYOUT, boardDisplayHeight);
+        GridPane.setConstraints(standard, 24, 21);
 
-        Board german = BoardUtil.makeGermanDaisy(boardDisplayHeight, new Config());
-        GridPane.setConstraints(german.drawable(), 25, 21);
+        GuiBoard german = new GuiBoard(BoardUtil.GERMAN_DAISY_LAYOUT, boardDisplayHeight);
+        GridPane.setConstraints(german, 25, 21);
 
-        Board belgian = BoardUtil.makeBelgianDaisy(boardDisplayHeight, new Config());
-        GridPane.setConstraints(belgian.drawable(), 26, 21);
+        GuiBoard belgian = new GuiBoard(BoardUtil.BELGIAN_DAISY_LAYOUT, boardDisplayHeight);
+        GridPane.setConstraints(belgian, 26, 21);
 
-        GridPane.setHalignment(standard.drawable(), HPos.CENTER);
-        GridPane.setHalignment(german.drawable(), HPos.CENTER);
-        GridPane.setHalignment(belgian.drawable(), HPos.CENTER);
+        GridPane.setHalignment(standard, HPos.CENTER);
+        GridPane.setHalignment(german, HPos.CENTER);
+        GridPane.setHalignment(belgian, HPos.CENTER);
 
         GridPane.setHalignment(standardRb, HPos.CENTER);
         GridPane.setHalignment(germanRb, HPos.CENTER);
@@ -125,7 +125,7 @@ public class Menu extends Application {
         GridPane.setHalignment(startBtn, HPos.CENTER);
 
 
-        gridpane.getChildren().addAll(title, standard.drawable(), german.drawable(), belgian.drawable(), blackLabel, whiteLabel, humanRb, aiRb, initialLayout, humanRb2,
+        gridpane.getChildren().addAll(title, standard, german, belgian, blackLabel, whiteLabel, humanRb, aiRb, initialLayout, humanRb2,
                 aiRb2, standardRb, germanRb, belgianRb, p1timelimit, p2timelimit, moveLimit, tbp1timelimit, tbp2timelimit, tbMoveLimit, startBtn, error);
 
         Scene scene = new Scene(gridpane, MENU_SCENE_WIDTH, MENU_SCENE_HEIGHT);

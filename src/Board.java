@@ -3,11 +3,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import javafx.application.Platform;
-import javafx.scene.Node;
-import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Polygon;
 
+/** Game logic */
 public class Board {
     public static final byte EMPTY = 'E', WHITE = 'W', BLACK = 'B';
     public static final int MAX_SIZE = 9; // vertically and horizontally
@@ -29,11 +26,10 @@ public class Board {
         void onPastGameState(Gamestate gamestate, Move move);
     }
 
-    private static final int TIME_STEP = 10;
+    private static final int TIME_STEP_MS = 10;
 
     private byte[][] board;
-    private Cell[][] cells;
-    private Pane pane;
+    private GuiBoard gui;
     private Player current;
     private Player opponent;
     public int blackMovesLeft;
@@ -48,11 +44,9 @@ public class Board {
     private TimeUpdatedListener timeUpdatedListener = (currentPlayer, timeLeftForPlayer) -> { };
     private PastGameStateListener pastGameStateListener = (gamestate, move) -> { };
 
-    private double width;
-
     Board(byte[][] board, double height, Config config) {
         this.board = BoardUtil.deepCopyRepresentation(board);
-        pane = new Pane();
+        gui = new GuiBoard(board, height);
 
         current = new Player(Board.BLACK, config.moveLimit, config.blackTimeLimitMs);
         opponent = new Player(Board.WHITE, config.moveLimit, config.whiteTimeLimitMs);
@@ -63,59 +57,7 @@ public class Board {
         whiteTurnTimeLeft = opponent.getTimeLimitMs();
 
         gameTimer = new Timer();
-        gameTimer.schedule(new Countdown(), 0, TIME_STEP);
-
-        double width = height / Math.sin(Math.PI / 3);
-        this.width = width;
-        Polygon background = Hexagon.drawable(width / 2, height / 2, width / 2, 0);
-        background.setFill(Color.DEEPSKYBLUE);
-        pane.getChildren().add(background);
-
-        double yPadding = height / (MAX_SIZE + 5); // somewhat relative to cell height but mostly arbitrary
-        double innerBoardHeight = height - yPadding * 2;
-        double cellHeight = innerBoardHeight / 7; // Counting vertically: cell height * 5 + hex side * 4, where cell
-                                                  // height = 2 * hex side
-        double xPadding = (width - Hexagon.width30Deg(cellHeight / 2) * 9) / 2;
-
-        initCells(board, cellHeight, xPadding, yPadding);
-        setupMarbles(board);
-    }
-
-    private void initCells(byte[][] board, double cellHeight, double xOffset, double yOffset) {
-        cells = new Cell[board.length][];
-        for (int row = 0; row < board.length; ++row) {
-            cells[row] = new Cell[board[row].length];
-        }
-
-        double cellWidth = Hexagon.width30Deg(cellHeight / 2);
-        double verticalHexOffset = Hexagon.verticalOffset30Deg(cellHeight / 2);
-        double xWidthOffset = -(cellHeight - cellWidth) / 2;
-
-        for (int row = 0; row < cells.length; ++row) {
-            for (int col = 0; col < cells[row].length; ++col) {
-                double x = cellWidth * (col + (MAX_SIZE - cells[row].length) / 2.0) + xWidthOffset + xOffset;
-                double y = row * (cellHeight - verticalHexOffset) + yOffset;
-                Cell c = new Cell(cellHeight, x, y, BoardUtil.COORDINATES[row][col]);
-                cells[row][col] = c;
-                pane.getChildren().add(c);
-            }
-        }
-    }
-
-    private void setupMarbles(byte[][] board) {
-        for (int row = 0; row < board.length; ++row) {
-            for (int col = 0; col < board[row].length; ++col) {
-                Cell c = boardCell(col, row);
-                if (board[row][col] == Board.EMPTY)
-                    c.setEmpty();
-                else
-                    c.setMarble(new Marble(board[row][col]));
-            }
-        }
-    }
-
-    private Cell boardCell(int x, int y) {
-        return cells[y][x];
+        gameTimer.schedule(new Countdown(), 0, TIME_STEP_MS);
     }
 
     public void makeMove(Move move) throws Move.IllegalMoveException {
@@ -138,27 +80,13 @@ public class Board {
         Optional<Byte> maybePushedOff = move.apply(board);
         Marble pushedOff = null;
         for (Push p : move.pushes()) {
-            pushedOff = visualPushPiece(p);
+            pushedOff = gui.visualPushPiece(p);
         }
 
         final Marble pushedOffMarble = pushedOff; // make compiler happy
         maybePushedOff.ifPresent(pushedOffPiece -> {
             updateScore(pushedOffPiece, pushedOffMarble);
         });
-    }
-
-    // this function is meant to be used right after pushPiece to update gui and
-    // retrieve the pushedOff marble if there's one
-    private Marble visualPushPiece(Push p) {
-        BoardUtil.Neighbor next = p.to;
-        Marble currentMarble = boardCell(p.from.x, p.from.y).removeMarble();
-        while (next != null && currentMarble != null) {
-            Marble nextMarble = boardCell(next.coordinate.x, next.coordinate.y).removeMarble();
-            boardCell(next.coordinate.x, next.coordinate.y).setMarble(currentMarble);
-            next = next.neighbors().fromDirection(next.direction);
-            currentMarble = nextMarble;
-        }
-        return next == null && currentMarble != null ? currentMarble : null;
     }
 
     private void updateScore(byte pushedOffPiece, Marble pushedOffMarble) {
@@ -196,21 +124,6 @@ public class Board {
         }
     }
 
-    Cell[][] cells() {
-        return cells;
-    }
-
-    public void setTextCoordVisibility(boolean visible) {
-        for (Cell[] row : cells) {
-            for (Cell c : row)
-                c.setTextCoordVisibility(visible);
-        }
-    }
-
-    public Node drawable() {
-        return pane;
-    }
-
     public byte[][] representation() {
         return board;
     }
@@ -221,10 +134,6 @@ public class Board {
 
     public Player currentOpponent() {
         return opponent;
-    }
-
-    public double getWidth() {
-        return this.width;
     }
 
     public double getWhiteTimeLeft() {
@@ -239,7 +148,7 @@ public class Board {
         Gamestate gsCopy = new Gamestate(gamestate);
 
         board = gsCopy.board;
-        setupMarbles(board);
+        gui.setupMarbles(board);
         current = gsCopy.currentPlayer;
         opponent = gsCopy.opponent;
         blackMovesLeft = gsCopy.movesLeftB;
@@ -281,11 +190,11 @@ public class Board {
                     if (!GAME_PAUSED) {
                         switch (currentPlayer().piece) {
                         case WHITE:
-                            whiteTurnTimeLeft -= TIME_STEP;
+                            whiteTurnTimeLeft -= TIME_STEP_MS;
                             timeUpdatedListener.onTimeUpdated(current, whiteTurnTimeLeft);
                             break;
                         case BLACK:
-                            blackTurnTimeLeft -= TIME_STEP;
+                            blackTurnTimeLeft -= TIME_STEP_MS;
                             timeUpdatedListener.onTimeUpdated(current, blackTurnTimeLeft);
                             break;
                         }
@@ -293,5 +202,9 @@ public class Board {
                 }
             });
         }
+    }
+
+    public GuiBoard gui() {
+        return gui;
     }
 }
