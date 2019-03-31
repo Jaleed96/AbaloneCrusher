@@ -26,12 +26,17 @@ public class Minimax {
     }
 
     public static Move searchBestMove(State state) {
+        // TODO iterative deepening
+        return searchBestMove(state, 5);
+    }
+
+    private static Move searchBestMove(State state, int depth) {
         List<Move> moves = MoveGenerator.generate(state.board, state.player, state.opponent);
         Move bestMove = moves.get(0);
         int bestScore = Integer.MIN_VALUE;
         for (Move m : moves) {
             // passing bestScore to make sure that alpha propagates to next level
-            int score = maximize(state, bestScore, Integer.MAX_VALUE, 3);
+            int score = maximize(moveResult(state, m), bestScore, Integer.MAX_VALUE, depth);
             if (score > bestScore) {
                 bestScore = score;
                 bestMove = m;

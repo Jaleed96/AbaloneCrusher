@@ -258,6 +258,16 @@ public class BoardUtil {
              | a.y == b.y & a.y == c.y;
     }
 
+    public static int manhattanDistance(Coordinate a, Coordinate b) {
+        int dx = _trx(a.x, a.y) - _trx(b.x, b.y);
+        int dy = a.y - b.y;
+
+        if (Integer.signum(dx) == Integer.signum(dy))
+            return Math.abs(dx + dy);
+        else
+            return Math.max(Math.abs(dx), Math.abs(dy));
+    }
+
     // Finds coordinate n positions away in the given direction
     // n == 1 is a neighbor, n == 0 will return the coordinate itself
     // Return none if the resulting coordinate is out of range
