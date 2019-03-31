@@ -29,6 +29,8 @@ public class Board {
         void onPastGameState(Gamestate gamestate, Move move);
     }
 
+    private static final int TIME_STEP = 10;
+
     private byte[][] board;
     private Cell[][] cells;
     private Pane pane;
@@ -41,31 +43,27 @@ public class Board {
     private int blackTurnTimeLeft;
     private int whiteTurnTimeLeft;
     private Timer gameTimer;
-    private ScoreUpdateListener scoreUpdateListener = (player, pushedOff, gameOver) -> {
-    };
-    private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> {
-    };
-    private TimeUpdatedListener timeUpdatedListener = (currentPlayer, timeLeftForPlayer) -> {
-    };
-    private PastGameStateListener pastGameStateListener = (gamestate, move) -> {
-    };
+    private ScoreUpdateListener scoreUpdateListener = (player, pushedOff, gameOver) -> { };
+    private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> { };
+    private TimeUpdatedListener timeUpdatedListener = (currentPlayer, timeLeftForPlayer) -> { };
+    private PastGameStateListener pastGameStateListener = (gamestate, move) -> { };
 
     private double width;
 
     Board(byte[][] board, double height, Config config) {
-        this.board = board;
+        this.board = BoardUtil.deepCopyRepresentation(board);
         pane = new Pane();
 
-        current = new Player(Board.BLACK, config.moveLimit, config.p1timeLimit * 1000);
-        opponent = new Player(Board.WHITE, config.moveLimit, config.p2timeLimit * 1000);
+        current = new Player(Board.BLACK, config.moveLimit, config.blackTimeLimitMs);
+        opponent = new Player(Board.WHITE, config.moveLimit, config.whiteTimeLimitMs);
 
         blackMovesLeft = config.moveLimit;
         whiteMovesLeft = config.moveLimit;
-        blackTurnTimeLeft = current.getTimeLimit();
-        whiteTurnTimeLeft = opponent.getTimeLimit();
+        blackTurnTimeLeft = current.getTimeLimitMs();
+        whiteTurnTimeLeft = opponent.getTimeLimitMs();
 
         gameTimer = new Timer();
-        gameTimer.schedule(new Countdown(), 0, 10);
+        gameTimer.schedule(new Countdown(), 0, TIME_STEP);
 
         double width = height / Math.sin(Math.PI / 3);
         this.width = width;
@@ -187,13 +185,13 @@ public class Board {
 
     private void refreshTurnData() {
         switch (currentPlayer().piece) {
-        case 'W':
+        case Board.WHITE:
             blackMovesLeft--;
-            whiteTurnTimeLeft = currentPlayer().getTimeLimit();
+            whiteTurnTimeLeft = currentPlayer().getTimeLimitMs();
             break;
-        case 'B':
+        case Board.BLACK:
             whiteMovesLeft--;
-            blackTurnTimeLeft = currentPlayer().getTimeLimit();
+            blackTurnTimeLeft = currentPlayer().getTimeLimitMs();
             break;
         }
     }
@@ -237,29 +235,16 @@ public class Board {
         return (blackTurnTimeLeft);
     }
 
-    /**
-     * @param board
-     *            the board to set
-     */
-    public void setBoard(byte[][] board) {
-        this.board = board;
+    public void setGamestate(Gamestate gamestate) {
+        Gamestate gsCopy = new Gamestate(gamestate);
+
+        board = gsCopy.board;
         setupMarbles(board);
-    }
-
-    /**
-     * @param current
-     *            the current to set
-     */
-    public void setCurrent(Player current) {
-        this.current = current;
-    }
-
-    /**
-     * @param opponent
-     *            the opponent to set
-     */
-    public void setOpponent(Player opponent) {
-        this.opponent = opponent;
+        current = gsCopy.currentPlayer;
+        opponent = gsCopy.opponent;
+        blackMovesLeft = gsCopy.movesLeftB;
+        whiteMovesLeft = gsCopy.movesLeftW;
+        setTurnTimeLeft(currentPlayer());
     }
 
     public void setScoreUpdateListener(ScoreUpdateListener listener) {
@@ -275,10 +260,10 @@ public class Board {
     }
 
     public void setTurnTimeLeft(Player player) {
-        if (player.piece == 'W') {
-            whiteTurnTimeLeft = player.getTimeLimit();
+        if (player.piece == WHITE) {
+            whiteTurnTimeLeft = player.getTimeLimitMs();
         } else {
-            blackTurnTimeLeft = player.getTimeLimit();
+            blackTurnTimeLeft = player.getTimeLimitMs();
         }
 
     }
@@ -295,12 +280,12 @@ public class Board {
                 public void run() {
                     if (!GAME_PAUSED) {
                         switch (currentPlayer().piece) {
-                        case 'W':
-                            whiteTurnTimeLeft -= 10;
+                        case WHITE:
+                            whiteTurnTimeLeft -= TIME_STEP;
                             timeUpdatedListener.onTimeUpdated(current, whiteTurnTimeLeft);
                             break;
-                        case 'B':
-                            blackTurnTimeLeft -= 10;
+                        case BLACK:
+                            blackTurnTimeLeft -= TIME_STEP;
                             timeUpdatedListener.onTimeUpdated(current, blackTurnTimeLeft);
                             break;
                         }

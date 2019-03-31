@@ -114,13 +114,13 @@ public class Menu extends Application {
         GridPane.setHalignment(standardRb, HPos.CENTER);
         GridPane.setHalignment(germanRb, HPos.CENTER);
         GridPane.setHalignment(belgianRb, HPos.CENTER);
-        
+
         GridPane.setHalignment(tbp1timelimit, HPos.LEFT);
         GridPane.setHalignment(tbp2timelimit, HPos.LEFT);
-        
+
         GridPane.setHalignment(p1timelimit, HPos.RIGHT);
         GridPane.setHalignment(p2timelimit, HPos.RIGHT);
-      
+
 
         GridPane.setHalignment(startBtn, HPos.CENTER);
 
@@ -138,8 +138,8 @@ public class Menu extends Application {
             if (!p1timelimitTxt.matches("[0-9]+") && !p2timelimitTxt.matches("[0-9]+")) {
                 errorMsg += "Invalid input for time limit.";
             } else {
-                cfg.p1timeLimit = Integer.parseInt(p1timelimitTxt);
-                cfg.p2timeLimit = Integer.parseInt(p2timelimitTxt);
+                cfg.blackTimeLimitMs = Integer.parseInt(p1timelimitTxt) * 1000;
+                cfg.whiteTimeLimitMs = Integer.parseInt(p2timelimitTxt) * 1000;
             }
 
             String moveLimitTxt = tbMoveLimit.getText().trim();
@@ -157,8 +157,8 @@ public class Menu extends Application {
             }
 
             cfg.initialLayout = (Config.InitialBoard) gameModeGroup.getSelectedToggle().getUserData();
-            cfg.B_type = (Config.PlayerType) player1SelectionGroup.getSelectedToggle().getUserData();
-            cfg.W_type = (Config.PlayerType) player2SelectionGroup.getSelectedToggle().getUserData();
+            cfg.blackAgent = (Config.PlayerAgent) player1SelectionGroup.getSelectedToggle().getUserData();
+            cfg.whiteAgent = (Config.PlayerAgent) player2SelectionGroup.getSelectedToggle().getUserData();
 
             Game game = new Game(cfg, MENU_SCENE_WIDTH, MENU_SCENE_HEIGHT, scene, primaryStage);
         });

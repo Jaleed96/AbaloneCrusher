@@ -1,5 +1,5 @@
 public class Config {
-    public enum PlayerType {
+    public enum PlayerAgent {
         AI, Human
     }
 
@@ -7,11 +7,11 @@ public class Config {
         Standard, GermanDaisy, BelgianDaisy
     }
 
-    public PlayerType B_type;
-    public PlayerType W_type;
+    public PlayerAgent blackAgent;
+    public PlayerAgent whiteAgent;
 
-    public int p1timeLimit;
-    public int p2timeLimit;
+    public int blackTimeLimitMs;
+    public int whiteTimeLimitMs;
     public int moveLimit;
 
     InitialBoard initialLayout;

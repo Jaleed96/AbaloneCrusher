@@ -296,19 +296,18 @@ public class BoardUtil {
     }
 
     public static Board makeStandardLayout(double height, Config config) {
-        return new Board(deepCopyRepresentation(STANDARD_LAYOUT), height, config);
+        return new Board(STANDARD_LAYOUT, height, config);
     }
 
     public static Board makeGermanDaisy(double height, Config config) {
-        return new Board(deepCopyRepresentation(GERMAN_DAISY_LAYOUT), height, config);
+        return new Board(GERMAN_DAISY_LAYOUT, height, config);
     }
 
     public static Board makeBelgianDaisy(double height, Config config) {
-        return new Board(deepCopyRepresentation(BELGIAN_DAISY_LAYOUT), height, config);
+        return new Board(BELGIAN_DAISY_LAYOUT, height, config);
     }
 
     public static byte[][] deepCopyRepresentation(byte[][] original) {
-
         final byte[][] result = new byte[original.length][];
         for (int i = 0; i < original.length; i++) {
             result[i] = Arrays.copyOf(original[i], original[i].length);
