@@ -146,7 +146,7 @@ public class TestUtil {
             return;
         }
 
-        byte opponent = playersOpponent(test.player);
+        byte opponent = Board.playersOpponent(test.player);
         if (opponent == Board.EMPTY) {
             System.err.println("Invalid player: " + (char) test.player);
             return;
@@ -190,14 +190,6 @@ public class TestUtil {
             fout.write(contents);
         }
         return newFileName;
-    }
-
-    private static byte playersOpponent(byte p) {
-        switch (p) {
-            case Board.WHITE: return Board.BLACK;
-            case Board.BLACK: return Board.WHITE;
-            default: return Board.EMPTY;
-        }
     }
 
     private static boolean isInputFile(File file) {

@@ -204,6 +204,17 @@ public class Board {
         }
     }
 
+    public static byte playersOpponent(byte p) {
+        switch (p) {
+            case Board.WHITE: return Board.BLACK;
+            case Board.BLACK: return Board.WHITE;
+            default: { // This is just to make the compiler happy
+                System.err.println("Board::playersOpponent received byte " + p);
+                return Board.EMPTY;
+            }
+        }
+    }
+
     public GuiBoard gui() {
         return gui;
     }
