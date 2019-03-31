@@ -6,18 +6,18 @@ public class Minimax {
     /** Smaller version of Gamestate class, there's some code duplication here */
     static class State {
         final byte[][] board;
-        final byte player;
-        final byte opponent;
+        byte maximizingPlayer;
+        byte minimizingPlayer;
         int movesLeftB;
         int movesLeftW;
         int scoreB;
         int scoreW;
 
-        State(byte[][] board, byte player, byte opponent, int movesLeftB, int movesLeftW, int scoreB, int scoreW) {
+        State(byte[][] board, byte maximizingPlayer, byte minimizingPlayer, int movesLeftB, int movesLeftW, int scoreB, int scoreW) {
             // TODO reverse move instead of copy every time
             this.board = BoardUtil.deepCopyRepresentation(board);
-            this.player = player;
-            this.opponent = opponent;
+            this.maximizingPlayer = maximizingPlayer;
+            this.minimizingPlayer = minimizingPlayer;
             this.movesLeftB = movesLeftB;
             this.movesLeftW = movesLeftW;
             this.scoreB = scoreB;
@@ -25,35 +25,50 @@ public class Minimax {
         }
     }
 
-    public static Move searchBestMove(State state) {
-        // TODO iterative deepening
-        return searchBestMove(state, 5);
+    /** Scored move helps retrieving the actual move after the maximum value has been calculated */
+    private static class ScoredMove {
+        int val;
+        Move move;
+
+        ScoredMove(int val, Move move) {
+            this.val = val;
+            this.move = move;
+        }
     }
 
-    private static Move searchBestMove(State state, int depth) {
-        List<Move> moves = MoveGenerator.generate(state.board, state.player, state.opponent);
-        Move bestMove = moves.get(0);
-        int bestScore = Integer.MIN_VALUE;
+    public static Move searchBestMove(State state) {
+        // TODO iterative deepening
+        ScoredMove result = topLevelMaximize(state, 3);
+        return result.move;
+    }
+
+    /** Matches moves to their scores */
+    private static ScoredMove topLevelMaximize(State state, int depth) {
+        if (gameOver(state))
+            return new ScoredMove(Heuristic.evaluate(state), null);
+
+        ScoredMove bestMove = new ScoredMove(Integer.MIN_VALUE, null);
+        List<Move> moves = MoveGenerator.generate(state.board, state.maximizingPlayer, state.minimizingPlayer);
         for (Move m : moves) {
-            // passing bestScore to make sure that alpha propagates to next level
-            int score = maximize(moveResult(state, m), bestScore, Integer.MAX_VALUE, depth);
-            if (score > bestScore) {
-                bestScore = score;
-                bestMove = m;
+            int minVal = minimize(moveResult(state, m, state.maximizingPlayer), bestMove.val, Integer.MAX_VALUE, depth - 1);
+            System.out.println(minVal + " " + MoveParser.toText(m));
+            if (minVal > bestMove.val) {
+                bestMove.val = minVal;
+                bestMove.move = m;
             }
         }
+
         return bestMove;
     }
 
-    /** toState is the move that was taken to reach the given state */
     private static int maximize(State state, int alpha, int beta, int depth) {
         if (gameOver(state) || depth == 0)
             return Heuristic.evaluate(state);
 
         int val = Integer.MIN_VALUE;
-        List<Move> moves = MoveGenerator.generate(state.board, state.player, state.opponent);
+        List<Move> moves = MoveGenerator.generate(state.board, state.maximizingPlayer, state.minimizingPlayer);
         for (Move m : moves) {
-            val = Math.max(val, minimize(moveResult(state, m), alpha, beta, depth - 1));
+            val = Math.max(val, minimize(moveResult(state, m, state.maximizingPlayer), alpha, beta, depth - 1));
             if (val >= beta) return val;
             alpha = Math.max(alpha, val);
         }
@@ -66,9 +81,9 @@ public class Minimax {
             return Heuristic.evaluate(state);
 
         int val = Integer.MAX_VALUE;
-        List<Move> moves = MoveGenerator.generate(state.board, state.player, state.opponent);
+        List<Move> moves = MoveGenerator.generate(state.board, state.minimizingPlayer, state.maximizingPlayer);
         for (Move m : moves) {
-            val = Math.min(val, maximize(moveResult(state, m), alpha, beta, depth - 1));
+            val = Math.min(val, maximize(moveResult(state, m, state.minimizingPlayer), alpha, beta, depth - 1));
             if (val <= alpha) return val;
             beta = Math.min(beta, val);
         }
@@ -82,9 +97,8 @@ public class Minimax {
                 || state.scoreW == Board.SCORE_TO_WIN;
     }
 
-    private static State moveResult(State state, Move move) {
-        final State newState = new State(state.board, state.opponent, state.player, state.movesLeftB, state.movesLeftW, state.scoreB, state.scoreW);
-
+    private static State moveResult(State state, Move move, byte movingPlayer) {
+        final State newState = new State(state.board, state.maximizingPlayer, state.minimizingPlayer, state.movesLeftB, state.movesLeftW, state.scoreB, state.scoreW);
         move.apply(newState.board).ifPresent(piece -> {
             if (piece == Board.WHITE)
                 newState.scoreB += 1;
@@ -92,9 +106,9 @@ public class Minimax {
                 newState.scoreW += 1;
         });
 
-        if (state.player == Board.WHITE)
+        if (movingPlayer == Board.WHITE)
             newState.movesLeftW -= 1;
-        else if (state.player == Board.BLACK)
+        else if (movingPlayer == Board.BLACK)
             newState.movesLeftB -= 1;
 
         return newState;
