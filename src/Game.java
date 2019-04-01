@@ -30,6 +30,7 @@ public class Game {
     private Label movesLeftW;
     private Label movesLeftB;
     public Label history;
+    private Label endGameMsg;
     private Timer timer;
     private CheckBox toggleCoordOverlay;
     private int turn = 1;
@@ -103,6 +104,10 @@ public class Game {
         gameBoard.setTimeUpdatedListener((player, timeLeft) -> {
             timeLeftCount = timeLeft;
             timeLabel.setText(String.format("%d.%03d s", timeLeft / 1000, timeLeft % 1000));
+        });
+
+        gameBoard.setGameInSessionListener((winner, winType) -> {
+            gameState.setText((char) winner.piece+" wins"+": "+winType);
         });
 
         movesLeftB = new Label("Moves Left (Black): " + gameBoard.blackMovesLeft);
@@ -182,8 +187,6 @@ public class Game {
 
         // VBOX History box on the right
         VBox rightPane = new VBox(50);
-        // TODO: Replace history box with formalized class that stores board history
-        // These are dummy boxes
         history = new Label();
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setContent(rightPane);
