@@ -65,12 +65,12 @@ public class Board {
     }
 
     private boolean enoughMovesLeft() {
-        if (current.piece == Board.BLACK) {
-            if (blackMovesLeft == 0) {
+        if (opponent.piece == Board.BLACK) {
+            if (whiteMovesLeft < 1) {
                 return false;
             }
-        } else if (current.piece == Board.WHITE) {
-            if (whiteMovesLeft == 0) {
+        } else if (opponent.piece == Board.WHITE) {
+            if (blackMovesLeft < 1) {
                 return false;
             }
         }
@@ -79,10 +79,6 @@ public class Board {
     }
 
     public void makeMove(Move move) throws Move.IllegalMoveException {
-        if (blackMovesLeft == 0 && whiteMovesLeft == 0) {
-
-        }
-
         if (!move.isLegal(this)) {
             StringBuilder erroMsg = new StringBuilder().append("Illegal move:");
             for (Push m : move.pushes()) {
@@ -134,12 +130,20 @@ public class Board {
     private void refreshTurnData() {
         switch (currentPlayer().piece) {
         case Board.WHITE:
-            blackMovesLeft--;
-            curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
+            --blackMovesLeft;
+            if (enoughMovesLeft()) {
+                curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
+            } else {
+                endGameSession();
+            }
             break;
         case Board.BLACK:
-            whiteMovesLeft--;
-            curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
+            --whiteMovesLeft;
+            if (enoughMovesLeft()) {
+                curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
+            } else {
+                endGameSession();
+            }
             break;
         }
     }
@@ -201,6 +205,16 @@ public class Board {
         GAME_STOPPED = true;
         this.winner = winner;
         gameInSessionListener.onGameStatusChange(winner, winType);
+    }
+
+    private void endGameSession() {
+        GAME_STOPPED = true;
+        if (currentPlayer().score()>currentOpponent().score()) {
+            this.winner = currentPlayer();
+        } else if (currentOpponent().score()>currentPlayer().score()) {
+            this.winner = currentOpponent();
+        }
+        gameInSessionListener.onGameStatusChange(this.winner, "Higher score of two");
     }
 
     public Player getWinner() {
