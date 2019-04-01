@@ -1,3 +1,4 @@
+import java.util.Map;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -26,12 +27,17 @@ public class Board {
         void onPastGameState(Gamestate gamestate, Move move);
     }
 
+    interface GameInSessionListener {
+        void onGameStatusChange(Player winner, String winType);
+    }
+
     private static final int TIME_STEP_MS = 10;
 
     private byte[][] board;
     private GuiBoard gui;
     private Player current;
     private Player opponent;
+    private Player winner;
     public int blackMovesLeft;
     public int whiteMovesLeft;
     public boolean GAME_STOPPED = false;
@@ -43,6 +49,7 @@ public class Board {
     private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> { };
     private TimeUpdatedListener timeUpdatedListener = (currentPlayer, timeLeftForPlayer) -> { };
     private PastGameStateListener pastGameStateListener = (gamestate, move) -> { };
+    private GameInSessionListener gameInSessionListener = (winner, winType) -> { };
 
     Board(byte[][] board, double height, Config config) {
         this.board = BoardUtil.deepCopyRepresentation(board);
@@ -92,6 +99,7 @@ public class Board {
     private void updateScore(byte pushedOffPiece, Marble pushedOffMarble) {
         if (currentOpponent().piece == pushedOffPiece) {
             currentPlayer().increaseScore();
+            if (currentPlayer().score() == SCORE_TO_WIN) endGameSession(current, "Pushed 6 marbles off board");
             scoreUpdateListener.scoreUpdate(currentPlayer(), pushedOffMarble, currentPlayer().score() == SCORE_TO_WIN);
         } else {
             System.out.println(
@@ -114,12 +122,22 @@ public class Board {
     private void refreshTurnData() {
         switch (currentPlayer().piece) {
         case Board.WHITE:
-            blackMovesLeft--;
-            whiteTurnTimeLeft = currentPlayer().getTimeLimitMs();
+            if (blackMovesLeft>1) {
+                blackMovesLeft--;
+                whiteTurnTimeLeft = currentPlayer().getTimeLimitMs();
+            } else {
+                blackMovesLeft--;
+                endGameSession(current, "B has 0 moves left");
+            }
             break;
         case Board.BLACK:
-            whiteMovesLeft--;
-            blackTurnTimeLeft = currentPlayer().getTimeLimitMs();
+            if (whiteMovesLeft>1) {
+                whiteMovesLeft--;
+                blackTurnTimeLeft = currentPlayer().getTimeLimitMs();
+            } else {
+                whiteMovesLeft--;
+                endGameSession(current, "W has 0 moves left");
+            }
             break;
         }
     }
@@ -168,13 +186,24 @@ public class Board {
         timeUpdatedListener = listener;
     }
 
+    public void setGameInSessionListener(GameInSessionListener listener) {
+        gameInSessionListener = listener;
+    }
+
+    private void endGameSession(Player winner, String winType) {
+        GAME_STOPPED = true;
+        this.winner = winner;
+        gameInSessionListener.onGameStatusChange(winner, winType);
+    }
+
+    public Player getWinner() { return this.winner; }
+
     public void setTurnTimeLeft(Player player) {
         if (player.piece == WHITE) {
             whiteTurnTimeLeft = player.getTimeLimitMs();
         } else {
             blackTurnTimeLeft = player.getTimeLimitMs();
         }
-
     }
 
     public void setPastGameStateListener(PastGameStateListener listener) {
@@ -187,15 +216,19 @@ public class Board {
             Platform.runLater(new Runnable() {
                 @Override
                 public void run() {
-                    if (!GAME_PAUSED) {
+                    if (!(GAME_PAUSED || GAME_STOPPED)) {
                         switch (currentPlayer().piece) {
                         case WHITE:
-                            whiteTurnTimeLeft -= TIME_STEP_MS;
-                            timeUpdatedListener.onTimeUpdated(current, whiteTurnTimeLeft);
+                            if (whiteTurnTimeLeft>0) {
+                                whiteTurnTimeLeft -= TIME_STEP_MS;
+                                timeUpdatedListener.onTimeUpdated(current, whiteTurnTimeLeft);
+                            } else endGameSession(opponent, "Wins by Timeout");
                             break;
                         case BLACK:
-                            blackTurnTimeLeft -= TIME_STEP_MS;
-                            timeUpdatedListener.onTimeUpdated(current, blackTurnTimeLeft);
+                            if (blackTurnTimeLeft>0) {
+                                blackTurnTimeLeft -= TIME_STEP_MS;
+                                timeUpdatedListener.onTimeUpdated(current, blackTurnTimeLeft);
+                            } else endGameSession(opponent, "Wins by Timeout");
                             break;
                         }
                     }
