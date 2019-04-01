@@ -38,10 +38,10 @@ public class Move {
         return next == null && currentPiece != Board.EMPTY ? Optional.of(currentPiece) : Optional.empty();
     }
 
-    public Optional<Byte> apply(byte[][] board) {
-        Optional<Byte> maybePushedOff = Optional.empty();
-        for (Push p : pushes())
-            maybePushedOff = pushPiece(board, p);
+    public Optional<Byte>[] apply(byte[][] board) {
+        Optional<Byte>[] maybePushedOff = new Optional[pushes().length];
+        for (int i = 0; i < pushes().length; ++i)
+            maybePushedOff[i] = pushPiece(board, pushes()[i]);
         return maybePushedOff;
     }
 
@@ -102,11 +102,11 @@ public class Move {
                         return false;
                 }
         }
-    
-            if (pushes.length == 3)
-                return BoardUtil.onSameAxis(pushes[0].from, pushes[1].from, pushes[2].from)
-                    && BoardUtil.areNeighbors(pushes[0].from, pushes[1].from, pushes[2].from);
-            
+
+        if (pushes.length == 3)
+            return BoardUtil.onSameAxis(pushes[0].from, pushes[1].from, pushes[2].from)
+                && BoardUtil.areNeighbors(pushes[0].from, pushes[1].from, pushes[2].from);
+
         return pushes.length == 1 || BoardUtil.areNeighbors(pushes[0].from, pushes[1].from);
     }
 

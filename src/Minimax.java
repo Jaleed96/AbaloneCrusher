@@ -1,4 +1,5 @@
 import java.util.List;
+import java.util.Optional;
 
 /** Minimax algorithm with alpha-beta pruning */
 public class Minimax {
@@ -102,12 +103,15 @@ public class Minimax {
 
     private static State moveResult(State state, Move move, byte movingPlayer) {
         final State newState = new State(state.board, state.maximizingPlayer, state.minimizingPlayer, state.movesLeftB, state.movesLeftW, state.scoreB, state.scoreW);
-        move.apply(newState.board).ifPresent(piece -> {
-            if (piece == Board.WHITE)
-                newState.scoreB += 1;
-            else if (piece == Board.BLACK)
-                newState.scoreW += 1;
-        });
+        Optional<Byte>[] scoreUpdates = move.apply(newState.board);
+        for (Optional<Byte> maybeScore : scoreUpdates) {
+            maybeScore.ifPresent(piece -> {
+                if (piece == Board.WHITE)
+                    newState.scoreB += 1;
+                else if (piece == Board.BLACK)
+                    newState.scoreW += 1;
+            });
+        }
 
         if (movingPlayer == Board.WHITE)
             newState.movesLeftW -= 1;

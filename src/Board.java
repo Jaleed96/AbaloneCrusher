@@ -1,4 +1,3 @@
-import java.util.Map;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -12,7 +11,7 @@ public class Board {
     public static final int SCORE_TO_WIN = 6;
 
     interface ScoreUpdateListener {
-        void scoreUpdate(Player player, Marble pushedOff, boolean gameOver);
+        void scoreUpdate(Player black, Player white);
     }
 
     interface CurrentPlayerChangedListener {
@@ -44,7 +43,7 @@ public class Board {
     public boolean GAME_PAUSED = false;
     private int curPlayerTurnTimeLeft;
     private Timer gameTimer;
-    private ScoreUpdateListener scoreUpdateListener = (player, pushedOff, gameOver) -> { };
+    private ScoreUpdateListener scoreUpdateListener = (blackPlayer, whitePlayer) -> { };
     private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> { };
     private TimeUpdatedListener timeUpdatedListener = (currentPlayer, timeLeftForPlayer) -> { };
     private PastGameStateListener pastGameStateListener = (gamestate, move) -> { };
@@ -84,30 +83,25 @@ public class Board {
     }
 
     private void applyMove(Move move) {
-        Optional<Byte> maybePushedOff = move.apply(board);
-        Marble pushedOff = null;
+        Optional<Byte>[] maybePushedOff = move.apply(board);
         for (Push p : move.pushes()) {
-            pushedOff = gui.visualPushPiece(p);
+            gui.visualPushPiece(p);
         }
 
-        final Marble pushedOffMarble = pushedOff; // make compiler happy
-        maybePushedOff.ifPresent(pushedOffPiece -> {
-            updateScore(pushedOffPiece, pushedOffMarble);
-        });
+        for (Optional<Byte> maybeScore : maybePushedOff) {
+            maybeScore.ifPresent(this::updateScore);
+        }
     }
 
-    private void updateScore(byte pushedOffPiece, Marble pushedOffMarble) {
+    private void updateScore(byte pushedOffPiece) {
         if (currentOpponent().piece == pushedOffPiece) {
-            currentPlayer().increaseScore();
-            if (currentPlayer().score() == SCORE_TO_WIN) endGameSession(current, "Pushed 6 marbles off board");
-            scoreUpdateListener.scoreUpdate(currentPlayer(), pushedOffMarble, currentPlayer().score() == SCORE_TO_WIN);
+            if (currentPlayer().increaseScore() == SCORE_TO_WIN)
+                endGameSession(current, "Pushed 6 marbles off board");
         } else {
-            System.out.println(
-                    "Board::updateScore - possible logic error. Verify that you meant to increase the opponent's score.");
-            currentOpponent().increaseScore();
-            scoreUpdateListener.scoreUpdate(currentOpponent(), pushedOffMarble,
-                    currentOpponent().score() == SCORE_TO_WIN);
+            if (currentOpponent().increaseScore() == SCORE_TO_WIN)
+                endGameSession(opponent, "Pushed 6 marbles off board");
         }
+        scoreUpdateCallback();
     }
 
     private void nextTurn() {
@@ -168,6 +162,15 @@ public class Board {
         blackMovesLeft = gsCopy.movesLeftB;
         whiteMovesLeft = gsCopy.movesLeftW;
         setTurnTimeLeft(currentPlayer());
+        scoreUpdateCallback();
+    }
+
+    private void scoreUpdateCallback() {
+        if (currentPlayer().piece == BLACK) {
+            scoreUpdateListener.scoreUpdate(currentPlayer(), currentOpponent());
+        } else {
+            scoreUpdateListener.scoreUpdate(currentOpponent(), currentPlayer());
+        }
     }
 
     public void setScoreUpdateListener(ScoreUpdateListener listener) {
