@@ -42,8 +42,7 @@ public class Board {
     public int whiteMovesLeft;
     public boolean GAME_STOPPED = false;
     public boolean GAME_PAUSED = false;
-    private int blackTurnTimeLeft;
-    private int whiteTurnTimeLeft;
+    private int curPlayerTurnTimeLeft;
     private Timer gameTimer;
     private ScoreUpdateListener scoreUpdateListener = (player, pushedOff, gameOver) -> { };
     private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> { };
@@ -60,10 +59,9 @@ public class Board {
 
         blackMovesLeft = config.moveLimit;
         whiteMovesLeft = config.moveLimit;
-        blackTurnTimeLeft = current.getTimeLimitMs();
-        whiteTurnTimeLeft = opponent.getTimeLimitMs();
+        curPlayerTurnTimeLeft = current.getTimeLimitMs();
 
-        gameTimer = new Timer();
+        gameTimer = new Timer(true);
         gameTimer.schedule(new Countdown(), 0, TIME_STEP_MS);
     }
 
@@ -126,7 +124,7 @@ public class Board {
         case Board.WHITE:
             if (blackMovesLeft>1) {
                 blackMovesLeft--;
-                whiteTurnTimeLeft = currentPlayer().getTimeLimitMs();
+                curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
             } else {
                 blackMovesLeft--;
                 endGameSession(current, "B has 0 moves left");
@@ -135,7 +133,7 @@ public class Board {
         case Board.BLACK:
             if (whiteMovesLeft>1) {
                 whiteMovesLeft--;
-                blackTurnTimeLeft = currentPlayer().getTimeLimitMs();
+                curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
             } else {
                 whiteMovesLeft--;
                 endGameSession(current, "W has 0 moves left");
@@ -156,12 +154,8 @@ public class Board {
         return opponent;
     }
 
-    public double getWhiteTimeLeft() {
-        return (whiteTurnTimeLeft);
-    }
-
-    public double getBlackTimeLeft() {
-        return (blackTurnTimeLeft);
+    public double getCurPlayerTurnTimeLeft() {
+        return curPlayerTurnTimeLeft;
     }
 
     public void setGamestate(Gamestate gamestate) {
@@ -201,11 +195,7 @@ public class Board {
     public Player getWinner() { return this.winner; }
 
     public void setTurnTimeLeft(Player player) {
-        if (player.piece == WHITE) {
-            whiteTurnTimeLeft = player.getTimeLimitMs();
-        } else {
-            blackTurnTimeLeft = player.getTimeLimitMs();
-        }
+        curPlayerTurnTimeLeft = player.getTimeLimitMs();
     }
 
     public void setPastGameStateListener(PastGameStateListener listener) {
@@ -219,20 +209,10 @@ public class Board {
                 @Override
                 public void run() {
                     if (!(GAME_PAUSED || GAME_STOPPED)) {
-                        switch (currentPlayer().piece) {
-                        case WHITE:
-                            if (whiteTurnTimeLeft>0) {
-                                whiteTurnTimeLeft -= TIME_STEP_MS;
-                                timeUpdatedListener.onTimeUpdated(current, whiteTurnTimeLeft);
-                            } else endGameSession(opponent, "Wins by Timeout");
-                            break;
-                        case BLACK:
-                            if (blackTurnTimeLeft>0) {
-                                blackTurnTimeLeft -= TIME_STEP_MS;
-                                timeUpdatedListener.onTimeUpdated(current, blackTurnTimeLeft);
-                            } else endGameSession(opponent, "Wins by Timeout");
-                            break;
-                        }
+                        if (curPlayerTurnTimeLeft>0) {
+                            curPlayerTurnTimeLeft -= TIME_STEP_MS;
+                            timeUpdatedListener.onTimeUpdated(current, curPlayerTurnTimeLeft);
+                        } else endGameSession(opponent, "Wins by Timeout");
                     }
                 }
             });
