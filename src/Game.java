@@ -107,7 +107,12 @@ public class Game {
         });
 
         gameBoard.setGameInSessionListener((winner, winType) -> {
-            gameState.setText((char) winner.piece+" wins"+": "+winType);
+            GAME_STOPPED = gameBoard.GAME_STOPPED;
+            if (winner == null) {
+                gameState.setText("Tie: player scores are equal");
+            } else {
+                gameState.setText((char) winner.piece+" wins"+": "+winType);
+            }
         });
 
         movesLeftB = new Label("Moves Left (Black): " + gameBoard.blackMovesLeft);
@@ -148,7 +153,7 @@ public class Game {
         });
 
         confirmBtn.setOnAction(e -> {
-            if (!GAME_PAUSED) {
+            if (!GAME_PAUSED && !GAME_STOPPED) {
                 Move move = null;
                 try {
                     move = MoveParser.parse(moveInput.getText());
@@ -169,7 +174,7 @@ public class Game {
 
         MoveSelection moveSelection = new MoveSelection(gameBoard);
         moveSelection.setOnMoveSelectedListener(move -> {
-            if (!GAME_PAUSED) {
+            if (!GAME_PAUSED && !GAME_STOPPED) {
                 try {
                     System.out.println("Saving state");
                     // saves the current state of board before a move is made
@@ -214,6 +219,7 @@ public class Game {
         // reverts to the saved state of the board
         undoBtn.setOnAction((e) -> {
             if (lastGamestate != null && lastGamestate.board != gameBoard.representation()) {
+                GAME_STOPPED = GAME_PAUSED = false;
                 gameBoard.setGamestate(lastGamestate);
                 movesLeftB.setText("Moves Left (Black): " + Integer.toString(lastGamestate.movesLeftB));
                 movesLeftW.setText("Moves Left (White): " + Integer.toString(lastGamestate.movesLeftW));

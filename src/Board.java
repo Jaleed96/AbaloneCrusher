@@ -65,12 +65,12 @@ public class Board {
     }
 
     private boolean enoughMovesLeft() {
-        if (current.piece == Board.BLACK) {
-            if (blackMovesLeft == 0) {
+        if (opponent.piece == Board.BLACK) {
+            if (whiteMovesLeft < 1) {
                 return false;
             }
-        } else if (current.piece == Board.WHITE) {
-            if (whiteMovesLeft == 0) {
+        } else if (opponent.piece == Board.WHITE) {
+            if (blackMovesLeft < 1) {
                 return false;
             }
         }
@@ -89,14 +89,11 @@ public class Board {
             }
             throw new Move.IllegalMoveException(erroMsg.toString());
         }
-        if (!enoughMovesLeft()) endGameSession();
-        else {
-            Gamestate gamestate = new Gamestate(this.representation(), this.currentPlayer(), this.currentOpponent(),
-                    this.blackMovesLeft, this.whiteMovesLeft);
-            pastGameStateListener.onPastGameState(gamestate, move);
-            applyMove(move);
-            nextTurn();
-        }
+        Gamestate gamestate = new Gamestate(this.representation(), this.currentPlayer(), this.currentOpponent(),
+                this.blackMovesLeft, this.whiteMovesLeft);
+        pastGameStateListener.onPastGameState(gamestate, move);
+        applyMove(move);
+        nextTurn();
     }
 
     private void applyMove(Move move) {
@@ -133,12 +130,20 @@ public class Board {
     private void refreshTurnData() {
         switch (currentPlayer().piece) {
         case Board.WHITE:
-            blackMovesLeft--;
-            curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
+            --blackMovesLeft;
+            if (enoughMovesLeft()) {
+                curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
+            } else {
+                endGameSession();
+            }
             break;
         case Board.BLACK:
-            whiteMovesLeft--;
-            curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
+            --whiteMovesLeft;
+            if (enoughMovesLeft()) {
+                curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
+            } else {
+                endGameSession();
+            }
             break;
         }
     }
@@ -204,7 +209,11 @@ public class Board {
 
     private void endGameSession() {
         GAME_STOPPED = true;
-        this.winner = currentPlayer().score()>currentOpponent().score() ? currentPlayer() : currentOpponent();
+        if (currentPlayer().score()>currentOpponent().score()) {
+            this.winner = currentPlayer();
+        } else if (currentOpponent().score()>currentPlayer().score()) {
+            this.winner = currentOpponent();
+        }
         gameInSessionListener.onGameStatusChange(this.winner, "Higher score of two");
     }
 
