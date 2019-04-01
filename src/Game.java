@@ -32,12 +32,8 @@ public class Game {
     public Label history;
     private Timer timer;
     private CheckBox toggleCoordOverlay;
-    private int timeLimit;
     private int turn = 1;
-    private int movesBlack;
-    private int movesWhite;
     private int timeLeftCount;
-    Board b;
     private Gamestate lastGamestate;
 
     Game(Config cfg, double w, double h, Scene menuScene, Stage stage) {
@@ -74,7 +70,7 @@ public class Game {
 
         pauseBtn = new Button("Resume/Pause");
         gameState = new Label();
-        timeLabel = new Label(Integer.toString(cfg.p1timeLimit));
+        timeLabel = new Label(Integer.toString(cfg.blackTimeLimitMs));
         topRow.getChildren().addAll(timeLabel, pauseBtn, gameState);
 
         HBox bottomRow = new HBox(50);
@@ -84,47 +80,49 @@ public class Game {
         undoBtn = new Button("Undo last move");
         bottomRow.getChildren().addAll(moveInput, confirmBtn, undoBtn);
 
-        b = null;
+        final Board gameBoard;
         double boardHeight = 500;
         switch (cfg.initialLayout) {
-        case Standard:
-            b = BoardUtil.makeStandardLayout(boardHeight, cfg);
-            break;
-        case GermanDaisy:
-            b = BoardUtil.makeGermanDaisy(boardHeight, cfg);
-            break;
-        case BelgianDaisy:
-            b = BoardUtil.makeBelgianDaisy(boardHeight, cfg);
-            break;
+            case Standard:
+                gameBoard = BoardUtil.makeStandardLayout(boardHeight, cfg);
+                break;
+            case GermanDaisy:
+                gameBoard = BoardUtil.makeGermanDaisy(boardHeight, cfg);
+                break;
+            case BelgianDaisy:
+                gameBoard = BoardUtil.makeBelgianDaisy(boardHeight, cfg);
+                break;
+            default:
+                gameBoard = null;
+                break;
         }
 
-        final Board finalB = b;
-        GAME_PAUSED = finalB.GAME_PAUSED;
-        GAME_STOPPED = finalB.GAME_STOPPED;
+        GAME_PAUSED = gameBoard.GAME_PAUSED;
+        GAME_STOPPED = gameBoard.GAME_STOPPED;
 
-        finalB.setTimeUpdatedListener((player, timeLeft) -> {
+        gameBoard.setTimeUpdatedListener((player, timeLeft) -> {
             timeLeftCount = timeLeft;
             timeLabel.setText(String.format("%d.%03d s", timeLeft / 1000, timeLeft % 1000));
         });
 
-        movesLeftB = new Label("Moves Left (Black): " + finalB.blackMovesLeft);
-        movesLeftW = new Label("Moves Left (White): " + finalB.whiteMovesLeft);
+        movesLeftB = new Label("Moves Left (Black): " + gameBoard.blackMovesLeft);
+        movesLeftW = new Label("Moves Left (White): " + gameBoard.whiteMovesLeft);
         leftPane.getChildren().addAll(movesLeftB, movesLeftW, currentPlayer, blackScoreRow, whiteScoreRow, newGameBtn,
                 resetBtn, stopBtn, toggleCoordOverlay);
-        finalB.setTextCoordVisibility(toggleCoordOverlay.isSelected());
+        gameBoard.gui().setTextCoordVisibility(toggleCoordOverlay.isSelected());
         toggleCoordOverlay.selectedProperty().addListener((observable, wasChecked, isChecked) -> {
-            finalB.setTextCoordVisibility(isChecked);
+            gameBoard.gui().setTextCoordVisibility(isChecked);
         });
 
-        finalB.setPastGameStateListener((gamestate, move) -> {
+        gameBoard.setPastGameStateListener((gamestate, move) -> {
             lastGamestate = gamestate;
             history.setText(String.format(("%s%s.(%s) %s (%3.2fs)\n"), history.getText(), String.valueOf(turn),
                     currentPlayerHistory.getText(), MoveParser.toText(move),
-                    ((double) (finalB.currentPlayer().getTimeLimit() - timeLeftCount) / 1000)));
+                    ((double) (gameBoard.currentPlayer().getTimeLimitMs() - timeLeftCount) / 1000)));
             turn++;
         });
 
-        finalB.setScoreUpdateListener((player, piece, gameOver) -> {
+        gameBoard.setScoreUpdateListener((player, piece, gameOver) -> {
             if (player.piece == Board.WHITE) {
                 whiteScore.setText(Integer.toString(player.score()));
             } else {
@@ -132,19 +130,17 @@ public class Game {
             }
         });
 
-        finalB.setCurrentPlayerChangedListener(player -> {
+        gameBoard.setCurrentPlayerChangedListener(player -> {
             switch (player.piece) {
-            case 'W':
-                movesLeftB.setText("Moves Left (Black): " + Integer.toString(finalB.blackMovesLeft));
+            case Board.WHITE:
+                movesLeftB.setText("Moves Left (Black): " + Integer.toString(gameBoard.blackMovesLeft));
                 currentPlayer.setText("Turn: White");
                 currentPlayerHistory.setText("White");
-                // timeLimit = cfg.p1timeLimit * 1000;
                 break;
-            case 'B':
-                movesLeftW.setText("Moves Left (White): " + Integer.toString(finalB.whiteMovesLeft));
+            case Board.BLACK:
+                movesLeftW.setText("Moves Left (White): " + Integer.toString(gameBoard.whiteMovesLeft));
                 currentPlayer.setText("Turn: Black");
                 currentPlayerHistory.setText("Black");
-                // timeLimit = cfg.p1timeLimit * 1000;
                 break;
             }
         });
@@ -161,7 +157,7 @@ public class Game {
                 }
 
                 try {
-                    finalB.makeMove(move);
+                    gameBoard.makeMove(move);
                 } catch (Move.IllegalMoveException ex) {
                     // TODO display in a text field
                     System.out.println(ex.getMessage());
@@ -169,33 +165,30 @@ public class Game {
             }
         });
 
-        MoveSelection moveSelection = new MoveSelection(b);
+        MoveSelection moveSelection = new MoveSelection(gameBoard);
         moveSelection.setOnMoveSelectedListener(move -> {
             if (!GAME_PAUSED) {
                 try {
                     System.out.println("Saving state");
                     // saves the current state of board before a move is made
-                    finalB.makeMove(move);
+                    gameBoard.makeMove(move);
                 } catch (Move.IllegalMoveException e) {
                     System.out.println(e.getMessage());
                 }
             }
         });
 
-        centerPane.getChildren().addAll(topRow, b.drawable(), bottomRow);
+        centerPane.getChildren().addAll(topRow, gameBoard.gui(), bottomRow);
 
         // VBOX History box on the right
         VBox rightPane = new VBox(50);
         // TODO: Replace history box with formalized class that stores board history
         // These are dummy boxes
-        Label move1 = new Label("1. A3 to B3 (B) - 3.435 s");
-        Label move2 = new Label("2. C3-C5 to D4 (W) - 1.214 s");
         history = new Label();
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setContent(rightPane);
         scrollPane.setPannable(true);
         rightPane.getChildren().addAll(history);
-
         rootLayout.getChildren().addAll(leftPane, centerPane, scrollPane);
         rootLayout.setSpacing((w + h) / 40);
         centerPane.setAlignment(Pos.CENTER);
@@ -220,47 +213,38 @@ public class Game {
 
         // reverts to the saved state of the board
         undoBtn.setOnAction((e) -> {
-            if (lastGamestate != null && lastGamestate.board != finalB.representation()) {
-            finalB.setBoard(lastGamestate.board);
-            finalB.setCurrent(lastGamestate.currentPlayer);
-            finalB.setOpponent(lastGamestate.opponent);
-            finalB.blackMovesLeft = lastGamestate.movesLeftB;
-            finalB.whiteMovesLeft = lastGamestate.movesLeftW;
-            movesLeftB.setText("Moves Left (Black): " + Integer.toString(lastGamestate.movesLeftB));
-            movesLeftW.setText("Moves Left (White): " + Integer.toString(lastGamestate.movesLeftW));
-            turn--;
-            if (finalB.currentPlayer().piece == 'W') {
-                currentPlayer.setText("Turn: White");
-                currentPlayerHistory.setText("White");
-            } else {
-                currentPlayer.setText("Turn: Black");
-                currentPlayerHistory.setText("Black");
-            }
-                history.setText(
-                        history.getText() + currentPlayerHistory.getText() + " has undone their last move!" + "\n");
+            if (lastGamestate != null && lastGamestate.board != gameBoard.representation()) {
+                gameBoard.setGamestate(lastGamestate);
+                movesLeftB.setText("Moves Left (Black): " + Integer.toString(lastGamestate.movesLeftB));
+                movesLeftW.setText("Moves Left (White): " + Integer.toString(lastGamestate.movesLeftW));
+                turn--;
+                if (gameBoard.currentPlayer().piece == Board.WHITE) {
+                    currentPlayer.setText("Turn: White");
+                    currentPlayerHistory.setText("White");
+                } else {
+                    currentPlayer.setText("Turn: Black");
+                    currentPlayerHistory.setText("Black");
+                }
+                history.setText(history.getText() + currentPlayerHistory.getText() + " has undone their last move!" + "\n");
             }
         });
 
         stopBtn.setOnAction(e -> {
-            finalB.GAME_STOPPED = true;
-            finalB.GAME_PAUSED = finalB.GAME_STOPPED;
-            GAME_STOPPED = finalB.GAME_STOPPED;
-            GAME_PAUSED = finalB.GAME_PAUSED;
+            gameBoard.GAME_STOPPED = true;
+            gameBoard.GAME_PAUSED = gameBoard.GAME_STOPPED;
+            GAME_STOPPED = gameBoard.GAME_STOPPED;
+            GAME_PAUSED = gameBoard.GAME_PAUSED;
             gameState.setText("Game Stopped");
         });
         pauseBtn.setOnAction(e -> {
-            if (!finalB.GAME_STOPPED) {
-                finalB.GAME_PAUSED = !finalB.GAME_PAUSED;
-                GAME_PAUSED = finalB.GAME_PAUSED;
-                if (finalB.GAME_PAUSED)
+            if (!gameBoard.GAME_STOPPED) {
+                gameBoard.GAME_PAUSED = !gameBoard.GAME_PAUSED;
+                GAME_PAUSED = gameBoard.GAME_PAUSED;
+                if (gameBoard.GAME_PAUSED)
                     gameState.setText("Game Paused");
                 else
                     gameState.setText("");
             }
         });
-    }
-
-    public Scene getScene() {
-        return this.scene;
     }
 }

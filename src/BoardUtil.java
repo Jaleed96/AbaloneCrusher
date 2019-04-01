@@ -91,7 +91,7 @@ public class BoardUtil {
 
     private static final byte E = Board.EMPTY, W = Board.WHITE, B = Board.BLACK;
 
-    private static final byte[][] STANDARD_LAYOUT = {
+    static final byte[][] STANDARD_LAYOUT = {
                 {W,W,W,W,W},
                {W,W,W,W,W,W},
               {E,E,W,W,W,E,E},
@@ -103,7 +103,7 @@ public class BoardUtil {
                 {B,B,B,B,B}
     };
 
-    private static final byte[][] GERMAN_DAISY_LAYOUT = {
+    static final byte[][] GERMAN_DAISY_LAYOUT = {
                 {E,E,E,E,E},
                {W,W,E,E,B,B},
               {W,W,W,E,B,B,B},
@@ -115,7 +115,7 @@ public class BoardUtil {
                 {E,E,E,E,E}
     };
 
-    private static final byte[][] BELGIAN_DAISY_LAYOUT = {
+    static final byte[][] BELGIAN_DAISY_LAYOUT = {
                 {W,W,E,B,B},
                {W,W,W,B,B,B},
               {E,W,W,E,B,B,E},
@@ -258,6 +258,16 @@ public class BoardUtil {
              | a.y == b.y & a.y == c.y;
     }
 
+    public static int manhattanDistance(Coordinate a, Coordinate b) {
+        int dx = _trx(a.x, a.y) - _trx(b.x, b.y);
+        int dy = a.y - b.y;
+
+        if (Integer.signum(dx) == Integer.signum(dy))
+            return Math.abs(dx + dy);
+        else
+            return Math.max(Math.abs(dx), Math.abs(dy));
+    }
+
     // Finds coordinate n positions away in the given direction
     // n == 1 is a neighbor, n == 0 will return the coordinate itself
     // Return none if the resulting coordinate is out of range
@@ -296,19 +306,18 @@ public class BoardUtil {
     }
 
     public static Board makeStandardLayout(double height, Config config) {
-        return new Board(deepCopyRepresentation(STANDARD_LAYOUT), height, config);
+        return new Board(STANDARD_LAYOUT, height, config);
     }
 
     public static Board makeGermanDaisy(double height, Config config) {
-        return new Board(deepCopyRepresentation(GERMAN_DAISY_LAYOUT), height, config);
+        return new Board(GERMAN_DAISY_LAYOUT, height, config);
     }
 
     public static Board makeBelgianDaisy(double height, Config config) {
-        return new Board(deepCopyRepresentation(BELGIAN_DAISY_LAYOUT), height, config);
+        return new Board(BELGIAN_DAISY_LAYOUT, height, config);
     }
 
     public static byte[][] deepCopyRepresentation(byte[][] original) {
-
         final byte[][] result = new byte[original.length][];
         for (int i = 0; i < original.length; i++) {
             result[i] = Arrays.copyOf(original[i], original[i].length);

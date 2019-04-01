@@ -19,7 +19,7 @@ public class MoveSelection {
 
     MoveSelection(Board context) {
         this.context = context;
-        cells = context.cells();
+        cells = context.gui().cells();
         initSelectListeners(cells);
     }
 
