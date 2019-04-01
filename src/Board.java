@@ -79,10 +79,6 @@ public class Board {
     }
 
     public void makeMove(Move move) throws Move.IllegalMoveException {
-        if (blackMovesLeft == 0 && whiteMovesLeft == 0) {
-
-        }
-
         if (!move.isLegal(this)) {
             StringBuilder erroMsg = new StringBuilder().append("Illegal move:");
             for (Push m : move.pushes()) {
@@ -93,11 +89,14 @@ public class Board {
             }
             throw new Move.IllegalMoveException(erroMsg.toString());
         }
-        Gamestate gamestate = new Gamestate(this.representation(), this.currentPlayer(), this.currentOpponent(),
-                this.blackMovesLeft, this.whiteMovesLeft);
-        pastGameStateListener.onPastGameState(gamestate, move);
-        applyMove(move);
-        nextTurn();
+        if (!enoughMovesLeft()) endGameSession();
+        else {
+            Gamestate gamestate = new Gamestate(this.representation(), this.currentPlayer(), this.currentOpponent(),
+                    this.blackMovesLeft, this.whiteMovesLeft);
+            pastGameStateListener.onPastGameState(gamestate, move);
+            applyMove(move);
+            nextTurn();
+        }
     }
 
     private void applyMove(Move move) {
@@ -201,6 +200,12 @@ public class Board {
         GAME_STOPPED = true;
         this.winner = winner;
         gameInSessionListener.onGameStatusChange(winner, winType);
+    }
+
+    private void endGameSession() {
+        GAME_STOPPED = true;
+        this.winner = currentPlayer().score()>currentOpponent().score() ? currentPlayer() : currentOpponent();
+        gameInSessionListener.onGameStatusChange(this.winner, "Higher score of two");
     }
 
     public Player getWinner() {
