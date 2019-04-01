@@ -127,9 +127,13 @@ public class Game {
             turn++;
         });
 
-        gameBoard.setScoreUpdateListener((blackPlayer, whitePlayer) -> {
-            whiteScore.setText(Integer.toString(whitePlayer.score()));
-            blackScore.setText(Integer.toString(blackPlayer.score()));
+        gameBoard.setScoreUpdateListener((player, piece, gameOver) -> {
+            if (player.piece == Board.WHITE) {
+                whiteScore.setText(Integer.toString(player.score()));
+
+            } else {
+                blackScore.setText(Integer.toString(player.score()));
+            }
         });
 
         gameBoard.setCurrentPlayerChangedListener(player -> {

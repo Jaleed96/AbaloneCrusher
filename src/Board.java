@@ -64,7 +64,25 @@ public class Board {
         gameTimer.schedule(new Countdown(), 0, TIME_STEP_MS);
     }
 
+    private boolean enoughMovesLeft() {
+        if (current.piece == Board.BLACK) {
+            if (blackMovesLeft == 0) {
+                return false;
+            }
+        } else if (current.piece == Board.WHITE) {
+            if (whiteMovesLeft == 0) {
+                return false;
+            }
+        }
+        return true;
+
+    }
+
     public void makeMove(Move move) throws Move.IllegalMoveException {
+        if (blackMovesLeft == 0 && whiteMovesLeft == 0) {
+
+        }
+
         if (!move.isLegal(this)) {
             StringBuilder erroMsg = new StringBuilder().append("Illegal move:");
             for (Push m : move.pushes()) {
@@ -95,8 +113,10 @@ public class Board {
 
     private void updateScore(byte pushedOffPiece) {
         if (currentOpponent().piece == pushedOffPiece) {
-            if (currentPlayer().increaseScore() == SCORE_TO_WIN)
+            currentPlayer().increaseScore();
+            if (currentPlayer().score() == SCORE_TO_WIN)
                 endGameSession(current, "Pushed 6 marbles off board");
+            scoreUpdateListener.scoreUpdate(currentPlayer(), pushedOffMarble, currentPlayer().score() == SCORE_TO_WIN);
         } else {
             if (currentOpponent().increaseScore() == SCORE_TO_WIN)
                 endGameSession(opponent, "Pushed 6 marbles off board");
@@ -116,22 +136,12 @@ public class Board {
     private void refreshTurnData() {
         switch (currentPlayer().piece) {
         case Board.WHITE:
-            if (blackMovesLeft>1) {
-                blackMovesLeft--;
-                curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
-            } else {
-                blackMovesLeft--;
-                endGameSession(current, "B has 0 moves left");
-            }
+            blackMovesLeft--;
+            curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
             break;
         case Board.BLACK:
-            if (whiteMovesLeft>1) {
-                whiteMovesLeft--;
-                curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
-            } else {
-                whiteMovesLeft--;
-                endGameSession(current, "W has 0 moves left");
-            }
+            whiteMovesLeft--;
+            curPlayerTurnTimeLeft = currentPlayer().getTimeLimitMs();
             break;
         }
     }
@@ -195,7 +205,9 @@ public class Board {
         gameInSessionListener.onGameStatusChange(winner, winType);
     }
 
-    public Player getWinner() { return this.winner; }
+    public Player getWinner() {
+        return this.winner;
+    }
 
     public void setTurnTimeLeft(Player player) {
         curPlayerTurnTimeLeft = player.getTimeLimitMs();
@@ -212,10 +224,11 @@ public class Board {
                 @Override
                 public void run() {
                     if (!(GAME_PAUSED || GAME_STOPPED)) {
-                        if (curPlayerTurnTimeLeft>0) {
+                        if (curPlayerTurnTimeLeft > 0) {
                             curPlayerTurnTimeLeft -= TIME_STEP_MS;
                             timeUpdatedListener.onTimeUpdated(current, curPlayerTurnTimeLeft);
-                        } else endGameSession(opponent, "Wins by Timeout");
+                        } else
+                            endGameSession(opponent, "Wins by Timeout");
                     }
                 }
             });
@@ -224,12 +237,14 @@ public class Board {
 
     public static byte playersOpponent(byte p) {
         switch (p) {
-            case Board.WHITE: return Board.BLACK;
-            case Board.BLACK: return Board.WHITE;
-            default: { // This is just to make the compiler happy
-                System.err.println("Board::playersOpponent received byte " + p);
-                return Board.EMPTY;
-            }
+        case Board.WHITE:
+            return Board.BLACK;
+        case Board.BLACK:
+            return Board.WHITE;
+        default: { // This is just to make the compiler happy
+            System.err.println("Board::playersOpponent received byte " + p);
+            return Board.EMPTY;
+        }
         }
     }
 
