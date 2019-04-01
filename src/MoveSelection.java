@@ -63,7 +63,8 @@ public class MoveSelection {
                 maybeMove.ifPresent(move -> selectionListener.moveSelected(move));
             } else if (selectedCells.size() > 1) {
                 boolean lastMarbleOnCorner = BoardUtil.onCorner(selectedCells.get(selectedCells.size() - 1).getCoordinate());
-                if (lastMarbleOnCorner) { //Need to determine whether broadside or inline
+                boolean firstMarbleOnEdge = BoardUtil.onEdge(selectedCells.get(0).getCoordinate());
+                if (lastMarbleOnCorner && firstMarbleOnEdge) { //Need to determine whether broadside or inline
                     List<String> choices = new ArrayList<>();
                     choices.add("Inline");
                     choices.add("Broadside");
@@ -80,7 +81,6 @@ public class MoveSelection {
                         maybeMove.ifPresent(move -> selectionListener.moveSelected(move));
                     });
                 } else {
-                    boolean firstMarbleOnEdge = BoardUtil.onEdge(selectedCells.get(0).getCoordinate());
                     boolean lastMarbleOnEdge = BoardUtil.onEdge(selectedCells.get(selectedCells.size() - 1).getCoordinate());
                     if (firstMarbleOnEdge && lastMarbleOnEdge) { //Must be broadside
                         Optional<Move> maybeMove = handleDestinationSelect(true);
