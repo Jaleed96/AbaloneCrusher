@@ -38,7 +38,7 @@ public class Minimax {
 
     public static Move searchBestMove(State state) {
         // TODO iterative deepening
-        ScoredMove result = topLevelMaximize(state, 3);
+        ScoredMove result = topLevelMaximize(state, 5);
         return result.move;
     }
 
@@ -48,13 +48,14 @@ public class Minimax {
             return new ScoredMove(Heuristic.evaluate(state), null);
 
         ScoredMove bestMove = new ScoredMove(Integer.MIN_VALUE, null);
-        List<Move> moves = MoveGenerator.generate(state.board, state.maximizingPlayer, state.minimizingPlayer);
-        for (Move m : moves) {
-            int minVal = minimize(moveResult(state, m, state.maximizingPlayer), bestMove.val, Integer.MAX_VALUE, depth - 1);
-            System.out.println(minVal + " " + MoveParser.toText(m));
+        List<OrderedMove> moves = MoveGenerator.generate(state.board, state.maximizingPlayer, state.minimizingPlayer);
+        moves.sort(OrderedMove::compareTo);
+        for (OrderedMove m : moves) {
+            int minVal = minimize(moveResult(state, m.move, state.maximizingPlayer), bestMove.val, Integer.MAX_VALUE, depth - 1);
+            System.out.println(minVal + " " + MoveParser.toText(m.move) + " " + m.type);
             if (minVal > bestMove.val) {
                 bestMove.val = minVal;
-                bestMove.move = m;
+                bestMove.move = m.move;
             }
         }
 
@@ -66,9 +67,10 @@ public class Minimax {
             return Heuristic.evaluate(state);
 
         int val = Integer.MIN_VALUE;
-        List<Move> moves = MoveGenerator.generate(state.board, state.maximizingPlayer, state.minimizingPlayer);
-        for (Move m : moves) {
-            val = Math.max(val, minimize(moveResult(state, m, state.maximizingPlayer), alpha, beta, depth - 1));
+        List<OrderedMove> moves = MoveGenerator.generate(state.board, state.maximizingPlayer, state.minimizingPlayer);
+        moves.sort(OrderedMove::compareTo);
+        for (OrderedMove m : moves) {
+            val = Math.max(val, minimize(moveResult(state, m.move, state.maximizingPlayer), alpha, beta, depth - 1));
             if (val >= beta) return val;
             alpha = Math.max(alpha, val);
         }
@@ -81,9 +83,10 @@ public class Minimax {
             return Heuristic.evaluate(state);
 
         int val = Integer.MAX_VALUE;
-        List<Move> moves = MoveGenerator.generate(state.board, state.minimizingPlayer, state.maximizingPlayer);
-        for (Move m : moves) {
-            val = Math.min(val, maximize(moveResult(state, m, state.minimizingPlayer), alpha, beta, depth - 1));
+        List<OrderedMove> moves = MoveGenerator.generate(state.board, state.minimizingPlayer, state.maximizingPlayer);
+        moves.sort(OrderedMove::compareTo);
+        for (OrderedMove m : moves) {
+            val = Math.min(val, maximize(moveResult(state, m.move, state.minimizingPlayer), alpha, beta, depth - 1));
             if (val <= alpha) return val;
             beta = Math.min(beta, val);
         }

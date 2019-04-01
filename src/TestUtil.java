@@ -152,7 +152,7 @@ public class TestUtil {
             return;
         }
 
-        List<Move> legalMoves = MoveGenerator.generate(test.board, test.player, opponent);
+        List<OrderedMove> legalMoves = MoveGenerator.generate(test.board, test.player, opponent);
 
         String boardResultDate = formatBoardOutput(test.board, legalMoves);
         String moveResultData = formatMoveOutput(legalMoves);
@@ -166,18 +166,18 @@ public class TestUtil {
         }
     }
 
-    private static String formatMoveOutput(List<Move> moves) {
+    private static String formatMoveOutput(List<OrderedMove> moves) {
         StringJoiner result = new StringJoiner(System.lineSeparator());
-        for (Move m : moves) {
-            result.add(MoveParser.toText(m));
+        for (OrderedMove m : moves) {
+            result.add(MoveParser.toText(m.move));
         }
         return result.toString();
     }
 
-    private static String formatBoardOutput(byte[][] board, List<Move> moves) {
+    private static String formatBoardOutput(byte[][] board, List<OrderedMove> moves) {
         StringJoiner result = new StringJoiner(System.lineSeparator());
-        for (Move m : moves) {
-            byte[][] afterMove = BoardUtil.copyThenApply(board, m);
+        for (OrderedMove m : moves) {
+            byte[][] afterMove = BoardUtil.copyThenApply(board, m.move);
             result.add(boardConfigToStringRep(afterMove));
         }
         return result.toString();

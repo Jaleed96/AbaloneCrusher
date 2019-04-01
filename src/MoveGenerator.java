@@ -6,7 +6,7 @@ import java.util.Optional;
 public class MoveGenerator {
 
     // Assesses if a side step in the given direction is legal
-    private static Optional<Move> maybeSideStep(byte[][] board, BoardUtil.Direction side, Coordinate... coords) {
+    private static Optional<OrderedMove> maybeSideStep(byte[][] board, BoardUtil.Direction side, Coordinate... coords) {
         Push[] pushes = new Push[coords.length];
         for (int i = 0; i < coords.length; ++i) {
             // Check if all the marbles can be moved in the same direction
@@ -15,20 +15,23 @@ public class MoveGenerator {
                 return Optional.empty();
             pushes[i] = new Push(coords[i], neighbor);
         }
-        return Optional.of(new Move(pushes));
+        return Optional.of(new OrderedMove(
+                new Move(pushes),
+                OrderedMove.sideStepType(pushes.length)
+        ));
     }
 
     // Finds all legal sidesteps in the forward left/right directions
-    private static List<Move> legalForwardSideSteps(byte[][] board, BoardUtil.Direction dir, Coordinate... coords) {
-        List<Move> moves = new ArrayList<>();
+    private static List<OrderedMove> legalForwardSideSteps(byte[][] board, BoardUtil.Direction dir, Coordinate... coords) {
+        List<OrderedMove> moves = new ArrayList<>();
         maybeSideStep(board, dir.forwardLeft(), coords).ifPresent(moves::add);
         maybeSideStep(board, dir.forwardRight(), coords).ifPresent(moves::add);
         return moves;
     }
 
     // Collects all the legal moves from a coordinate in a given direction
-    private static List<Move> collectFromDirection(byte[][] board, byte playerPiece, byte opponentPiece, Coordinate from, BoardUtil.Direction dir) {
-        List<Move> moves = new ArrayList<>();
+    private static List<OrderedMove> collectFromDirection(byte[][] board, byte playerPiece, byte opponentPiece, Coordinate from, BoardUtil.Direction dir) {
+        List<OrderedMove> moves = new ArrayList<>();
 
         int playerMarbleCnt = 1;
         int opponentMarbleCnt = 0;
@@ -64,23 +67,31 @@ public class MoveGenerator {
             next = next.neighbors().fromDirection(dir);
             canPush = playerMarbleCnt > opponentMarbleCnt;
             if (next == null || !canPush) {
-                if (canPush)
+                if (canPush) {
                     // Pushing opponent's marbles
-                    moves.add(new Move(new Push(from, to)));
+                    moves.add(new OrderedMove(
+                            new Move(new Push(from, to)),
+                            OrderedMove.inlineType(playerMarbleCnt, opponentMarbleCnt, true)
+                    ));
+                }
                 return moves;
             }
         }
 
         // Inline move ending with an empty cell
-        if (board[next.coordinate.y][next.coordinate.x] == Board.EMPTY)
-            moves.add(new Move(new Push(from, to)));
+        if (board[next.coordinate.y][next.coordinate.x] == Board.EMPTY) {
+            moves.add(new OrderedMove(
+                    new Move(new Push(from, to)),
+                    OrderedMove.inlineType(playerMarbleCnt, opponentMarbleCnt, false)
+            ));
+        }
 
         return moves;
     }
 
     // Collects all the legal moves starting at a given coordinate
-    private static List<Move> collectFromCoord(byte[][] board, byte playerPiece, byte opponentPiece, Coordinate from) {
-        List<Move> moves = new ArrayList<>();
+    private static List<OrderedMove> collectFromCoord(byte[][] board, byte playerPiece, byte opponentPiece, Coordinate from) {
+        List<OrderedMove> moves = new ArrayList<>();
         BoardUtil.Neighbors neighbors = BoardUtil.neighborsOf(from);
         // to allow pushing own pieces off the board, make sure neighbors array includes null neighbors
         // add additional null checks to collectFromDirection
@@ -89,8 +100,8 @@ public class MoveGenerator {
         return moves;
     }
 
-    public static List<Move> generate(byte[][] board, byte playerPiece, byte opponentPiece) {
-        List<Move> moves = new ArrayList<>();
+    public static List<OrderedMove> generate(byte[][] board, byte playerPiece, byte opponentPiece) {
+        List<OrderedMove> moves = new ArrayList<>();
         for (Coordinate[] row : BoardUtil.COORDINATES) {
             for (Coordinate coord : row)
                 // All the private functions assume that the given coordinates contain the current player's piece
