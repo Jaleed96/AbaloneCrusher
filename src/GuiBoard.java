@@ -4,10 +4,11 @@ import javafx.scene.shape.Polygon;
 
 public class GuiBoard extends Pane {
     private Cell[][] cells;
+    private Polygon background;
 
     GuiBoard(byte[][] initialBoardSetup, double height) {
         double width = height / Math.sin(Math.PI / 3);
-        Polygon background = Hexagon.drawable(width / 2, height / 2, width / 2, 0);
+        background = Hexagon.drawable(width / 2, height / 2, width / 2, 0);
         background.setFill(Color.DEEPSKYBLUE);
         getChildren().add(background);
 
@@ -23,6 +24,10 @@ public class GuiBoard extends Pane {
 
     Cell[][] cells() {
         return cells;
+    }
+    
+    Polygon background() {
+        return background;
     }
 
     private void initCells(byte[][] board, double cellHeight, double xOffset, double yOffset) {
