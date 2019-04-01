@@ -113,10 +113,8 @@ public class Board {
 
     private void updateScore(byte pushedOffPiece) {
         if (currentOpponent().piece == pushedOffPiece) {
-            currentPlayer().increaseScore();
-            if (currentPlayer().score() == SCORE_TO_WIN)
+            if (currentPlayer().increaseScore() == SCORE_TO_WIN)
                 endGameSession(current, "Pushed 6 marbles off board");
-            scoreUpdateListener.scoreUpdate(currentPlayer(), pushedOffMarble, currentPlayer().score() == SCORE_TO_WIN);
         } else {
             if (currentOpponent().increaseScore() == SCORE_TO_WIN)
                 endGameSession(opponent, "Pushed 6 marbles off board");
