@@ -219,7 +219,8 @@ public class Game {
         // reverts to the saved state of the board
         undoBtn.setOnAction((e) -> {
             if (lastGamestate != null && lastGamestate.board != gameBoard.representation()) {
-                GAME_STOPPED = GAME_PAUSED = false;
+                GAME_STOPPED = GAME_PAUSED = gameBoard.GAME_PAUSED = gameBoard.GAME_STOPPED = false;
+                gameState.setText("");
                 gameBoard.setGamestate(lastGamestate);
                 movesLeftB.setText("Moves Left (Black): " + Integer.toString(lastGamestate.movesLeftB));
                 movesLeftW.setText("Moves Left (White): " + Integer.toString(lastGamestate.movesLeftW));
