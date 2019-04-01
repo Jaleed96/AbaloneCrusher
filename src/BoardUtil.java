@@ -46,6 +46,7 @@ public class BoardUtil {
         public Neighbors neighbors() {
             return neighborsOf(coordinate);
         }
+        
     }
 
     /// Maps neighboring cells to their coordinates and directions
@@ -323,5 +324,13 @@ public class BoardUtil {
             result[i] = Arrays.copyOf(original[i], original[i].length);
         }
         return result;
+    }
+    
+    public static boolean onEdge(Coordinate coord) {
+        return coord.x == 0 || coord.y == 0 || coord.y == 8 ||
+                (coord.x == 5 && coord.y == 7) || (coord.x == 6 && coord.y == 6) ||
+                (coord.x == 7 && coord.y == 5) || (coord.x == 8 && coord.y == 4) ||
+                (coord.x == 7 && coord.y == 3) || (coord.x == 6 && coord.y == 2) ||
+                (coord.x == 5 && coord.y == 1);
     }
 }

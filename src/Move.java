@@ -18,7 +18,7 @@ public class Move {
     }
 
     private static boolean isLegalOneStep(byte[][] board, byte playerPiece, Push m) {
-        return board[m.to.coordinate.y][m.to.coordinate.x] == Board.EMPTY && board[m.from.y][m.from.x] == playerPiece;
+        return board[m.from.y][m.from.x] == playerPiece && (m.to == null && BoardUtil.onEdge(m.from)|| board[m.to.coordinate.y][m.to.coordinate.x] == Board.EMPTY);
     }
 
     /// Pushes the piece in the board representation only, to update gui use
@@ -35,7 +35,7 @@ public class Move {
             currentPiece = nextPiece;
         }
         /// If the piece has been pushed off the board, return it
-        return next == null && currentPiece != Board.EMPTY? Optional.of(currentPiece) : Optional.empty();
+        return next == null && currentPiece != Board.EMPTY ? Optional.of(currentPiece) : Optional.empty();
     }
 
     public Optional<Byte> apply(byte[][] board) {
@@ -54,14 +54,14 @@ public class Move {
         int opponentMarbleCnt = 0;
 
         BoardUtil.Neighbor next = m.to;
-        while (board[next.coordinate.y][next.coordinate.x] == playerPiece) {
+        while (next != null && board[next.coordinate.y][next.coordinate.x] == playerPiece) {
             playerMarbleCnt += 1;
             next = next.neighbors().fromDirection(m.to.direction);
-            if (playerMarbleCnt == 4 || next == null)
+            if (playerMarbleCnt == 4)
                 return false;
         }
 
-        while (board[next.coordinate.y][next.coordinate.x] == opponentPiece) {
+        while (next != null && board[next.coordinate.y][next.coordinate.x] == opponentPiece) {
             opponentMarbleCnt += 1;
             next = next.neighbors().fromDirection(m.to.direction);
             if (next == null)
@@ -70,7 +70,7 @@ public class Move {
                 return false;
         }
 
-        return board[next.coordinate.y][next.coordinate.x] == Board.EMPTY;
+        return next == null || board[next.coordinate.y][next.coordinate.x] == Board.EMPTY;
     }
 
     public boolean hasValidOneSteps(byte[][] board, byte playerPiece) {
@@ -95,16 +95,18 @@ public class Move {
         if (!hasValidOneSteps(board, playerPiece))
             return false;
 
-        BoardUtil.Direction stepDirection = pushes[0].to.direction;
-        for (int i = 1; i < pushes.length; ++i) {
-            if (pushes[i].to.direction != stepDirection) // all are moving in the same direction
-                return false;
+        if (pushes[0].to != null) {
+            BoardUtil.Direction stepDirection = pushes[0].to.direction;
+                for (int i = 1; i < pushes.length; ++i) {
+                    if (pushes[i].to.direction != stepDirection) // all are moving in the same direction
+                        return false;
+                }
         }
-
-        if (pushes.length == 3)
-            return BoardUtil.onSameAxis(pushes[0].from, pushes[1].from, pushes[2].from)
-                && BoardUtil.areNeighbors(pushes[0].from, pushes[1].from, pushes[2].from);
-
+    
+            if (pushes.length == 3)
+                return BoardUtil.onSameAxis(pushes[0].from, pushes[1].from, pushes[2].from)
+                    && BoardUtil.areNeighbors(pushes[0].from, pushes[1].from, pushes[2].from);
+            
         return pushes.length == 1 || BoardUtil.areNeighbors(pushes[0].from, pushes[1].from);
     }
 

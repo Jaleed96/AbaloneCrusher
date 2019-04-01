@@ -119,8 +119,7 @@ public class MoveSelection {
                 if (marbleNeighbor != null) {
                     BoardUtil.Direction marbleDirection = marbleNeighbor.direction;
                     boolean broadside = moveDirection != marbleDirection;
-                    boolean horizontalInline = !broadside && cCoord.y == nextMarbleCoord.y;
-                    maybeMove = broadside ? moveBroadside(c) : moveInline(c, horizontalInline);
+                    maybeMove = broadside ? moveBroadside(c) : moveInline(c);
                 }
             }
         }
@@ -136,7 +135,7 @@ public class MoveSelection {
         return Optional.of(new Move(new Push(marble, neighborTo)));
     }
 
-    private Optional<Move> moveInline(Cell c, boolean horizontalInline) {
+    private Optional<Move> moveInline(Cell c) {
         Coordinate marble = selectedCells.get(0).getCoordinate();
         Coordinate lastMarble = selectedCells.get(selectedCells.size() - 1).getCoordinate();
         BoardUtil.Neighbor nextMarble = BoardUtil.neighborsOf(marble)

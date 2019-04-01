@@ -71,8 +71,10 @@ public class Board {
         if (!move.isLegal(this)) {
             StringBuilder erroMsg = new StringBuilder().append("Illegal move:");
             for (Push m : move.pushes()) {
-                erroMsg.append(String.format(" [%s to %s, %s to %s]", m.from.toString(), m.to.coordinate.toString(),
-                        BoardUtil.toConformanceCoord(m.from), BoardUtil.toConformanceCoord(m.to.coordinate)));
+                String toString = m.to == null ? "EDGE" : m.to.coordinate.toString();
+                String conformenceString = m.to == null ? "EDGE" : BoardUtil.toConformanceCoord(m.to.coordinate);
+                erroMsg.append(String.format(" [%s to %s, %s to %s]", m.from.toString(), toString,
+                        BoardUtil.toConformanceCoord(m.from), conformenceString));
             }
             throw new Move.IllegalMoveException(erroMsg.toString());
         }

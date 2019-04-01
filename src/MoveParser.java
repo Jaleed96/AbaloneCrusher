@@ -15,9 +15,11 @@ public class MoveParser {
 
         if (fromTo.length < 2)
             throw new Exception("Not enough arguments");
+        
+        boolean offBoard = fromTo[1].trim().equals("EDGE");
 
         Coordinate to = BoardUtil.toCoord(fromTo[1].trim());
-        if (to == null)
+        if (!offBoard && to == null)
             throw new Exception("Failed to parse destination coordinate");
 
         String[] maybeRange = fromTo[0].split(RANGE_SEPARATOR);
@@ -26,8 +28,9 @@ public class MoveParser {
             if (from == null)
                 throw new Exception("Failed to parse source coordinate");
 
+            offBoard = offBoard && BoardUtil.onEdge(from);
             BoardUtil.Neighbor toNeighbor = BoardUtil.neighborsOf(from).fromCoordinate(to);
-            if (toNeighbor == null)
+            if (!offBoard && toNeighbor == null)
                 throw new Exception("Destination coordinate is not adjacent to source coordinate");
 
             return new Move(new Push(from, toNeighbor));
@@ -39,30 +42,33 @@ public class MoveParser {
             Coordinate fromLast = BoardUtil.toCoord(maybeRange[1].trim());
             if (fromLast == null)
                 throw new Exception("Failed to parse last range coordinate");
-
+            
+            offBoard = offBoard && BoardUtil.onEdge(fromFirst) && BoardUtil.onEdge(fromLast);
             BoardUtil.Neighbor toFirstNeighbor = BoardUtil.neighborsOf(fromFirst).fromCoordinate(to);
-            if (toFirstNeighbor == null)
+            if (!offBoard && toFirstNeighbor == null)
                 throw new Exception("Destination coordinate is not adjacent to first range coordinate");
 
-            BoardUtil.Direction moveDirection = toFirstNeighbor.direction;
-            BoardUtil.Neighbor toLastNeighbor = BoardUtil.neighborsOf(fromLast).fromDirection(moveDirection);
-
-            if (BoardUtil.areNeighbors(fromFirst, fromLast)) // then it's a 2-piece side move
+            BoardUtil.Direction moveDirection = offBoard ? null : toFirstNeighbor.direction;
+            BoardUtil.Neighbor toLastNeighbor = offBoard ? null : BoardUtil.neighborsOf(fromLast).fromDirection(moveDirection);
+            
+            if (BoardUtil.areNeighbors(fromFirst, fromLast))  // then it's a 2-piece side move
                 return new Move(new Push(fromFirst, toFirstNeighbor),
                                 new Push(fromLast, toLastNeighbor));
             else {
                 Coordinate between = BoardUtil.findCoordBetween(fromFirst, fromLast);
+                offBoard = offBoard && BoardUtil.onEdge(between);
                 if (between == null)
                     throw new Exception("Failed to find coordinate between first and last");
 
-                BoardUtil.Neighbor betweenNeighbor = BoardUtil.neighborsOf(between).fromDirection(moveDirection);
-                if (betweenNeighbor == null)
+                BoardUtil.Neighbor betweenNeighbor = offBoard ? null : BoardUtil.neighborsOf(between).fromDirection(moveDirection);
+                if (!offBoard && betweenNeighbor == null)
                     throw new Exception("Middle coordinate has nowhere to move"); // should never happen
 
                 return new Move(new Push(fromFirst, toFirstNeighbor),
                                 new Push(between, betweenNeighbor),
                                 new Push(fromLast, toLastNeighbor));
             }
+            
         }
 
         throw new Exception("Failed to parse input");
@@ -78,7 +84,11 @@ public class MoveParser {
             moveText.append(BoardUtil.toConformanceCoord(pushes[pushes.length - 1].from));
         }
         moveText.append(FROM_TO_SEPARATOR.toLowerCase());
-        moveText.append(BoardUtil.toConformanceCoord(pushes[0].to.coordinate));
+        if (pushes[0].to == null) {
+            moveText.append("EDGE");
+        } else {
+            moveText.append(BoardUtil.toConformanceCoord(pushes[0].to.coordinate));
+        }
 
         return moveText.toString();
     }
