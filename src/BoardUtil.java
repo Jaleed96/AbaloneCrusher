@@ -333,4 +333,9 @@ public class BoardUtil {
                 (coord.x == 7 && coord.y == 3) || (coord.x == 6 && coord.y == 2) ||
                 (coord.x == 5 && coord.y == 1);
     }
+    
+    public static boolean onCorner(Coordinate coord) {
+        return (coord.x == 0 && coord.y == 0) || (coord.x == 4 && coord.y == 0) ||
+                (coord.x == 0 && coord.y == 8) || (coord.x == 4 && coord.y == 8);
+    }
 }
