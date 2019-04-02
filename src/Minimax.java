@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -47,13 +49,19 @@ public class Minimax {
     }
 
     /** Scored move helps retrieving the actual move after the maximum value has been calculated */
-    private static class ScoredMove {
+    private static class ScoredMove implements Comparable {
         int val;
-        Move move;
+        OrderedMove move;
 
-        ScoredMove(int val, Move move) {
+        ScoredMove(int val, OrderedMove move) {
             this.val = val;
             this.move = move;
+        }
+
+        @Override
+        public int compareTo(Object o) {
+            ScoredMove other = (ScoredMove) o;
+            return this.val - other.val;
         }
     }
 
@@ -67,15 +75,29 @@ public class Minimax {
         ExecutorService exec = Executors.newSingleThreadExecutor();
         Future<Move> resultFuture = exec.submit(() -> {
             int depth = 1;
-            Move result = null;
+            ScoredMove result = new ScoredMove(Integer.MIN_VALUE, null);
+            ScoredMove latestDecision = new ScoredMove(Integer.MIN_VALUE, null);
+            List<ScoredMove> sortedPreviousScores = null;
 
-            while (!interruptFlag.get()) {
-                ScoredMove r = topLevelMaximize(initialSearchState, depth++);
-                if (r.move != null)
-                    result = r.move;
+            while (true) {
+                sortedPreviousScores = topLevelMaximize(initialSearchState, sortedPreviousScores, depth++);
+                if (!sortedPreviousScores.isEmpty()) {
+                    latestDecision = sortedPreviousScores.get(0);
+                }
+
+                if (!interruptFlag.get()) {
+                    // always take the last depth decision
+                    result = latestDecision;
+                } else {
+                    break;
+                }
             }
 
-            return result;
+            // if we were interrupted, means we're at the last possible depth and we can use the move found there
+            if (latestDecision.val > result.val)
+                result = latestDecision;
+
+            return result.move.move;
         });
         exec.shutdown();
 
@@ -96,16 +118,28 @@ public class Minimax {
         interruptFlag.set(true);
     }
 
-    /** Matches moves to their scores */
-    private ScoredMove topLevelMaximize(State state, int depth) {
+    /** Matches moves to their scores
+     * @return sorted list of legal moves matched to their scores for this iteration */
+    private List<ScoredMove> topLevelMaximize(State state, List<ScoredMove> sortedPreviousScores, int depth) {
         if (gameOver(state))
-            return new ScoredMove(Heuristic.evaluate(state), null);
+            return new ArrayList<>();
 
         ScoredMove bestMove = new ScoredMove(Integer.MIN_VALUE, null);
-        List<OrderedMove> moves = MoveGenerator.generate(state.board, state.maximizingPlayer, state.minimizingPlayer);
-        moves.sort(OrderedMove::compareTo);
+        List<OrderedMove> moves;
+        if (sortedPreviousScores != null) {
+            moves = new ArrayList<>(sortedPreviousScores.size());
+            for (ScoredMove sm : sortedPreviousScores) {
+                moves.add(sm.move);
+            }
+        } else {
+            moves = MoveGenerator.generate(state.board, state.maximizingPlayer, state.minimizingPlayer);
+            moves.sort(OrderedMove::compareTo);
+        }
+
+        List<ScoredMove> recordedMoves = new ArrayList<>();
         for (OrderedMove m : moves) {
             int minVal = minimize(moveResult(state, m.move, state.maximizingPlayer), bestMove.val, Integer.MAX_VALUE, depth - 1);
+            recordedMoves.add(new ScoredMove(minVal, m));
             System.out.println(minVal + " " + MoveParser.toText(m.move) + " " + m.type);
             if (interruptFlag.get()) {
                 // if interruptFlag is set, value returned by minimize likely doesn't make sense
@@ -113,11 +147,14 @@ public class Minimax {
             }
             if (minVal > bestMove.val) {
                 bestMove.val = minVal;
-                bestMove.move = m.move;
+                bestMove.move = m;
             }
         }
 
-        return bestMove;
+        // put moves with highest previously found score at the front
+        recordedMoves.sort(Collections.reverseOrder());
+
+        return recordedMoves;
     }
 
     private int maximize(State state, int alpha, int beta, int depth) {
