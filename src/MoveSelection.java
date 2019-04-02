@@ -1,3 +1,5 @@
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
@@ -59,8 +61,12 @@ public class MoveSelection {
         }
         edge.addEventHandler(MouseDragEvent.MOUSE_DRAG_RELEASED, me -> {
             if (selectedCells.size() == 1) {
-                Optional<Move> maybeMove = moveOneMarble(null);
-                maybeMove.ifPresent(move -> selectionListener.moveSelected(move));
+                if (Move.sureAboutSelfElimination()) {
+                    Optional<Move> maybeMove = moveOneMarble(null);
+                    maybeMove.ifPresent(move -> selectionListener.moveSelected(move));
+                } else {
+                    dehighlightAllMarbles();
+                }
             } else if (selectedCells.size() > 1) {
                 boolean lastMarbleOnCorner = BoardUtil.onCorner(selectedCells.get(selectedCells.size() - 1).getCoordinate());
                 boolean firstMarbleOnEdge = BoardUtil.onEdge(selectedCells.get(0).getCoordinate());
@@ -71,8 +77,8 @@ public class MoveSelection {
         
                     ChoiceDialog<String> dialog = new ChoiceDialog<>("Please select", choices);
                     dialog.setTitle("Self-elimination move");
-                    dialog.setHeaderText("It appears you are trying to move off the board.");
-                    dialog.setContentText("Would you like to move: ");
+                    dialog.setHeaderText("It looks like you are trying to push your own piece(s) off the board.");
+                    dialog.setContentText("If you're sure, please select a move direction:  ");
         
                     Optional<String> result = dialog.showAndWait();
                     result.ifPresent(answer -> {
@@ -80,16 +86,22 @@ public class MoveSelection {
                         Optional<Move> maybeMove = handleDestinationSelect(broadside);
                         maybeMove.ifPresent(move -> selectionListener.moveSelected(move));
                     });
-                } else {
-                    boolean lastMarbleOnEdge = BoardUtil.onEdge(selectedCells.get(selectedCells.size() - 1).getCoordinate());
-                    if (firstMarbleOnEdge && lastMarbleOnEdge) { //Must be broadside
-                        Optional<Move> maybeMove = handleDestinationSelect(true);
-                        maybeMove.ifPresent(move -> selectionListener.moveSelected(move));
-                    } else {
-                        Optional<Move> maybeMove = handleDestinationSelect(false); //Must be inline
-                        maybeMove.ifPresent(move -> selectionListener.moveSelected(move));
+                    if (result.isEmpty()) {
+                        dehighlightAllMarbles();
                     }
-
+                } else {
+                    if (Move.sureAboutSelfElimination()) {
+                        boolean lastMarbleOnEdge = BoardUtil.onEdge(selectedCells.get(selectedCells.size() - 1).getCoordinate());
+                        if (firstMarbleOnEdge && lastMarbleOnEdge) { //Must be broadside
+                            Optional<Move> maybeMove = handleDestinationSelect(true);
+                            maybeMove.ifPresent(move -> selectionListener.moveSelected(move));
+                        } else {
+                            Optional<Move> maybeMove = handleDestinationSelect(false); //Must be inline
+                            maybeMove.ifPresent(move -> selectionListener.moveSelected(move));
+                        }
+                    } else {
+                        dehighlightAllMarbles();
+                    }
                 }
             }
         });
@@ -217,6 +229,9 @@ public class MoveSelection {
         BoardUtil.Direction moveDirection = toFirstNeighbor.direction;
         Coordinate lastMarble = selectedCells.get(0).getCoordinate();
         BoardUtil.Neighbor toLastNeighbor = BoardUtil.neighborsOf(lastMarble).fromDirection(moveDirection);
+        if (toLastNeighbor == null && !Move.sureAboutSelfElimination()) {
+            dehighlightAllMarbles();
+        }
         if (selectedCells.size() == 2) {
             return Optional.of(new Move(new Push(firstMarble, toFirstNeighbor),
                                         new Push(lastMarble, toLastNeighbor)));
