@@ -1,3 +1,6 @@
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+
 import java.util.Optional;
 
 public class Move {
@@ -95,7 +98,15 @@ public class Move {
         if (!hasValidOneSteps(board, playerPiece))
             return false;
 
-        if (pushes[0].to != null) {
+        boolean selfElimination = false;
+        for (int i = 0; i < pushes.length; i++) {
+            if (pushes[i].to == null) {
+                selfElimination = true;
+                break;
+            }
+        }
+
+        if (!selfElimination) {
             BoardUtil.Direction stepDirection = pushes[0].to.direction;
                 for (int i = 1; i < pushes.length; ++i) {
                     if (pushes[i].to.direction != stepDirection) // all are moving in the same direction
@@ -113,5 +124,15 @@ public class Move {
     public boolean isLegal(Board context) {
         return isLegalInline(context.representation(), context.currentPlayer().piece, context.currentOpponent().piece)
                 || isLegalSideStep(context.representation(), context.currentPlayer().piece);
+    }
+
+    public static boolean sureAboutSelfElimination() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Self-elimination move");
+        alert.setHeaderText("It looks like you are trying to push your own piece(s) off the board.");
+        alert.setContentText("Are you sure this is the move you meant to make?");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.get() == ButtonType.OK;
     }
 }
