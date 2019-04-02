@@ -22,17 +22,27 @@ public class Minimax {
         byte minimizingPlayer;
         int movesLeftB;
         int movesLeftW;
-        int scoreB;
-        int scoreW;
+        int maxPlayerScore;
+        int minPlayerScore;
 
-        State(byte[][] board, byte maximizingPlayer, byte minimizingPlayer, int movesLeftB, int movesLeftW, int scoreB, int scoreW) {
+        State(byte[][] board, byte maximizingPlayer, byte minimizingPlayer, int movesLeftB, int movesLeftW, int maxPlayerScore, int minPlayerScore) {
             this.board = BoardUtil.deepCopyRepresentation(board);
             this.maximizingPlayer = maximizingPlayer;
             this.minimizingPlayer = minimizingPlayer;
             this.movesLeftB = movesLeftB;
             this.movesLeftW = movesLeftW;
-            this.scoreB = scoreB;
-            this.scoreW = scoreW;
+            this.maxPlayerScore = maxPlayerScore;
+            this.minPlayerScore = minPlayerScore;
+        }
+
+        State(State toCopy) {
+            this.board = BoardUtil.deepCopyRepresentation(toCopy.board);
+            this.maximizingPlayer = toCopy.maximizingPlayer;
+            this.minimizingPlayer = toCopy.minimizingPlayer;
+            this.movesLeftB = toCopy.movesLeftB;
+            this.movesLeftW = toCopy.movesLeftW;
+            this.maxPlayerScore = toCopy.maxPlayerScore;
+            this.minPlayerScore = toCopy.minPlayerScore;
         }
     }
 
@@ -152,19 +162,19 @@ public class Minimax {
 
     private static boolean gameOver(State state) {
         return state.movesLeftB == 0 && state.movesLeftW == 0
-                || state.scoreB == Board.SCORE_TO_WIN
-                || state.scoreW == Board.SCORE_TO_WIN;
+                || state.maxPlayerScore == Board.SCORE_TO_WIN
+                || state.minPlayerScore == Board.SCORE_TO_WIN;
     }
 
     private static State moveResult(State state, Move move, byte movingPlayer) {
-        final State newState = new State(state.board, state.maximizingPlayer, state.minimizingPlayer, state.movesLeftB, state.movesLeftW, state.scoreB, state.scoreW);
+        final State newState = new State(state);
         Optional<Byte>[] scoreUpdates = move.apply(newState.board);
-        for (Optional<Byte> maybeScore : scoreUpdates) {
-            maybeScore.ifPresent(piece -> {
-                if (piece == Board.WHITE)
-                    newState.scoreB += 1;
-                else if (piece == Board.BLACK)
-                    newState.scoreW += 1;
+        for (Optional<Byte> maybePushedOff : scoreUpdates) {
+            maybePushedOff.ifPresent(piece -> {
+                if (piece == newState.maximizingPlayer)
+                    newState.minPlayerScore += 1;
+                else if (piece == newState.minimizingPlayer)
+                    newState.maxPlayerScore += 1;
             });
         }
 

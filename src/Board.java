@@ -66,9 +66,8 @@ public class Board {
         // Example minimax usage
         if (current.agent == Config.PlayerAgent.AI) {
             Minimax.SearchInterruptHandle handle = minimax.searchBestMove(
-                    new Minimax.State(board, current.piece, opponent.piece, blackMovesLeft, whiteMovesLeft,
-                            current.score(),  // this is black player's score (not always current)
-                            opponent.score()) // same for white player
+                    // current is the maximizing player, opponent is the minimizing player
+                    new Minimax.State(board, current.piece, opponent.piece, blackMovesLeft, whiteMovesLeft, current.score(), opponent.score())
             );
 
             final TimeUpdatedListener aiTimeout = new TimeUpdatedListener() {

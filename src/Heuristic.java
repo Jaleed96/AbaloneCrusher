@@ -27,7 +27,27 @@ public class Heuristic {
         return totalScore;
     }
 
+    private static int winLoss(Minimax.State state) {
+        if (state.maxPlayerScore == Board.SCORE_TO_WIN)
+            return Integer.MAX_VALUE;
+        if (state.minPlayerScore == Board.SCORE_TO_WIN)
+            return Integer.MIN_VALUE;
+        if (state.movesLeftB == 0 && state.movesLeftW == 0) {
+            if (state.maxPlayerScore > state.minPlayerScore)
+                return Integer.MAX_VALUE;
+            if (state.maxPlayerScore < state.minPlayerScore)
+                return Integer.MIN_VALUE;
+            // what to do in case of draw?
+        }
+
+        return 0;
+    }
+
     public static int evaluate(Minimax.State state) {
+        int winLossVal = winLoss(state);
+        if (winLossVal != 0)
+            return winLossVal;
+
         return closenessToCenter(state.board, state.maximizingPlayer) * DISTANCE_TO_CENTER_WEIGHT;
     }
 }
