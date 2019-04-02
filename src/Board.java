@@ -1,5 +1,7 @@
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javafx.application.Platform;
 
@@ -49,6 +51,7 @@ public class Board {
     private PastGameStateListener pastGameStateListener = (gamestate, move) -> { };
     private GameInSessionListener gameInSessionListener = (winner, winType) -> { };
 
+
     Board(byte[][] board, double height, Config config) {
         this.board = BoardUtil.deepCopyRepresentation(board);
         gui = new GuiBoard(board, height);
@@ -63,8 +66,10 @@ public class Board {
         gameTimer = new Timer(true);
         gameTimer.schedule(new Countdown(), 0, TIME_STEP_MS);
         minimax = new Minimax();
+        runAI();
+    }
 
-        // Example minimax usage
+    private void runAI(){
         if (current.agent == Config.PlayerAgent.AI) {
             Minimax.SearchInterruptHandle handle = minimax.searchBestMove(
                     // current is the maximizing player, opponent is the minimizing player
@@ -78,6 +83,9 @@ public class Board {
                         Move m = handle.interruptWithOutput();
                         try {
                             makeMove(m);
+                            if (!GAME_STOPPED) {
+                                runAI();
+                            }
                         } catch (Move.IllegalMoveException ignored) {
                         }
                         removeTimeUpdatedListener(this);
@@ -99,6 +107,7 @@ public class Board {
             }
         }
         return true;
+
     }
 
     public void makeMove(Move move) throws Move.IllegalMoveException {
@@ -117,6 +126,8 @@ public class Board {
         pastGameStateListener.onPastGameState(gamestate, move);
         applyMove(move);
         nextTurn();
+        //runs AI after turn has been taken
+        runAI();
     }
 
     private void applyMove(Move move) {
