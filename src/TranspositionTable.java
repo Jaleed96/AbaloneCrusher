@@ -16,7 +16,7 @@ public class TranspositionTable {
         for (int i = 0; i<board.length; i++) {
             for (int j = 0; j<board[i].length; j++) {
                 if (board[i][j] != 'E') {
-                    int piece = board[i][j]=='W' ? TranspositionTable.WHITE_SEED : TranspositionTable.BLACK_SEED;
+                    int piece = board[i][j]=='W' ? WHITE_SEED : BLACK_SEED;
                     hash ^= table[i][j][piece];
                 }
             }
@@ -32,5 +32,21 @@ public class TranspositionTable {
                 }
             }
         }
+    }
+
+    public boolean containsKey(long key) {
+        return transpostion.containsKey(key);
+    }
+    public boolean containsKey(byte[][] board) {
+        long key = TranspositionTable.generateZobristKey(board);
+        return transpostion.containsKey(key);
+    }
+
+    public TableEntry get(long key) {
+        return transpostion.get(key);
+    }
+    public TableEntry get(byte[][] board) {
+        long key = TranspositionTable.generateZobristKey(board);
+        return transpostion.get(key);
     }
 }
