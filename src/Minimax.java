@@ -124,7 +124,6 @@ public class Minimax {
         if (gameOver(state))
             return new ArrayList<>();
 
-        ScoredMove bestMove = new ScoredMove(Integer.MIN_VALUE, null);
         List<OrderedMove> moves;
         if (sortedPreviousScores != null) {
             moves = new ArrayList<>(sortedPreviousScores.size());
@@ -136,19 +135,17 @@ public class Minimax {
             moves.sort(OrderedMove::compareTo);
         }
 
+        int alpha = Integer.MIN_VALUE;
         List<ScoredMove> recordedMoves = new ArrayList<>();
         for (OrderedMove m : moves) {
-            int minVal = minimize(moveResult(state, m.move, state.maximizingPlayer), bestMove.val, Integer.MAX_VALUE, depth - 1);
-            recordedMoves.add(new ScoredMove(minVal, m));
+            int minVal = minimize(moveResult(state, m.move, state.maximizingPlayer), alpha, Integer.MAX_VALUE, depth - 1);
             System.out.println(minVal + " " + MoveParser.toText(m.move) + " " + m.type);
             if (interruptFlag.get()) {
                 // if interruptFlag is set, value returned by minimize likely doesn't make sense
                 break;
             }
-            if (minVal > bestMove.val) {
-                bestMove.val = minVal;
-                bestMove.move = m;
-            }
+            recordedMoves.add(new ScoredMove(minVal, m));
+            alpha = Math.max(alpha, minVal);
         }
 
         // put moves with highest previously found score at the front
