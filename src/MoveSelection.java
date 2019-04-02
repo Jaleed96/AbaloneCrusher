@@ -86,7 +86,7 @@ public class MoveSelection {
                         Optional<Move> maybeMove = handleDestinationSelect(broadside);
                         maybeMove.ifPresent(move -> selectionListener.moveSelected(move));
                     });
-                    if (result.isEmpty()) {
+                    if (!result.isPresent()) {
                         dehighlightAllMarbles();
                     }
                 } else {
