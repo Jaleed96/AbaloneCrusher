@@ -61,10 +61,14 @@ public class Menu extends Application {
         tbp2timelimit.setText("60");
 
         humanRb.setToggleGroup(player1SelectionGroup);
+        humanRb.setUserData(Config.PlayerAgent.Human);
         aiRb.setToggleGroup(player1SelectionGroup);
+        aiRb.setUserData(Config.PlayerAgent.AI);
         player1SelectionGroup.selectToggle(humanRb);
         humanRb2.setToggleGroup(player2SelectionGroup);
+        humanRb2.setUserData(Config.PlayerAgent.Human);
         aiRb2.setToggleGroup(player2SelectionGroup);
+        aiRb2.setUserData(Config.PlayerAgent.AI);
         player2SelectionGroup.selectToggle(humanRb2);
         standardRb.setToggleGroup(gameModeGroup);
         standardRb.setUserData(Config.InitialBoard.Standard);

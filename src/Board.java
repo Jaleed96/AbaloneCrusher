@@ -1,6 +1,4 @@
-import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import javafx.application.Platform;
 
@@ -43,9 +41,10 @@ public class Board {
     public boolean GAME_PAUSED = false;
     private int curPlayerTurnTimeLeft;
     private Timer gameTimer;
+    private Minimax minimax;
     private ScoreUpdateListener scoreUpdateListener = (blackPlayer, whitePlayer) -> { };
     private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> { };
-    private TimeUpdatedListener timeUpdatedListener = (currentPlayer, timeLeftForPlayer) -> { };
+    private List<TimeUpdatedListener> timeUpdatedListeners = new ArrayList<>();
     private PastGameStateListener pastGameStateListener = (gamestate, move) -> { };
     private GameInSessionListener gameInSessionListener = (winner, winType) -> { };
 
@@ -53,8 +52,8 @@ public class Board {
         this.board = BoardUtil.deepCopyRepresentation(board);
         gui = new GuiBoard(board, height);
 
-        current = new Player(Board.BLACK, config.moveLimit, config.blackTimeLimitMs);
-        opponent = new Player(Board.WHITE, config.moveLimit, config.whiteTimeLimitMs);
+        current = new Player(config.blackAgent, Board.BLACK, config.moveLimit, config.blackTimeLimitMs);
+        opponent = new Player(config.whiteAgent, Board.WHITE, config.moveLimit, config.whiteTimeLimitMs);
 
         blackMovesLeft = config.moveLimit;
         whiteMovesLeft = config.moveLimit;
@@ -62,6 +61,31 @@ public class Board {
 
         gameTimer = new Timer(true);
         gameTimer.schedule(new Countdown(), 0, TIME_STEP_MS);
+        minimax = new Minimax();
+
+        // Example minimax usage
+        if (current.agent == Config.PlayerAgent.AI) {
+            Minimax.SearchInterruptHandle handle = minimax.searchBestMove(
+                    new Minimax.State(board, current.piece, opponent.piece, blackMovesLeft, whiteMovesLeft,
+                            current.score(),  // this is black player's score (not always current)
+                            opponent.score()) // same for white player
+            );
+
+            final TimeUpdatedListener aiTimeout = new TimeUpdatedListener() {
+                @Override
+                public void onTimeUpdated(Player currentPlayer, int timeLeftForPlayer) {
+                    if (timeLeftForPlayer < Minimax.SAFE_TIMEOUT_THRESHOLD_MS) {
+                        Move m = handle.interruptWithOutput();
+                        try {
+                            makeMove(m);
+                        } catch (Move.IllegalMoveException ignored) {
+                        }
+                        removeTimeUpdatedListener(this);
+                    }
+                }
+            };
+            addTimeUpdatedListener(aiTimeout);
+        }
     }
 
     private boolean enoughMovesLeft() {
@@ -193,8 +217,12 @@ public class Board {
         currentPlayerChangedListener = listener;
     }
 
-    public void setTimeUpdatedListener(TimeUpdatedListener listener) {
-        timeUpdatedListener = listener;
+    public void addTimeUpdatedListener(TimeUpdatedListener listener) {
+        timeUpdatedListeners.add(listener);
+    }
+
+    public void removeTimeUpdatedListener(TimeUpdatedListener listener) {
+        timeUpdatedListeners.remove(listener);
     }
 
     public void setGameInSessionListener(GameInSessionListener listener) {
@@ -238,7 +266,9 @@ public class Board {
                     if (!(GAME_PAUSED || GAME_STOPPED)) {
                         if (curPlayerTurnTimeLeft > 0) {
                             curPlayerTurnTimeLeft -= TIME_STEP_MS;
-                            timeUpdatedListener.onTimeUpdated(current, curPlayerTurnTimeLeft);
+                            for (TimeUpdatedListener listen : timeUpdatedListeners) {
+                                listen.onTimeUpdated(current, curPlayerTurnTimeLeft);
+                            }
                         } else
                             endGameSession(opponent, "Wins by Timeout");
                     }

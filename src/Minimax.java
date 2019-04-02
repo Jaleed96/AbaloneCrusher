@@ -1,8 +1,19 @@
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Minimax algorithm with alpha-beta pruning */
 public class Minimax {
+
+    public static int SAFE_TIMEOUT_THRESHOLD_MS = 200;
+
+    interface SearchInterruptHandle {
+        Move interruptWithOutput();
+    }
 
     /** Smaller version of Gamestate class, there's some code duplication here */
     static class State {
@@ -15,7 +26,6 @@ public class Minimax {
         int scoreW;
 
         State(byte[][] board, byte maximizingPlayer, byte minimizingPlayer, int movesLeftB, int movesLeftW, int scoreB, int scoreW) {
-            // TODO reverse move instead of copy every time
             this.board = BoardUtil.deepCopyRepresentation(board);
             this.maximizingPlayer = maximizingPlayer;
             this.minimizingPlayer = minimizingPlayer;
@@ -37,14 +47,47 @@ public class Minimax {
         }
     }
 
-    public static Move searchBestMove(State state) {
-        // TODO iterative deepening
-        ScoredMove result = topLevelMaximize(state, 5);
-        return result.move;
+    private final AtomicBoolean interruptFlag = new AtomicBoolean(false);
+    private State initialSearchState;
+
+    public SearchInterruptHandle searchBestMove(final State state) {
+        interruptFlag.set(false);
+        initialSearchState = state;
+
+        ExecutorService exec = Executors.newSingleThreadExecutor();
+        Future<Move> resultFuture = exec.submit(() -> {
+            int depth = 1;
+            Move result = null;
+
+            while (!interruptFlag.get()) {
+                ScoredMove r = topLevelMaximize(initialSearchState, depth++);
+                if (r.move != null)
+                    result = r.move;
+            }
+
+            return result;
+        });
+        exec.shutdown();
+
+        return () -> {
+            interrupt();
+            try {
+                return resultFuture.get();
+            } catch (InterruptedException | ExecutionException e) {
+                // Neither exception should ever happen unless we have some serious errors
+                System.err.println("Something went terribly wrong and minimax failed to find a move.");
+                e.printStackTrace();
+                return null;
+            }
+        };
+    }
+
+    private void interrupt() {
+        interruptFlag.set(true);
     }
 
     /** Matches moves to their scores */
-    private static ScoredMove topLevelMaximize(State state, int depth) {
+    private ScoredMove topLevelMaximize(State state, int depth) {
         if (gameOver(state))
             return new ScoredMove(Heuristic.evaluate(state), null);
 
@@ -54,6 +97,10 @@ public class Minimax {
         for (OrderedMove m : moves) {
             int minVal = minimize(moveResult(state, m.move, state.maximizingPlayer), bestMove.val, Integer.MAX_VALUE, depth - 1);
             System.out.println(minVal + " " + MoveParser.toText(m.move) + " " + m.type);
+            if (interruptFlag.get()) {
+                // if interruptFlag is set, value returned by minimize likely doesn't make sense
+                break;
+            }
             if (minVal > bestMove.val) {
                 bestMove.val = minVal;
                 bestMove.move = m.move;
@@ -63,7 +110,11 @@ public class Minimax {
         return bestMove;
     }
 
-    private static int maximize(State state, int alpha, int beta, int depth) {
+    private int maximize(State state, int alpha, int beta, int depth) {
+        if (interruptFlag.get()) {
+            return alpha;
+        }
+
         if (gameOver(state) || depth == 0)
             return Heuristic.evaluate(state);
 
@@ -79,7 +130,11 @@ public class Minimax {
         return val;
     }
 
-    private static int minimize(State state, int alpha, int beta, int depth) {
+    private int minimize(State state, int alpha, int beta, int depth) {
+        if (interruptFlag.get()) {
+            return beta;
+        }
+
         if (gameOver(state) || depth == 0)
             return Heuristic.evaluate(state);
 
