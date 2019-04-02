@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javafx.application.Platform;
 
@@ -44,7 +45,7 @@ public class Board {
     private Minimax minimax;
     private ScoreUpdateListener scoreUpdateListener = (blackPlayer, whitePlayer) -> { };
     private CurrentPlayerChangedListener currentPlayerChangedListener = currentPlayer -> { };
-    private List<TimeUpdatedListener> timeUpdatedListeners = new ArrayList<>();
+    private List<TimeUpdatedListener> timeUpdatedListeners = new CopyOnWriteArrayList<>();
     private PastGameStateListener pastGameStateListener = (gamestate, move) -> { };
     private GameInSessionListener gameInSessionListener = (winner, winType) -> { };
 
@@ -98,7 +99,6 @@ public class Board {
             }
         }
         return true;
-
     }
 
     public void makeMove(Move move) throws Move.IllegalMoveException {
