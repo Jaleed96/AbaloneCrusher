@@ -49,4 +49,11 @@ public class TranspositionTable {
         long key = TranspositionTable.generateZobristKey(board);
         return transpostion.get(key);
     }
+    public void put(long key, TableEntry entry) {
+        transpostion.put(key, entry);
+    }
+    public void put(byte[][] board, TableEntry entry) {
+        long key = TranspositionTable.generateZobristKey(board);
+        transpostion.put(key, entry);
+    }
 }
