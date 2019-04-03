@@ -162,7 +162,7 @@ public class Minimax {
 
         if (gameOver(state) || depth == 0)
             return Heuristic.evaluate(state);
-        else if (TranspositionTable.containsKey(state.board) && depth>TranspositionTable.get(state.board).getDepth()) {
+        else if (TranspositionTable.containsKey(state.board) && depth<=TranspositionTable.get(state.board).getDepth()) {
             System.out.println("CACHE HIT");
             return TranspositionTable.get(state.board).fetchHeuristic();
         }
@@ -188,7 +188,7 @@ public class Minimax {
 
         if (gameOver(state) || depth == 0)
             return Heuristic.evaluate(state);
-        else if (TranspositionTable.containsKey(state.board) && depth>TranspositionTable.get(state.board).getDepth()) {
+        else if (TranspositionTable.containsKey(state.board) && depth<=TranspositionTable.get(state.board).getDepth()) {
             System.out.println("CACHE HIT");
             return TranspositionTable.get(state.board).fetchHeuristic();
         }
