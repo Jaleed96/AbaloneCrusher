@@ -1,3 +1,4 @@
+import java.util.List;
 import java.util.Optional;
 
 public class Heuristic {
@@ -46,7 +47,7 @@ public class Heuristic {
 
     /** Formation break happens when a player's marble is between two opponents marbles.
      * @return the number of "broken up" opponent's marbles, i.e. WBW has value of 2 for B player*/
-    public static int formationBreak(byte[][] board, byte player, byte opponent) {
+    private static int formationBreak(byte[][] board, byte player, byte opponent) {
         int formationBreak = 0;
         for (int row = 0; row < board.length; ++row) {
             for (int col = 0; col < board[row].length; ++col) {
@@ -65,6 +66,25 @@ public class Heuristic {
         return formationBreak;
     }
 
+    private static int aggressionFactor(List<OrderedMove> possibleMoves) {
+        final int capture = 2;
+        final int push = 1;
+
+        int aggression = 0;
+        for (OrderedMove om : possibleMoves) {
+            switch (om.type) {
+                case THREE_PUSH_TWO_CAPTURE: case THREE_PUSH_ONE_CAPTURE: case TWO_PUSH_ONE_CAPTURE:
+                    aggression += capture;
+                    break;
+                case THREE_PUSH_TWO: case THREE_PUSH_ONE: case TWO_PUSH_ONE:
+                    aggression += push;
+                    break;
+                default: break;
+            }
+        }
+        return aggression;
+    }
+
     private static int winLoss(Minimax.State state) {
         if (state.maxPlayerScore == Board.SCORE_TO_WIN)
             return Integer.MAX_VALUE;
@@ -81,16 +101,21 @@ public class Heuristic {
         return 0;
     }
 
-    private static final int DISTANCE_TO_CENTER_WEIGHT = 10;
+    private static final int DISTANCE_TO_CENTER_WEIGHT = 25;
     private static final int SCORE_WEIGHT = 1000;
     private static final int LOSS_WEIGHT = 200;
-    private static final int GROUPING_WEIGHT = 20;
-    private static final int FORMATION_BREAK_WEIGHT = 40;
+    private static final int GROUPING_WEIGHT = 10;
+    private static final int FORMATION_BREAK_WEIGHT = 35;
+    private static final int MAX_AGGRESSION_WEIGHT = 100;
+    private static final int MIN_AGGRESSION_WEIGHT = 25;
 
     public static int evaluate(Minimax.State state) {
         int winLossVal = winLoss(state);
         if (winLossVal != 0)
             return winLossVal;
+
+        List<OrderedMove> maxMoves = MoveGenerator.generate(state.board, state.maximizingPlayer, state.minimizingPlayer);
+        List<OrderedMove> minMoves = MoveGenerator.generate(state.board, state.minimizingPlayer, state.maximizingPlayer);
 
         // TODO experiment and decide which heuristics need to be symmetrical
         return closenessToCenter(state.board, state.maximizingPlayer) * DISTANCE_TO_CENTER_WEIGHT
@@ -98,8 +123,11 @@ public class Heuristic {
                 // Score-wise losses are only bad if they lead to a game loss.
                 // However, they should still be accounted for as less marbles means a weaker position.
                 + state.maxPlayerScore * SCORE_WEIGHT - state.minPlayerScore * LOSS_WEIGHT
-                + (grouping(state.board, state.maximizingPlayer) - grouping(state.board, state.minimizingPlayer)) * GROUPING_WEIGHT
+                + (grouping(state.board, state.maximizingPlayer)
+                    - grouping(state.board, state.minimizingPlayer)) * GROUPING_WEIGHT
                 + (formationBreak(state.board, state.maximizingPlayer, state.minimizingPlayer)
-                   - formationBreak(state.board, state.minimizingPlayer, state.maximizingPlayer)) * FORMATION_BREAK_WEIGHT;
+                    - formationBreak(state.board, state.minimizingPlayer, state.maximizingPlayer)) * FORMATION_BREAK_WEIGHT
+                + aggressionFactor(maxMoves) * MAX_AGGRESSION_WEIGHT
+                    - aggressionFactor(minMoves) * MIN_AGGRESSION_WEIGHT;
     }
 }
