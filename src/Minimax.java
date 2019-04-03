@@ -139,7 +139,7 @@ public class Minimax {
         List<ScoredMove> recordedMoves = new ArrayList<>();
         for (OrderedMove m : moves) {
             int minVal = minimize(moveResult(state, m.move, state.maximizingPlayer), alpha, Integer.MAX_VALUE, depth - 1);
-            System.out.println(minVal + " " + MoveParser.toText(m.move) + " " + m.type);
+            //System.out.println(minVal + " " + MoveParser.toText(m.move) + " " + m.type);
             if (interruptFlag.get()) {
                 // if interruptFlag is set, value returned by minimize likely doesn't make sense
                 break;
@@ -155,41 +155,53 @@ public class Minimax {
     }
 
     private int maximize(State state, int alpha, int beta, int depth) {
+        System.out.println(depth);
         if (interruptFlag.get()) {
             return alpha;
         }
 
         if (gameOver(state) || depth == 0)
             return Heuristic.evaluate(state);
-
+        else if (TranspositionTable.containsKey(state.board) && depth>TranspositionTable.get(state.board).getDepth()) {
+            System.out.println("CACHE HIT");
+            return TranspositionTable.get(state.board).fetchHeuristic();
+        }
+        System.out.println("===========CACHE MISS=============");
         int val = Integer.MIN_VALUE;
         List<OrderedMove> moves = MoveGenerator.generate(state.board, state.maximizingPlayer, state.minimizingPlayer);
         moves.sort(OrderedMove::compareTo);
         for (OrderedMove m : moves) {
             val = Math.max(val, minimize(moveResult(state, m.move, state.maximizingPlayer), alpha, beta, depth - 1));
-            if (val >= beta) return val;
+            if (val >= beta) break/*return val*/;
             alpha = Math.max(alpha, val);
         }
+        TranspositionTable.put(state.board, new TableEntry(val, state, alpha, beta, depth));
 
         return val;
     }
 
     private int minimize(State state, int alpha, int beta, int depth) {
+        System.out.println(depth);
         if (interruptFlag.get()) {
             return beta;
         }
 
         if (gameOver(state) || depth == 0)
             return Heuristic.evaluate(state);
-
+        else if (TranspositionTable.containsKey(state.board) && depth>TranspositionTable.get(state.board).getDepth()) {
+            System.out.println("CACHE HIT");
+            return TranspositionTable.get(state.board).fetchHeuristic();
+        }
+        System.out.println("===========CACHE MISS=============");
         int val = Integer.MAX_VALUE;
         List<OrderedMove> moves = MoveGenerator.generate(state.board, state.minimizingPlayer, state.maximizingPlayer);
         moves.sort(OrderedMove::compareTo);
         for (OrderedMove m : moves) {
             val = Math.min(val, maximize(moveResult(state, m.move, state.minimizingPlayer), alpha, beta, depth - 1));
-            if (val <= alpha) return val;
+            if (val <= alpha) break/*return val**/;
             beta = Math.min(beta, val);
         }
+        TranspositionTable.put(state.board, new TableEntry(val, state, alpha, beta, depth));
 
         return val;
     }

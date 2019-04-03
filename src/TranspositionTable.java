@@ -4,11 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TranspositionTable {
-    private Map<Long, TableEntry> transpostion = new HashMap<>();
-    public static final int WHITE_SEED = 1;
-    public static final int BLACK_SEED = 2;
+    private static Map<Long, TableEntry> transpostion = new HashMap<>();
+    public static final int WHITE_SEED = 0;
+    public static final int BLACK_SEED = 1;
     public static final int RANGE = 100000;
-    private static final int[][][] table = new int[9][9][2];;
+    private static long[][][] table = initializeZobrist();;
 
 
     public static long generateZobristKey(byte[][] board) {
@@ -24,35 +24,37 @@ public class TranspositionTable {
         return hash;
     }
 
-    private static void initializeZobrist() {
+    private static long[][][] initializeZobrist() {
+        long[][][] table = new long[9][9][2];
         for (int i = 0; i<table.length; i++) {
-            for (int j = 0; j<table[i].length; i++) {
+            for (int j = 0; j<table[i].length; j++) {
                 for (int k = 0; k<table[i][j].length; k++) {
-                    table[i][j][k] = (int) (Math.random()*RANGE);
+                    table[i][j][k] = (long) (Math.random()*RANGE);
                 }
             }
         }
+        return table;
     }
 
-    public boolean containsKey(long key) {
+    public static boolean containsKey(long key) {
         return transpostion.containsKey(key);
     }
-    public boolean containsKey(byte[][] board) {
+    public static boolean containsKey(byte[][] board) {
         long key = TranspositionTable.generateZobristKey(board);
         return transpostion.containsKey(key);
     }
 
-    public TableEntry get(long key) {
+    public static TableEntry get(long key) {
         return transpostion.get(key);
     }
-    public TableEntry get(byte[][] board) {
+    public static TableEntry get(byte[][] board) {
         long key = TranspositionTable.generateZobristKey(board);
         return transpostion.get(key);
     }
-    public void put(long key, TableEntry entry) {
+    public static void put(long key, TableEntry entry) {
         transpostion.put(key, entry);
     }
-    public void put(byte[][] board, TableEntry entry) {
+    public static void put(byte[][] board, TableEntry entry) {
         long key = TranspositionTable.generateZobristKey(board);
         transpostion.put(key, entry);
     }
