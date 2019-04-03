@@ -1,3 +1,4 @@
+import java.util.Stack;
 import java.util.Timer;
 
 import javafx.geometry.Pos;
@@ -36,6 +37,8 @@ public class Game {
     private int turn = 1;
     private int timeLeftCount;
     private Gamestate lastGamestate;
+    private Stack<Integer> totalBlackTime = new Stack<>();
+    private Stack<Integer> totalWhiteTime = new Stack<>();
 
     Game(Config cfg, double w, double h, Scene menuScene, Stage stage) {
         this.stage = stage;
@@ -110,6 +113,8 @@ public class Game {
             GAME_STOPPED = gameBoard.GAME_STOPPED;
             if (winner == null) {
                 gameState.setText("Tie: player scores are equal");
+                gameState.setText(String.format("%s\n%s %3.2fs\n%s %3.2fs", "Game Stopped", "Total Black Time:", ((double)getTotalTime(totalBlackTime) / 1000)
+                        , "Total White Time:", ((double)getTotalTime(totalWhiteTime) / 1000)));
             } else {
                 gameState.setText((char) winner.piece+" wins"+": "+winType);
             }
@@ -129,6 +134,11 @@ public class Game {
             history.setText(String.format(("%s%s.(%s) %s (%3.2fs)\n"), history.getText(), String.valueOf(turn),
                     currentPlayerHistory.getText(), MoveParser.toText(move),
                     ((double) (gameBoard.currentPlayer().getTimeLimitMs() - timeLeftCount) / 1000)));
+            if (gameBoard.currentPlayer().piece == 'B') {
+               totalBlackTime.push(((gameBoard.currentPlayer().getTimeLimitMs() - timeLeftCount)));
+            } else {
+                totalWhiteTime.push((gameBoard.currentPlayer().getTimeLimitMs() - timeLeftCount));
+            }
             turn++;
         });
 
@@ -228,9 +238,11 @@ public class Game {
                 if (gameBoard.currentPlayer().piece == Board.WHITE) {
                     currentPlayer.setText("Turn: White");
                     currentPlayerHistory.setText("White");
+                    totalWhiteTime.pop();
                 } else {
                     currentPlayer.setText("Turn: Black");
                     currentPlayerHistory.setText("Black");
+                    totalBlackTime.pop();
                 }
                 history.setText(history.getText() + currentPlayerHistory.getText() + " has undone their last move!" + "\n");
             }
@@ -241,7 +253,8 @@ public class Game {
             gameBoard.GAME_PAUSED = gameBoard.GAME_STOPPED;
             GAME_STOPPED = gameBoard.GAME_STOPPED;
             GAME_PAUSED = gameBoard.GAME_PAUSED;
-            gameState.setText("Game Stopped");
+            gameState.setText(String.format("%s\n%s %3.2fs\n%s %3.2fs", "Game Stopped", "Total Black Time:", ((double)getTotalTime(totalBlackTime) / 1000)
+                    , "Total White Time:", ((double)getTotalTime(totalWhiteTime) / 1000)));
         });
         pauseBtn.setOnAction(e -> {
             if (!gameBoard.GAME_STOPPED) {
@@ -255,5 +268,13 @@ public class Game {
         });
 
         gameBoard.doFirstRandMove();
+    }
+
+    private int getTotalTime(Stack<Integer> stack) {
+        int total = 0;
+        for (int x : stack) {
+            total += x;
+        }
+        return total;
     }
 }

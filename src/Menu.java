@@ -14,7 +14,7 @@ import javafx.stage.Stage;
 
 public class Menu extends Application {
     public static final int MENU_SCENE_WIDTH = 1300;
-    public static final int MENU_SCENE_HEIGHT = 690;
+    public static final int MENU_SCENE_HEIGHT = 710;
 
     private GridPane gridpane = new GridPane();
     private Label title = new Label("ABALONE");
