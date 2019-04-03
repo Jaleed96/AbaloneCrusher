@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 // Generates legal moves for a given game state
 public class MoveGenerator {
@@ -109,5 +110,13 @@ public class MoveGenerator {
                     moves.addAll(collectFromCoord(board, playerPiece, opponentPiece, coord));
         }
         return moves;
+    }
+    //gets a random move generated from
+    public static Move firstRandMove(byte[][] board) {
+        List<OrderedMove> moves = generate(board, Board.BLACK, Board.WHITE);
+        Random r = new Random();
+        int randInd =  r.nextInt((moves.size()));
+        OrderedMove move = moves.get(randInd);
+        return move.move;
     }
 }

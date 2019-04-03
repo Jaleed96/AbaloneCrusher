@@ -66,7 +66,15 @@ public class Board {
         gameTimer = new Timer(true);
         gameTimer.schedule(new Countdown(), 0, TIME_STEP_MS);
         minimax = new Minimax();
-        runAI();
+        //random first move if it's an agent
+        if (current.agent == Config.PlayerAgent.AI) {
+            try {
+                makeMove(MoveGenerator.firstRandMove(board));
+            } catch (Move.IllegalMoveException e) {
+                System.out.println("FIRST MOVE WAS ILLEGAL?! BUT WHY??");
+                e.printStackTrace();
+            }
+        }
     }
 
     private void runAI(){
@@ -126,8 +134,10 @@ public class Board {
         pastGameStateListener.onPastGameState(gamestate, move);
         applyMove(move);
         nextTurn();
-        //runs AI after turn has been taken
-        runAI();
+        //runs AI if next player is an agent
+        if (current.agent == Config.PlayerAgent.AI) {
+            runAI();
+        }
     }
 
     private void applyMove(Move move) {
