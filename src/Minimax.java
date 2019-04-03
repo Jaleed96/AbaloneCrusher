@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Minimax {
 
     public static int SAFE_TIMEOUT_THRESHOLD_MS = 200;
+    private static int Q_SEARCH_DEPTH = 2;
 
     interface SearchInterruptHandle {
         Move interruptWithOutput();
@@ -138,7 +139,7 @@ public class Minimax {
         int alpha = Integer.MIN_VALUE;
         List<ScoredMove> recordedMoves = new ArrayList<>();
         for (OrderedMove m : moves) {
-            int minVal = minimize(moveResult(state, m.move, state.maximizingPlayer), alpha, Integer.MAX_VALUE, depth - 1);
+            int minVal = minimize(moveResult(state, m.move, state.maximizingPlayer), alpha, Integer.MAX_VALUE, qSearchDepth(m, depth), depth - 1);
             //System.out.println(minVal + " " + MoveParser.toText(m.move) + " " + m.type);
             if (interruptFlag.get()) {
                 // if interruptFlag is set, value returned by minimize likely doesn't make sense
@@ -154,15 +155,14 @@ public class Minimax {
         return recordedMoves;
     }
 
-    private int maximize(State state, int alpha, int beta, int depth) {
-        System.out.println(depth);
+    private int maximize(State state, int alpha, int beta, final int q, int depth) {
         if (interruptFlag.get()) {
             return alpha;
         }
 
-        if (gameOver(state) || depth == 0)
+        if (gameOver(state) || depth + q == 0)
             return Heuristic.evaluate(state);
-        else if (TranspositionTable.containsKey(state.board) && depth<=TranspositionTable.get(state.board).getDepth()) {
+        else if (TranspositionTable.containsKey(state.board) && depth+q<=TranspositionTable.get(state.board).getDepth()) {
             System.out.println("CACHE HIT");
             return TranspositionTable.get(state.board).fetchHeuristic();
         }
@@ -171,24 +171,23 @@ public class Minimax {
         List<OrderedMove> moves = MoveGenerator.generate(state.board, state.maximizingPlayer, state.minimizingPlayer);
         moves.sort(OrderedMove::compareTo);
         for (OrderedMove m : moves) {
-            val = Math.max(val, minimize(moveResult(state, m.move, state.maximizingPlayer), alpha, beta, depth - 1));
+            val = Math.max(val, minimize(moveResult(state, m.move, state.maximizingPlayer), alpha, beta, Math.max(qSearchDepth(m, depth), q), depth - 1));
             if (val >= beta) break/*return val*/;
             alpha = Math.max(alpha, val);
         }
-        TranspositionTable.put(state.board, new TableEntry(val, state, alpha, beta, depth));
+        TranspositionTable.put(state.board, new TableEntry(val, state, alpha, beta, depth+q));
 
         return val;
     }
 
-    private int minimize(State state, int alpha, int beta, int depth) {
-        System.out.println(depth);
+    private int minimize(State state, int alpha, int beta, final int q, int depth) {
         if (interruptFlag.get()) {
             return beta;
         }
 
-        if (gameOver(state) || depth == 0)
+        if (gameOver(state) || depth + q == 0)
             return Heuristic.evaluate(state);
-        else if (TranspositionTable.containsKey(state.board) && depth<=TranspositionTable.get(state.board).getDepth()) {
+        else if (TranspositionTable.containsKey(state.board) && depth+q<=TranspositionTable.get(state.board).getDepth()) {
             System.out.println("CACHE HIT");
             return TranspositionTable.get(state.board).fetchHeuristic();
         }
@@ -197,13 +196,28 @@ public class Minimax {
         List<OrderedMove> moves = MoveGenerator.generate(state.board, state.minimizingPlayer, state.maximizingPlayer);
         moves.sort(OrderedMove::compareTo);
         for (OrderedMove m : moves) {
-            val = Math.min(val, maximize(moveResult(state, m.move, state.minimizingPlayer), alpha, beta, depth - 1));
+            val = Math.min(val, maximize(moveResult(state, m.move, state.minimizingPlayer), alpha, beta, Math.max(qSearchDepth(m, depth), q), depth - 1));
             if (val <= alpha) break/*return val**/;
             beta = Math.min(beta, val);
         }
-        TranspositionTable.put(state.board, new TableEntry(val, state, alpha, beta, depth));
+        TranspositionTable.put(state.board, new TableEntry(val, state, alpha, beta, depth+q));
 
         return val;
+    }
+
+    private static int qSearchDepth(OrderedMove m, int depth) {
+        // We only care about q if the move that leads to a leaf is a capturing one
+        if (depth != 1)
+            return 0;
+
+        switch (m.type) {
+            case THREE_PUSH_TWO_CAPTURE:
+            case THREE_PUSH_ONE_CAPTURE:
+            case TWO_PUSH_ONE_CAPTURE:
+                return Q_SEARCH_DEPTH;
+            default:
+                return 0;
+        }
     }
 
     private static boolean gameOver(State state) {
