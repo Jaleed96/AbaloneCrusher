@@ -1,3 +1,5 @@
+import java.util.Optional;
+
 public class Heuristic {
     public static final int[][] CACHED_CENTER_DIST_SCORE = cacheCenterDist();
 
@@ -12,8 +14,6 @@ public class Heuristic {
         return dist;
     }
 
-    private static final int DISTANCE_TO_CENTER_WEIGHT = 10;
-
     /** Reverse Manhattan distance of all player's pieces to the center of the board,
      * i.e. at center dist = 4, 4 away from center = 0 */
     private static int closenessToCenter(byte[][] board, byte player) {
@@ -25,6 +25,44 @@ public class Heuristic {
             }
         }
         return totalScore;
+    }
+
+    /** Finds how many friendly neighbors each of the player's pieces has */
+    private static int grouping(byte[][] board, byte player) {
+        int grouping = 0;
+        for (int row = 0; row < board.length; ++row) {
+            for (int col = 0; col < board[row].length; ++col) {
+                if (board[row][col] == player) {
+                    BoardUtil.Neighbors neighbors = BoardUtil.neighborsOf(BoardUtil.COORDINATES[row][col]);
+                    for (BoardUtil.Neighbor n : neighbors.toArray()) {
+                        if (board[n.coordinate.y][n.coordinate.x] == player)
+                            grouping += 1;
+                    }
+                }
+            }
+        }
+        return grouping;
+    }
+
+    /** Formation break happens when a player's marble is between two opponents marbles.
+     * @return the number of "broken up" opponent's marbles, i.e. WBW has value of 2 for B player*/
+    public static int formationBreak(byte[][] board, byte player, byte opponent) {
+        int formationBreak = 0;
+        for (int row = 0; row < board.length; ++row) {
+            for (int col = 0; col < board[row].length; ++col) {
+                if (board[row][col] == player) {
+                    BoardUtil.Neighbors neighbors = BoardUtil.neighborsOf(BoardUtil.COORDINATES[row][col]);
+                    for (BoardUtil.Neighbor n : neighbors.toArray()) {
+                        if (board[n.coordinate.y][n.coordinate.x] == opponent) {
+                            formationBreak += Optional.ofNullable(neighbors.fromDirection(n.direction.opposite()))
+                                                      .map(neighbor -> board[neighbor.coordinate.y][neighbor.coordinate.x] == opponent ? 1 : null)
+                                                      .orElse(0);
+                        }
+                    }
+                }
+            }
+        }
+        return formationBreak;
     }
 
     private static int winLoss(Minimax.State state) {
@@ -43,11 +81,25 @@ public class Heuristic {
         return 0;
     }
 
+    private static final int DISTANCE_TO_CENTER_WEIGHT = 10;
+    private static final int SCORE_WEIGHT = 1000;
+    private static final int LOSS_WEIGHT = 200;
+    private static final int GROUPING_WEIGHT = 20;
+    private static final int FORMATION_BREAK_WEIGHT = 40;
+
     public static int evaluate(Minimax.State state) {
         int winLossVal = winLoss(state);
         if (winLossVal != 0)
             return winLossVal;
 
-        return closenessToCenter(state.board, state.maximizingPlayer) * DISTANCE_TO_CENTER_WEIGHT;
+        // TODO experiment and decide which heuristics need to be symmetrical
+        return closenessToCenter(state.board, state.maximizingPlayer) * DISTANCE_TO_CENTER_WEIGHT
+                // Note that the score heuristic is not symmetrical.
+                // Score-wise losses are only bad if they lead to a game loss.
+                // However, they should still be accounted for as less marbles means a weaker position.
+                + state.maxPlayerScore * SCORE_WEIGHT - state.minPlayerScore * LOSS_WEIGHT
+                + (grouping(state.board, state.maximizingPlayer) - grouping(state.board, state.minimizingPlayer)) * GROUPING_WEIGHT
+                + (formationBreak(state.board, state.maximizingPlayer, state.minimizingPlayer)
+                   - formationBreak(state.board, state.minimizingPlayer, state.maximizingPlayer)) * FORMATION_BREAK_WEIGHT;
     }
 }
