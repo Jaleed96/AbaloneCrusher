@@ -67,15 +67,6 @@ public class Board {
         gameTimer = new Timer(true);
         gameTimer.schedule(new Countdown(), 0, TIME_STEP_MS);
         minimax = new Minimax();
-        //random first move if it's an agent
-        if (current.agent == Config.PlayerAgent.AI) {
-            try {
-                makeMove(MoveGenerator.firstRandMove(board));
-            } catch (Move.IllegalMoveException e) {
-                System.out.println("FIRST MOVE WAS ILLEGAL?! BUT WHY??");
-                e.printStackTrace();
-            }
-        }
     }
 
     private void runAI(){
@@ -305,6 +296,17 @@ public class Board {
             System.err.println("Board::playersOpponent received byte " + p);
             return Board.EMPTY;
         }
+        }
+    }
+
+    public void doFirstRandMove(){
+        if (current.agent == Config.PlayerAgent.AI) {
+            try {
+                makeMove(MoveGenerator.firstRandMove(board));
+            } catch (Move.IllegalMoveException e) {
+                System.out.println("FIRST MOVE WAS ILLEGAL?! BUT WHY??");
+                e.printStackTrace();
+            }
         }
     }
 

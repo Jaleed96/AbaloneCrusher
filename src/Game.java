@@ -253,5 +253,7 @@ public class Game {
                     gameState.setText("");
             }
         });
+
+        gameBoard.doFirstRandMove();
     }
 }
