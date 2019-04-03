@@ -1,9 +1,10 @@
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import javafx.application.Platform;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /** Game logic */
 public class Board {
@@ -91,9 +92,6 @@ public class Board {
                         Move m = handle.interruptWithOutput();
                         try {
                             makeMove(m);
-                            if (!GAME_STOPPED) {
-                                runAI();
-                            }
                         } catch (Move.IllegalMoveException ignored) {
                         }
                         removeTimeUpdatedListener(this);
