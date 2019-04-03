@@ -74,12 +74,12 @@ public class MoveSelection {
                     List<String> choices = new ArrayList<>();
                     choices.add("Inline");
                     choices.add("Broadside");
-        
+
                     ChoiceDialog<String> dialog = new ChoiceDialog<>("Please select", choices);
                     dialog.setTitle("Self-elimination move");
                     dialog.setHeaderText("It looks like you are trying to push your own piece(s) off the board.");
                     dialog.setContentText("If you're sure, please select a move direction:  ");
-        
+
                     Optional<String> result = dialog.showAndWait();
                     result.ifPresent(answer -> {
                         boolean broadside = answer.equals("Broadside");
@@ -178,7 +178,7 @@ public class MoveSelection {
         dehighlightAllMarbles();
         return maybeMove;
     }
-    
+
     private Optional<Move> handleDestinationSelect(boolean broadside) {
         Optional<Move> maybeMove = Optional.empty();
         if (selectedCells.size() == 1) {
@@ -209,7 +209,7 @@ public class MoveSelection {
         }
         return Optional.empty();
     }
-    
+
     private Optional<Move> moveInline() {
         Coordinate marble = selectedCells.get(0).getCoordinate();
         Coordinate lastMarble = selectedCells.get(selectedCells.size() - 1).getCoordinate();
@@ -231,8 +231,7 @@ public class MoveSelection {
         BoardUtil.Neighbor toLastNeighbor = BoardUtil.neighborsOf(lastMarble).fromDirection(moveDirection);
         if (toLastNeighbor == null && !Move.sureAboutSelfElimination()) {
             dehighlightAllMarbles();
-        }
-        if (selectedCells.size() == 2) {
+        } else if (selectedCells.size() == 2) {
             return Optional.of(new Move(new Push(firstMarble, toFirstNeighbor),
                                         new Push(lastMarble, toLastNeighbor)));
         } else {
@@ -242,8 +241,9 @@ public class MoveSelection {
                                         new Push(middleMarble, toMiddleNeighbor),
                                         new Push(lastMarble, toLastNeighbor)));
         }
+        return Optional.empty();
     }
-    
+
     private Optional<Move> moveBroadside() {
         Coordinate firstMarble = selectedCells.get(selectedCells.size() - 1).getCoordinate();
         Coordinate lastMarble = selectedCells.get(0).getCoordinate();
