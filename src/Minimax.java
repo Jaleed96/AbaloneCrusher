@@ -93,7 +93,7 @@ public class Minimax {
                     break;
                 }
             }
-
+            TranspositionTable.clear();
             // if we were interrupted, means we're at the last possible depth and we can use the move found there
             if (latestDecision.val > result.val)
                 result = latestDecision;
@@ -162,11 +162,30 @@ public class Minimax {
 
         if (gameOver(state) || depth + q == 0)
             return Heuristic.evaluate(state);
-        else if (TranspositionTable.containsKey(state.board) && depth+q<=TranspositionTable.get(state.board).getDepth()) {
-            System.out.println("CACHE HIT");
-            return TranspositionTable.get(state.board).fetchHeuristic();
+
+        TableEntry entry = TranspositionTable.get(state.board, state.maximizingPlayer);
+        if (entry != null && depth+q<=entry.getDepth()) {
+            int score = entry.fetchHeuristic();
+            TableEntry.ScoreType type = entry.getScoreType();
+            switch(type) {
+                case LOWER_BOUND:
+                    if (alpha<score) {
+                        alpha = score;
+                    }
+                    break;
+                case UPPER_BOUND:
+                    if (beta>score) {
+                        beta = score;
+                    }
+                    break;
+                case EXACT_SCORE:
+                    return score;
+            }
+            if (alpha>=beta) {
+                return score;
+            }
         }
-        System.out.println("===========CACHE MISS=============");
+
         int val = Integer.MIN_VALUE;
         List<OrderedMove> moves = MoveGenerator.generate(state.board, state.maximizingPlayer, state.minimizingPlayer);
         moves.sort(OrderedMove::compareTo);
@@ -175,7 +194,10 @@ public class Minimax {
             if (val >= beta) break/*return val*/;
             alpha = Math.max(alpha, val);
         }
-        TranspositionTable.put(state.board, new TableEntry(val, state, alpha, beta, depth+q));
+        if (!interruptFlag.get()) {
+            TranspositionTable.put(state.board, state.maximizingPlayer, new TableEntry(val, alpha, beta, depth+q));
+            //System.out.println("===========CACHE ADDED=============");
+        }
 
         return val;
     }
@@ -187,11 +209,30 @@ public class Minimax {
 
         if (gameOver(state) || depth + q == 0)
             return Heuristic.evaluate(state);
-        else if (TranspositionTable.containsKey(state.board) && depth+q<=TranspositionTable.get(state.board).getDepth()) {
-            System.out.println("CACHE HIT");
-            return TranspositionTable.get(state.board).fetchHeuristic();
+
+        TableEntry entry = TranspositionTable.get(state.board, state.maximizingPlayer);
+        if (entry != null && depth+q<=entry.getDepth()) {
+            int score = entry.fetchHeuristic();
+            TableEntry.ScoreType type = entry.getScoreType();
+            switch(type) {
+                case LOWER_BOUND:
+                    if (alpha<score) {
+                        alpha = score;
+                    }
+                    break;
+                case UPPER_BOUND:
+                    if (beta>score) {
+                        beta = score;
+                    }
+                    break;
+                case EXACT_SCORE:
+                    return score;
+            }
+            if (alpha>=beta) {
+                return score;
+            }
         }
-        System.out.println("===========CACHE MISS=============");
+
         int val = Integer.MAX_VALUE;
         List<OrderedMove> moves = MoveGenerator.generate(state.board, state.minimizingPlayer, state.maximizingPlayer);
         moves.sort(OrderedMove::compareTo);
@@ -200,7 +241,11 @@ public class Minimax {
             if (val <= alpha) break/*return val**/;
             beta = Math.min(beta, val);
         }
-        TranspositionTable.put(state.board, new TableEntry(val, state, alpha, beta, depth+q));
+
+        if (!interruptFlag.get()) {
+            TranspositionTable.put(state.board, state.maximizingPlayer, new TableEntry(val, alpha, beta, depth+q));
+            //System.out.println("===========CACHE ADDED=============");
+        }
 
         return val;
     }

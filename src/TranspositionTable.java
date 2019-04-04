@@ -2,9 +2,10 @@ import org.omg.CORBA.TRANSACTION_MODE;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class TranspositionTable {
-    private static Map<Long, TableEntry> transpostion = new HashMap<>();
+    private static Map<HashableState, TableEntry> transpostion = new HashMap<>();
     public static final int WHITE_SEED = 0;
     public static final int BLACK_SEED = 1;
     public static final int RANGE = 100000;
@@ -36,26 +37,41 @@ public class TranspositionTable {
         return table;
     }
 
-    public static boolean containsKey(long key) {
-        return transpostion.containsKey(key);
-    }
-    public static boolean containsKey(byte[][] board) {
+    public static TableEntry get(byte[][] board, byte maxPlayer) {
         long key = TranspositionTable.generateZobristKey(board);
-        return transpostion.containsKey(key);
+        HashableState hashicorp = new HashableState(key, maxPlayer);
+        return transpostion.get(hashicorp);
     }
 
-    public static TableEntry get(long key) {
-        return transpostion.get(key);
-    }
-    public static TableEntry get(byte[][] board) {
+    public static void put(byte[][] board, byte maxPlayer, TableEntry entry) {
         long key = TranspositionTable.generateZobristKey(board);
-        return transpostion.get(key);
+        HashableState hashicorp = new HashableState(key, maxPlayer);
+        transpostion.put(hashicorp, entry);
     }
-    public static void put(long key, TableEntry entry) {
-        transpostion.put(key, entry);
-    }
-    public static void put(byte[][] board, TableEntry entry) {
-        long key = TranspositionTable.generateZobristKey(board);
-        transpostion.put(key, entry);
+
+    public static void clear() { transpostion.clear(); }
+
+    private static class HashableState {
+        final long zKey;
+        final byte maxPlayer;
+
+        public HashableState(long zKey, byte maxPlayer) {
+            this.maxPlayer = maxPlayer;
+            this.zKey = zKey;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            HashableState that = (HashableState) o;
+            return zKey == that.zKey &&
+                    maxPlayer == that.maxPlayer;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(zKey, maxPlayer);
+        }
     }
 }
