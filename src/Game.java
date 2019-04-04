@@ -115,11 +115,13 @@ public class Game {
             GAME_STOPPED = gameBoard.GAME_STOPPED;
             if (winner == null) {
                 gameState.setText("Tie: player scores are equal");
-                gameState.setText(String.format("%s\n%s %3.2fs\n%s %3.2fs", "Game Stopped", "Total Black Time:", ((double)getTotalTime(totalBlackTime) / 1000)
-                        , "Total White Time:", ((double)getTotalTime(totalWhiteTime) / 1000)));
+
             } else {
                 gameState.setText((char) winner.piece+" wins"+": "+winType);
             }
+            gameState.setText(gameState.getText() +  (String.format("\n%s %3.2fs\n%s %3.2fs", "Total Black Time:", ((double)getTotalTime(totalBlackTime) / 1000)
+                    , "Total White Time:", ((double)getTotalTime(totalWhiteTime) / 1000))));
+
         });
 
         movesLeftB = new Label("Moves Left (Black): " + gameBoard.blackMovesLeft);
@@ -206,6 +208,7 @@ public class Game {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setContent(rightPane);
         scrollPane.setPannable(true);
+        scrollPane.vvalueProperty().bind(rightPane.heightProperty());
         rightPane.getChildren().addAll(history);
         rootLayout.getChildren().addAll(leftPane, centerPane, scrollPane);
         rootLayout.setSpacing((w + h) / 40);
