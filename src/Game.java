@@ -219,10 +219,12 @@ public class Game {
 
         // TODO: Button listeners preferably more atomic
         newGameBtn.setOnAction((e) -> {
+            gameBoard.onStop();
             this.stage.setScene(menuScene);
         });
 
         resetBtn.setOnAction((e) -> {
+            gameBoard.onStop();
             new Game(cfg, Menu.MENU_SCENE_WIDTH, Menu.MENU_SCENE_HEIGHT, menuScene, this.stage);
         });
 
@@ -245,11 +247,11 @@ public class Game {
                     totalBlackTime.pop();
                 }
                 history.setText(history.getText() + currentPlayerHistory.getText() + " has undone their last move!" + "\n");
-                gameBoard.runAI();
             }
         });
 
         stopBtn.setOnAction(e -> {
+            gameBoard.onStop();
             gameBoard.GAME_STOPPED = true;
             gameBoard.GAME_PAUSED = gameBoard.GAME_STOPPED;
             GAME_STOPPED = gameBoard.GAME_STOPPED;

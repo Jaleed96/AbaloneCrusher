@@ -52,6 +52,10 @@ public class Board {
     private PastGameStateListener pastGameStateListener = (gamestate, move) -> { };
     private GameInSessionListener gameInSessionListener = (winner, winType) -> { };
 
+    // ai stuff
+    private TimeUpdatedListener aiTimeoutHandler = (currentPlayer, timeLeftForPlayer) -> { };
+    private Minimax.SearchInterruptHandle lastSearchHandle = () -> null;
+
 
     Board(byte[][] board, double height, Config config) {
         this.board = BoardUtil.deepCopyRepresentation(board);
@@ -69,28 +73,34 @@ public class Board {
         minimax = new Minimax();
     }
 
-    public void runAI(){
+    private void runAI(){
         if (current.agent == Config.PlayerAgent.AI) {
-            Minimax.SearchInterruptHandle handle = minimax.searchBestMove(
+            lastSearchHandle = minimax.searchBestMove(
                     // current is the maximizing player, opponent is the minimizing player
                     new Minimax.State(board, current.piece, opponent.piece, blackMovesLeft, whiteMovesLeft, current.score(), opponent.score())
             );
 
-            final TimeUpdatedListener aiTimeout = new TimeUpdatedListener() {
-                @Override
-                public void onTimeUpdated(Player currentPlayer, int timeLeftForPlayer) {
-                    if (timeLeftForPlayer < Minimax.SAFE_TIMEOUT_THRESHOLD_MS) {
-                        Move m = handle.interruptWithOutput();
-                        try {
-                            makeMove(m);
-                        } catch (Move.IllegalMoveException ignored) {
-                        }
-                        removeTimeUpdatedListener(this);
+            aiTimeoutHandler = (currentPlayer, timeLeftForPlayer) -> {
+                if (timeLeftForPlayer < Minimax.SAFE_TIMEOUT_THRESHOLD_MS) {
+                    Move m = lastSearchHandle.interruptWithOutput();
+                    try {
+                        makeMove(m);
+                    } catch (Move.IllegalMoveException ignored) {
+                    }
+                    // The if is needed because runAI is called inside makeMove
+                    if (current.agent != Config.PlayerAgent.AI) {
+                        aiTimeoutHandler = (c, t) -> { };
+                        lastSearchHandle = () -> null;
                     }
                 }
             };
-            addTimeUpdatedListener(aiTimeout);
         }
+    }
+
+    private void stopAI() {
+        aiTimeoutHandler = (currentPlayer, timeLeftForPlayer) -> { };
+        lastSearchHandle.interruptWithOutput();
+        lastSearchHandle = () -> null;
     }
 
     private boolean enoughMovesLeft() {
@@ -208,6 +218,13 @@ public class Board {
         whiteMovesLeft = gsCopy.movesLeftW;
         setTurnTimeLeft(currentPlayer());
         scoreUpdateCallback();
+
+        stopAI();
+        runAI();
+    }
+
+    public void onStop() {
+        stopAI();
     }
 
     private void scoreUpdateCallback() {
@@ -278,6 +295,7 @@ public class Board {
                             for (TimeUpdatedListener listen : timeUpdatedListeners) {
                                 listen.onTimeUpdated(current, curPlayerTurnTimeLeft);
                             }
+                            aiTimeoutHandler.onTimeUpdated(current, curPlayerTurnTimeLeft);
                         } else
                             endGameSession(opponent, "Wins by Timeout");
                     }
