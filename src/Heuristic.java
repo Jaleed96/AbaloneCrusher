@@ -103,11 +103,11 @@ public class Heuristic {
 
     private static final int DISTANCE_TO_CENTER_WEIGHT = 25;
     private static final int SCORE_WEIGHT = 1000;
-    private static final int LOSS_WEIGHT = 200;
-    private static final int GROUPING_WEIGHT = 10;
-    private static final int FORMATION_BREAK_WEIGHT = 35;
+    private static final int LOSS_WEIGHT = 900;
+    private static final int GROUPING_WEIGHT = 15;
+    private static final int FORMATION_BREAK_WEIGHT = 30;
     private static final int MAX_AGGRESSION_WEIGHT = 100;
-    private static final int MIN_AGGRESSION_WEIGHT = 25;
+    private static final int MIN_AGGRESSION_WEIGHT = 50;
 
     public static int evaluate(Minimax.State state) {
         int winLossVal = winLoss(state);
