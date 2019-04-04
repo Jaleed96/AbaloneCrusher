@@ -74,7 +74,7 @@ public class Board {
     }
 
     private void runAI(){
-        if (current.agent == Config.PlayerAgent.AI) {
+        if (!GAME_STOPPED && current.agent == Config.PlayerAgent.AI) {
             lastSearchHandle = minimax.searchBestMove(
                     // current is the maximizing player, opponent is the minimizing player
                     new Minimax.State(board, current.piece, opponent.piece, blackMovesLeft, whiteMovesLeft, current.score(), opponent.score())
@@ -133,10 +133,7 @@ public class Board {
         pastGameStateListener.onPastGameState(gamestate, move);
         applyMove(move);
         nextTurn();
-        //runs AI if next player is an agent
-        if (current.agent == Config.PlayerAgent.AI) {
-            runAI();
-        }
+        runAI();
     }
 
     private void applyMove(Move move) {
