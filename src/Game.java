@@ -37,6 +37,7 @@ public class Game {
     private int turn = 1;
     private int timeLeftCount;
     private Gamestate lastGamestate;
+    private Stack<Gamestate> gamestateStack = new Stack<>();
     private Stack<Integer> totalBlackTime = new Stack<>();
     private Stack<Integer> totalWhiteTime = new Stack<>();
 
@@ -132,6 +133,7 @@ public class Game {
 
         gameBoard.setPastGameStateListener((gamestate, move) -> {
             lastGamestate = gamestate;
+            gamestateStack.push(gamestate);
             history.setText(String.format(("%s%s.(%s) %s (%3.2fs)\n"), history.getText(), String.valueOf(turn),
                     currentPlayerHistory.getText(), MoveParser.toText(move),
                     ((double) (gameBoard.currentPlayer().getTimeLimitMs() - timeLeftCount) / 1000)));
@@ -233,6 +235,11 @@ public class Game {
 
         // reverts to the saved state of the board
         undoBtn.setOnAction((e) -> {
+            gamestateStack.pop();
+            if (lastGamestate.currentPlayer.agent == Config.PlayerAgent.AI) {
+                lastGamestate = gamestateStack.pop();
+                turn--;
+            }
             if (lastGamestate != null && lastGamestate.board != gameBoard.representation()) {
                 GAME_STOPPED = GAME_PAUSED = gameBoard.GAME_PAUSED = gameBoard.GAME_STOPPED = false;
                 gameState.setText("");
