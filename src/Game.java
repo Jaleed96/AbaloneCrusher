@@ -104,6 +104,7 @@ public class Game {
         GAME_PAUSED = gameBoard.GAME_PAUSED;
         GAME_STOPPED = gameBoard.GAME_STOPPED;
 
+        timeLeftCount = gameBoard.getCurPlayerTurnTimeLeft();
         gameBoard.addTimeUpdatedListener((player, timeLeft) -> {
             timeLeftCount = timeLeft;
             timeLabel.setText(String.format("%d.%03d s", timeLeft / 1000, timeLeft % 1000));

@@ -203,7 +203,7 @@ public class Board {
         return opponent;
     }
 
-    public double getCurPlayerTurnTimeLeft() {
+    public int getCurPlayerTurnTimeLeft() {
         return curPlayerTurnTimeLeft;
     }
 
