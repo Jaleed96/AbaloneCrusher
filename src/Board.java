@@ -69,7 +69,7 @@ public class Board {
         minimax = new Minimax();
     }
 
-    private void runAI(){
+    public void runAI(){
         if (current.agent == Config.PlayerAgent.AI) {
             Minimax.SearchInterruptHandle handle = minimax.searchBestMove(
                     // current is the maximizing player, opponent is the minimizing player

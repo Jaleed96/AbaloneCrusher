@@ -245,6 +245,7 @@ public class Game {
                     totalBlackTime.pop();
                 }
                 history.setText(history.getText() + currentPlayerHistory.getText() + " has undone their last move!" + "\n");
+                gameBoard.runAI();
             }
         });
 
