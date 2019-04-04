@@ -218,6 +218,8 @@ public class Game {
         scene = new Scene(rootLayout, w, h);
         stage.setScene(scene);
 
+        stage.setOnCloseRequest(windowEvent -> gameBoard.onStop());
+
         // TODO: Button listeners preferably more atomic
         newGameBtn.setOnAction((e) -> {
             gameBoard.onStop();
