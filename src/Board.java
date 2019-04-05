@@ -98,14 +98,14 @@ public class Board {
 
             aiTimeoutHandler = (currentPlayer, timeLeftForPlayer) -> {
                 Optional<Move> maybeMove = lastSearchHandle.getOutputIfReady();
+
+                if (timeLeftForPlayer < Minimax.SAFE_TIMEOUT_THRESHOLD_MS) {
+                    maybeMove = Optional.of(lastSearchHandle.interruptWithOutput());
+                }
+
                 maybeMove.ifPresent(m -> {
                     try { makeMove(m); } catch (Move.IllegalMoveException ignored) { }
                 });
-
-                if (!maybeMove.isPresent() && timeLeftForPlayer < Minimax.SAFE_TIMEOUT_THRESHOLD_MS) {
-                    Move m = lastSearchHandle.interruptWithOutput();
-                    try { makeMove(m); } catch (Move.IllegalMoveException ignored) { }
-                }
             };
         }
     }
