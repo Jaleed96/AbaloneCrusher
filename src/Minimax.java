@@ -16,6 +16,7 @@ public class Minimax {
 
     interface SearchInterruptHandle {
         Move interruptWithOutput();
+        Optional<Move> getOutputIfReady();
     }
 
     /** Smaller version of Gamestate class, there's some code duplication here */
@@ -104,15 +105,30 @@ public class Minimax {
         });
         exec.shutdown();
 
-        return () -> {
-            interrupt();
-            try {
-                return resultFuture.get();
-            } catch (InterruptedException | ExecutionException e) {
-                // Neither exception should ever happen unless we have some serious errors
-                System.err.println("Something went terribly wrong and minimax failed to find a move.");
-                e.printStackTrace();
-                return null;
+        return new SearchInterruptHandle() {
+            @Override
+            public Move interruptWithOutput() {
+                interrupt();
+                try {
+                    return resultFuture.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    System.err.println("Something went terribly wrong and minimax failed to find a move.");
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+
+            @Override
+            public Optional<Move> getOutputIfReady() {
+                if (resultFuture.isDone()) {
+                    try {
+                        return Optional.of(resultFuture.get());
+                    } catch (InterruptedException | ExecutionException e) {
+                        System.err.println("Something went terribly wrong and minimax failed to find a move.");
+                        e.printStackTrace();
+                    }
+                }
+                return Optional.empty();
             }
         };
     }
@@ -198,7 +214,6 @@ public class Minimax {
         }
         if (!interruptFlag.get()) {
             TranspositionTable.put(state.board, state.maximizingPlayer, new TableEntry(val, alpha, beta, depth+q));
-            //System.out.println("===========CACHE ADDED=============");
         }
 
         return val;
@@ -246,7 +261,6 @@ public class Minimax {
 
         if (!interruptFlag.get()) {
             TranspositionTable.put(state.board, state.maximizingPlayer, new TableEntry(val, alpha, beta, depth+q));
-            //System.out.println("===========CACHE ADDED=============");
         }
 
         return val;
