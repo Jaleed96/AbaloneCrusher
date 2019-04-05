@@ -61,8 +61,8 @@ public class Board {
         this.board = BoardUtil.deepCopyRepresentation(board);
         gui = new GuiBoard(board, height);
 
-        current = new Player(config.blackAgent, Board.BLACK, config.moveLimit, config.blackTimeLimitMs);
-        opponent = new Player(config.whiteAgent, Board.WHITE, config.moveLimit, config.whiteTimeLimitMs);
+        current = new Player(config.blackAgent, Board.BLACK, config.moveLimit, config.blackTimeLimitMs, new PrimaryHeuristic());
+        opponent = new Player(config.whiteAgent, Board.WHITE, config.moveLimit, config.whiteTimeLimitMs, new PrimaryHeuristic());
 
         blackMovesLeft = config.moveLimit;
         whiteMovesLeft = config.moveLimit;
@@ -77,7 +77,8 @@ public class Board {
         if (!GAME_STOPPED && current.agent == Config.PlayerAgent.AI) {
             lastSearchHandle = minimax.searchBestMove(
                     // current is the maximizing player, opponent is the minimizing player
-                    new Minimax.State(board, current.piece, opponent.piece, blackMovesLeft, whiteMovesLeft, current.score(), opponent.score())
+                    new Minimax.State(board, current.piece, opponent.piece, blackMovesLeft, whiteMovesLeft, current.score(), opponent.score()),
+                    current.heuristic()
             );
 
             aiTimeoutHandler = (currentPlayer, timeLeftForPlayer) -> {

@@ -1,8 +1,8 @@
 import java.util.List;
 import java.util.Optional;
 
-public class Heuristic {
-    public static final int[][] CACHED_CENTER_DIST_SCORE = cacheCenterDist();
+public abstract class Heuristic {
+    private static final int[][] CACHED_CENTER_DIST_SCORE = cacheCenterDist();
 
     private static int[][] cacheCenterDist() {
         int maxDistFromCenter = 4;
@@ -17,7 +17,7 @@ public class Heuristic {
 
     /** Reverse Manhattan distance of all player's pieces to the center of the board,
      * i.e. at center dist = 4, 4 away from center = 0 */
-    private static int closenessToCenter(byte[][] board, byte player) {
+    static int closenessToCenter(byte[][] board, byte player) {
         int totalScore = 0;
         for (int row = 0; row < board.length; ++row) {
             for (int col = 0; col < board[row].length; ++col) {
@@ -29,7 +29,7 @@ public class Heuristic {
     }
 
     /** Finds how many friendly neighbors each of the player's pieces has */
-    private static int grouping(byte[][] board, byte player) {
+    static int grouping(byte[][] board, byte player) {
         int grouping = 0;
         for (int row = 0; row < board.length; ++row) {
             for (int col = 0; col < board[row].length; ++col) {
@@ -47,7 +47,7 @@ public class Heuristic {
 
     /** Formation break happens when a player's marble is between two opponents marbles.
      * @return the number of "broken up" opponent's marbles, i.e. WBW has value of 2 for B player*/
-    private static int formationBreak(byte[][] board, byte player, byte opponent) {
+    static int formationBreak(byte[][] board, byte player, byte opponent) {
         int formationBreak = 0;
         for (int row = 0; row < board.length; ++row) {
             for (int col = 0; col < board[row].length; ++col) {
@@ -66,7 +66,7 @@ public class Heuristic {
         return formationBreak;
     }
 
-    private static int aggressionFactor(List<OrderedMove> possibleMoves) {
+    static int aggressionFactor(List<OrderedMove> possibleMoves) {
         final int capture = 2;
         final int push = 1;
 
@@ -85,7 +85,7 @@ public class Heuristic {
         return aggression;
     }
 
-    private static int winLoss(Minimax.State state) {
+    static int winLoss(Minimax.State state) {
         if (state.maxPlayerScore == Board.SCORE_TO_WIN)
             return Integer.MAX_VALUE;
         if (state.minPlayerScore == Board.SCORE_TO_WIN)
@@ -95,39 +95,10 @@ public class Heuristic {
                 return Integer.MAX_VALUE;
             if (state.maxPlayerScore < state.minPlayerScore)
                 return Integer.MIN_VALUE;
-            // what to do in case of draw?
         }
 
         return 0;
     }
 
-    private static final int DISTANCE_TO_CENTER_WEIGHT = 25;
-    private static final int SCORE_WEIGHT = 1000;
-    private static final int LOSS_WEIGHT = 900;
-    private static final int GROUPING_WEIGHT = 15;
-    private static final int FORMATION_BREAK_WEIGHT = 30;
-    private static final int MAX_AGGRESSION_WEIGHT = 100;
-    private static final int MIN_AGGRESSION_WEIGHT = 50;
-
-    public static int evaluate(Minimax.State state) {
-        int winLossVal = winLoss(state);
-        if (winLossVal != 0)
-            return winLossVal;
-
-        List<OrderedMove> maxMoves = MoveGenerator.generate(state.board, state.maximizingPlayer, state.minimizingPlayer);
-        List<OrderedMove> minMoves = MoveGenerator.generate(state.board, state.minimizingPlayer, state.maximizingPlayer);
-
-        // TODO experiment and decide which heuristics need to be symmetrical
-        return closenessToCenter(state.board, state.maximizingPlayer) * DISTANCE_TO_CENTER_WEIGHT
-                // Note that the score heuristic is not symmetrical.
-                // Score-wise losses are only bad if they lead to a game loss.
-                // However, they should still be accounted for as less marbles means a weaker position.
-                + state.maxPlayerScore * SCORE_WEIGHT - state.minPlayerScore * LOSS_WEIGHT
-                + (grouping(state.board, state.maximizingPlayer)
-                    - grouping(state.board, state.minimizingPlayer)) * GROUPING_WEIGHT
-                + (formationBreak(state.board, state.maximizingPlayer, state.minimizingPlayer)
-                    - formationBreak(state.board, state.minimizingPlayer, state.maximizingPlayer)) * FORMATION_BREAK_WEIGHT
-                + aggressionFactor(maxMoves) * MAX_AGGRESSION_WEIGHT
-                    - aggressionFactor(minMoves) * MIN_AGGRESSION_WEIGHT;
-    }
+    public abstract int evaluate(final Minimax.State state);
 }

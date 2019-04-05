@@ -68,10 +68,12 @@ public class Minimax {
 
     private final AtomicBoolean interruptFlag = new AtomicBoolean(false);
     private State initialSearchState;
+    private Heuristic heuristic;
 
-    public SearchInterruptHandle searchBestMove(final State state) {
+    public SearchInterruptHandle searchBestMove(final State state, Heuristic heuristic) {
         interruptFlag.set(false);
         initialSearchState = state;
+        this.heuristic = heuristic;
 
         ExecutorService exec = Executors.newSingleThreadExecutor();
         Future<Move> resultFuture = exec.submit(() -> {
@@ -161,7 +163,7 @@ public class Minimax {
         }
 
         if (gameOver(state) || depth + q == 0)
-            return Heuristic.evaluate(state);
+            return heuristic.evaluate(state);
 
         TableEntry entry = TranspositionTable.get(state.board, state.maximizingPlayer);
         if (entry != null && depth+q<=entry.getDepth()) {
@@ -208,7 +210,7 @@ public class Minimax {
         }
 
         if (gameOver(state) || depth + q == 0)
-            return Heuristic.evaluate(state);
+            return heuristic.evaluate(state);
 
         TableEntry entry = TranspositionTable.get(state.board, state.maximizingPlayer);
         if (entry != null && depth+q<=entry.getDepth()) {
@@ -265,7 +267,7 @@ public class Minimax {
         }
     }
 
-    private static boolean gameOver(State state) {
+    static boolean gameOver(State state) {
         return state.movesLeftB == 0 && state.movesLeftW == 0
                 || state.maxPlayerScore == Board.SCORE_TO_WIN
                 || state.minPlayerScore == Board.SCORE_TO_WIN;
