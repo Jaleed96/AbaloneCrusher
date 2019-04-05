@@ -36,7 +36,6 @@ public class Game {
     private CheckBox toggleCoordOverlay;
     private int turn = 1;
     private int timeLeftCount;
-    private Gamestate lastGamestate;
     private Stack<Gamestate> gamestateStack = new Stack<>();
     private Stack<Integer> totalBlackTime = new Stack<>();
     private Stack<Integer> totalWhiteTime = new Stack<>();
@@ -134,7 +133,6 @@ public class Game {
         });
 
         gameBoard.setPastGameStateListener((gamestate, move) -> {
-            lastGamestate = gamestate;
             gamestateStack.push(gamestate);
             history.setText(String.format(("%s%s.(%s) %s (%3.2fs)\n"), history.getText(), String.valueOf(turn),
                     currentPlayerHistory.getText(), MoveParser.toText(move),
@@ -238,17 +236,19 @@ public class Game {
 
         // reverts to the saved state of the board
         undoBtn.setOnAction((e) -> {
-            gamestateStack.pop();
-            if (lastGamestate.currentPlayer.agent == Config.PlayerAgent.AI) {
-                lastGamestate = gamestateStack.pop();
-                turn--;
-            }
-            if (lastGamestate != null && lastGamestate.board != gameBoard.representation()) {
+            if (!gamestateStack.empty()) {
+                Gamestate lastGamestate = gamestateStack.pop();
+
+                if (lastGamestate.currentPlayer.agent == Config.PlayerAgent.AI && !gamestateStack.empty()) {
+                    lastGamestate = gamestateStack.pop();
+                    turn--;
+                }
+
                 GAME_STOPPED = GAME_PAUSED = gameBoard.GAME_PAUSED = gameBoard.GAME_STOPPED = false;
                 gameState.setText("");
                 gameBoard.setGamestate(lastGamestate);
-                movesLeftB.setText("Moves Left (Black): " + Integer.toString(lastGamestate.movesLeftB));
-                movesLeftW.setText("Moves Left (White): " + Integer.toString(lastGamestate.movesLeftW));
+                movesLeftB.setText("Moves Left (Black): " + lastGamestate.movesLeftB);
+                movesLeftW.setText("Moves Left (White): " + lastGamestate.movesLeftW);
                 turn--;
                 if (gameBoard.currentPlayer().piece == Board.WHITE) {
                     currentPlayer.setText("Turn: White");
