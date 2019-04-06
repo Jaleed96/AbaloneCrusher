@@ -1,13 +1,10 @@
+import java.util.Optional;
 import java.util.Stack;
 import java.util.Timer;
 
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -138,7 +135,7 @@ public class Game {
                     currentPlayerHistory.getText(), MoveParser.toText(move),
                     ((double) (gameBoard.currentPlayer().getTimeLimitMs() - timeLeftCount) / 1000)));
             if (gameBoard.currentPlayer().piece == 'B') {
-               totalBlackTime.push(((gameBoard.currentPlayer().getTimeLimitMs() - timeLeftCount)));
+                totalBlackTime.push(((gameBoard.currentPlayer().getTimeLimitMs() - timeLeftCount)));
             } else {
                 totalWhiteTime.push((gameBoard.currentPlayer().getTimeLimitMs() - timeLeftCount));
             }
@@ -152,16 +149,16 @@ public class Game {
 
         gameBoard.setCurrentPlayerChangedListener(player -> {
             switch (player.piece) {
-            case Board.WHITE:
-                movesLeftB.setText("Moves Left (Black): " + Integer.toString(gameBoard.blackMovesLeft));
-                currentPlayer.setText("Turn: White");
-                currentPlayerHistory.setText("White");
-                break;
-            case Board.BLACK:
-                movesLeftW.setText("Moves Left (White): " + Integer.toString(gameBoard.whiteMovesLeft));
-                currentPlayer.setText("Turn: Black");
-                currentPlayerHistory.setText("Black");
-                break;
+                case Board.WHITE:
+                    movesLeftB.setText("Moves Left (Black): " + Integer.toString(gameBoard.blackMovesLeft));
+                    currentPlayer.setText("Turn: White");
+                    currentPlayerHistory.setText("White");
+                    break;
+                case Board.BLACK:
+                    movesLeftW.setText("Moves Left (White): " + Integer.toString(gameBoard.whiteMovesLeft));
+                    currentPlayer.setText("Turn: Black");
+                    currentPlayerHistory.setText("Black");
+                    break;
             }
         });
 
@@ -236,30 +233,38 @@ public class Game {
 
         // reverts to the saved state of the board
         undoBtn.setOnAction((e) -> {
-            if (!gamestateStack.empty()) {
-                Gamestate lastGamestate = gamestateStack.pop();
+            if (!GAME_STOPPED && !GAME_PAUSED) {
+                gameBoard.GAME_PAUSED = true;
+                GAME_PAUSED = true;
+                if (sureAboutUndo()) {
+                    if (!gamestateStack.empty()) {
+                        Gamestate lastGamestate = gamestateStack.pop();
 
-                if (lastGamestate.currentPlayer.agent == Config.PlayerAgent.AI && !gamestateStack.empty()) {
-                    lastGamestate = gamestateStack.pop();
-                    turn--;
-                }
+                        if (lastGamestate.currentPlayer.agent == Config.PlayerAgent.AI && !gamestateStack.empty()) {
+                            lastGamestate = gamestateStack.pop();
+                            turn--;
+                        }
 
-                GAME_STOPPED = GAME_PAUSED = gameBoard.GAME_PAUSED = gameBoard.GAME_STOPPED = false;
-                gameState.setText("");
-                gameBoard.setGamestate(lastGamestate);
-                movesLeftB.setText("Moves Left (Black): " + lastGamestate.movesLeftB);
-                movesLeftW.setText("Moves Left (White): " + lastGamestate.movesLeftW);
-                turn--;
-                if (gameBoard.currentPlayer().piece == Board.WHITE) {
-                    currentPlayer.setText("Turn: White");
-                    currentPlayerHistory.setText("White");
-                    totalWhiteTime.pop();
-                } else {
-                    currentPlayer.setText("Turn: Black");
-                    currentPlayerHistory.setText("Black");
-                    totalBlackTime.pop();
+                        GAME_STOPPED = GAME_PAUSED = gameBoard.GAME_PAUSED = gameBoard.GAME_STOPPED = false;
+                        gameState.setText("");
+                        gameBoard.setGamestate(lastGamestate);
+                        movesLeftB.setText("Moves Left (Black): " + lastGamestate.movesLeftB);
+                        movesLeftW.setText("Moves Left (White): " + lastGamestate.movesLeftW);
+                        turn--;
+                        if (gameBoard.currentPlayer().piece == Board.WHITE) {
+                            currentPlayer.setText("Turn: White");
+                            currentPlayerHistory.setText("White");
+                            totalWhiteTime.pop();
+                        } else {
+                            currentPlayer.setText("Turn: Black");
+                            currentPlayerHistory.setText("Black");
+                            totalBlackTime.pop();
+                        }
+                        history.setText(history.getText() + currentPlayerHistory.getText() + " has undone their last move!" + "\n");
+                    }
                 }
-                history.setText(history.getText() + currentPlayerHistory.getText() + " has undone their last move!" + "\n");
+                gameBoard.GAME_PAUSED = false;
+                GAME_PAUSED = false;
             }
         });
 
@@ -284,6 +289,16 @@ public class Game {
         });
 
         gameBoard.doFirstRandMove();
+    }
+
+    private boolean sureAboutUndo() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Undo");
+        alert.setHeaderText("This will undo the last human move.");
+        alert.setContentText("Are you sure you'd like to undo?");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.get() == ButtonType.OK;
     }
 
     private int getTotalTime(Stack<Integer> stack) {
