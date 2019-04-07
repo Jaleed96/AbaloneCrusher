@@ -63,7 +63,7 @@ public class Minimax {
         @Override
         public int compareTo(Object o) {
             ScoredMove other = (ScoredMove) o;
-            return this.val - other.val;
+            return Integer.compare(this.val, other.val);
         }
     }
 
