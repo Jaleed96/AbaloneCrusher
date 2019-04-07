@@ -71,38 +71,54 @@ public class Minimax {
     private State initialSearchState;
     private Heuristic heuristic;
 
-    public SearchInterruptHandle searchBestMove(final State state, Heuristic heuristic) {
+    public SearchInterruptHandle searchBestMove(final State state, Heuristic heuristic, boolean useIterativeDeepening) {
         interruptFlag.set(false);
         initialSearchState = state;
         this.heuristic = heuristic;
 
         ExecutorService exec = Executors.newSingleThreadExecutor();
-        Future<Move> resultFuture = exec.submit(() -> {
-            int depth = 1;
-            ScoredMove result = new ScoredMove(Integer.MIN_VALUE, null);
-            ScoredMove latestDecision = new ScoredMove(Integer.MIN_VALUE, null);
-            List<ScoredMove> sortedPreviousScores = null;
+        Future<Move> resultFuture;
+        if (useIterativeDeepening) {
+            resultFuture = exec.submit(() -> {
+                int depth = 1;
+                ScoredMove result = new ScoredMove(Integer.MIN_VALUE, null);
+                ScoredMove latestDecision = new ScoredMove(Integer.MIN_VALUE, null);
+                List<ScoredMove> sortedPreviousScores = null;
 
-            while (true) {
-                sortedPreviousScores = topLevelMaximize(initialSearchState, sortedPreviousScores, depth++);
-                if (!sortedPreviousScores.isEmpty()) {
-                    latestDecision = sortedPreviousScores.get(0);
+                while (true) {
+                    sortedPreviousScores = topLevelMaximize(initialSearchState, sortedPreviousScores, depth++);
+                    if (!sortedPreviousScores.isEmpty()) {
+                        latestDecision = sortedPreviousScores.get(0);
+                    }
+
+                    if (!interruptFlag.get()) {
+                        // always take the last depth decision
+                        result = latestDecision;
+                    } else {
+                        break;
+                    }
                 }
-
-                if (!interruptFlag.get()) {
-                    // always take the last depth decision
+                TranspositionTable.clear();
+                // if we were interrupted, means we're at the last possible depth and we can use the move found there
+                if (latestDecision.val > result.val)
                     result = latestDecision;
-                } else {
-                    break;
-                }
-            }
-            TranspositionTable.clear();
-            // if we were interrupted, means we're at the last possible depth and we can use the move found there
-            if (latestDecision.val > result.val)
-                result = latestDecision;
 
-            return result.move.move;
-        });
+                return result.move.move;
+            });
+        } else {
+            resultFuture = exec.submit(() -> {
+                // 1 depth run to pre-order moves by heuristic and to ensure that a move is found
+                List<ScoredMove> sortedPreviousScores = topLevelMaximize(initialSearchState, null, 1);
+                ScoredMove result = sortedPreviousScores.get(0);
+
+                sortedPreviousScores = topLevelMaximize(initialSearchState, null, 4);
+                if (!sortedPreviousScores.isEmpty()) {
+                    result = sortedPreviousScores.get(0);
+                }
+
+                return result.move.move;
+            });
+        }
         exec.shutdown();
 
         return new SearchInterruptHandle() {
