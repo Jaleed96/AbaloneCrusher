@@ -15,6 +15,15 @@ public abstract class Heuristic {
         return dist;
     }
 
+    static int logScale(int val) {
+        if (val <= 0) return 0;
+        return (int) Math.ceil(Math.log(val));
+    }
+
+    static int quadraticScale(int val) {
+        return val * val;
+    }
+
     /** Reverse Manhattan distance of all player's pieces to the center of the board,
      * i.e. at center dist = 4, 4 away from center = 0 */
     static int closenessToCenter(byte[][] board, byte player) {
