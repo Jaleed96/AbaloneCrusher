@@ -233,39 +233,39 @@ public class Game {
 
         // reverts to the saved state of the board
         undoBtn.setOnAction((e) -> {
-            if (!GAME_STOPPED && !GAME_PAUSED) {
-                gameBoard.GAME_PAUSED = true;
-                GAME_PAUSED = true;
-                if (sureAboutUndo()) {
-                    if (!gamestateStack.empty()) {
-                        Gamestate lastGamestate = gamestateStack.pop();
+            boolean paused = GAME_PAUSED;
+            gameBoard.GAME_PAUSED = true;
+            GAME_PAUSED = true;
+            if (sureAboutUndo()) {
+                if (!gamestateStack.empty()) {
+                    Gamestate lastGamestate = gamestateStack.pop();
 
-                        if (lastGamestate.currentPlayer.agent == Config.PlayerAgent.AI && !gamestateStack.empty()) {
-                            lastGamestate = gamestateStack.pop();
-                            turn--;
-                        }
-
-                        GAME_STOPPED = GAME_PAUSED = gameBoard.GAME_PAUSED = gameBoard.GAME_STOPPED = false;
-                        gameState.setText("");
-                        gameBoard.setGamestate(lastGamestate);
-                        movesLeftB.setText("Moves Left (Black): " + lastGamestate.movesLeftB);
-                        movesLeftW.setText("Moves Left (White): " + lastGamestate.movesLeftW);
+                    if (lastGamestate.currentPlayer.agent == Config.PlayerAgent.AI && !gamestateStack.empty()) {
+                        lastGamestate = gamestateStack.pop();
                         turn--;
-                        if (gameBoard.currentPlayer().piece == Board.WHITE) {
-                            currentPlayer.setText("Turn: White");
-                            currentPlayerHistory.setText("White");
-                            totalWhiteTime.pop();
-                        } else {
-                            currentPlayer.setText("Turn: Black");
-                            currentPlayerHistory.setText("Black");
-                            totalBlackTime.pop();
-                        }
-                        history.setText(history.getText() + currentPlayerHistory.getText() + " has undone their last move!" + "\n");
                     }
+
+                    GAME_STOPPED = GAME_PAUSED = gameBoard.GAME_PAUSED = gameBoard.GAME_STOPPED = false;
+                    gameState.setText("");
+                    gameBoard.setGamestate(lastGamestate);
+                    movesLeftB.setText("Moves Left (Black): " + lastGamestate.movesLeftB);
+                    movesLeftW.setText("Moves Left (White): " + lastGamestate.movesLeftW);
+                    turn--;
+                    if (gameBoard.currentPlayer().piece == Board.WHITE) {
+                        currentPlayer.setText("Turn: White");
+                        currentPlayerHistory.setText("White");
+                        totalWhiteTime.pop();
+                    } else {
+                        currentPlayer.setText("Turn: Black");
+                        currentPlayerHistory.setText("Black");
+                        totalBlackTime.pop();
+                    }
+                    history.setText(history.getText() + currentPlayerHistory.getText() + " has undone their last move!" + "\n");
                 }
-                gameBoard.GAME_PAUSED = false;
-                GAME_PAUSED = false;
             }
+            gameBoard.GAME_PAUSED = paused;
+            GAME_PAUSED = paused;
+            GAME_STOPPED = false;
         });
 
         stopBtn.setOnAction(e -> {
