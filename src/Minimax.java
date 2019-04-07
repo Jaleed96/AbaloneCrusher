@@ -116,6 +116,7 @@ public class Minimax {
                     result = sortedPreviousScores.get(0);
                 }
 
+                TranspositionTable.clear();
                 return result.move.move;
             });
         }
