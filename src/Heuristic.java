@@ -28,6 +28,22 @@ public abstract class Heuristic {
         return totalScore;
     }
 
+    static int piecesOnEdge(byte[][] board, byte player) {
+        int piecesOnEdge = 0;
+        for (byte b : board[0])
+            piecesOnEdge += b == player ? 1 : 0;
+
+        for (byte b : board[board.length - 1])
+            piecesOnEdge += b == player ? 1 : 0;
+
+        for (int row = 1; row < board.length - 1; ++row) {
+            piecesOnEdge += board[row][0] == player ? 1 : 0;
+            piecesOnEdge += board[row][board[row].length - 1] == player ? 1 : 0;
+        }
+
+        return piecesOnEdge;
+    }
+
     /** Finds how many friendly neighbors each of the player's pieces has */
     static int grouping(byte[][] board, byte player) {
         int grouping = 0;
