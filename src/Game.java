@@ -245,7 +245,6 @@ public class Game {
                         turn--;
                     }
 
-                    GAME_STOPPED = GAME_PAUSED = gameBoard.GAME_PAUSED = gameBoard.GAME_STOPPED = false;
                     gameState.setText("");
                     gameBoard.setGamestate(lastGamestate);
                     movesLeftB.setText("Moves Left (Black): " + lastGamestate.movesLeftB);
@@ -265,6 +264,7 @@ public class Game {
             }
             gameBoard.GAME_PAUSED = paused;
             GAME_PAUSED = paused;
+            gameBoard.GAME_STOPPED = false;
             GAME_STOPPED = false;
         });
 
