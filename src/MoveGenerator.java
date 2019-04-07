@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 // Generates legal moves for a given game state
 public class MoveGenerator {
@@ -114,8 +111,10 @@ public class MoveGenerator {
     //gets a random move generated from
     public static Move firstRandMove(byte[][] board) {
         List<OrderedMove> moves = generate(board, Board.BLACK, Board.WHITE);
+        moves.sort(Comparator.comparing(orderedMove -> orderedMove.type));
         Random r = new Random();
-        int randInd =  r.nextInt((moves.size()));
+        //gets top 10 first random moves
+        int randInd =  r.nextInt(11);
         OrderedMove move = moves.get(randInd);
         return move.move;
     }
