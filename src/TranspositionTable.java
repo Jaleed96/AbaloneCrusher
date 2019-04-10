@@ -1,6 +1,7 @@
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 
 public class TranspositionTable {
     private static Map<HashableState, TableEntry> transpostion = new HashMap<>();
@@ -24,11 +25,12 @@ public class TranspositionTable {
     }
 
     private static long[][][] initializeZobrist() {
+        Random rand = new Random();
         long[][][] table = new long[9][9][2];
         for (int i = 0; i<table.length; i++) {
             for (int j = 0; j<table[i].length; j++) {
                 for (int k = 0; k<table[i][j].length; k++) {
-                    table[i][j][k] = (long) (Math.random()*RANGE);
+                    table[i][j][k] = (long) rand.nextInt(RANGE);
                 }
             }
         }
