@@ -74,8 +74,8 @@ public class Board {
         this.board = BoardUtil.deepCopyRepresentation(board);
         gui = new GuiBoard(board, height);
 
-        current = new Player(config.blackAgent, Board.BLACK, config.moveLimit, config.blackTimeLimitMs, new PrimaryHeuristic(), false);
-        opponent = new Player(config.whiteAgent, Board.WHITE, config.moveLimit, config.whiteTimeLimitMs, new PrimaryHeuristic(), false);
+        current = new Player(config.blackAgent, Board.BLACK, config.moveLimit, config.blackTimeLimitMs, new PrimaryHeuristic(), false, 4);
+        opponent = new Player(config.whiteAgent, Board.WHITE, config.moveLimit, config.whiteTimeLimitMs, new PrimaryHeuristic(), false, 4);
 
         blackMovesLeft = config.moveLimit;
         whiteMovesLeft = config.moveLimit;
@@ -94,7 +94,8 @@ public class Board {
                     // current is the maximizing player, opponent is the minimizing player
                     new Minimax.State(board, current.piece, opponent.piece, blackMovesLeft, whiteMovesLeft, current.score(), opponent.score()),
                     current.heuristic(),
-                    current.usesIterativeDeepening()
+                    current.usesIterativeDeepening(),
+                    current.depthLimit()
             );
 
             aiTimeoutHandler = (currentPlayer, timeLeftForPlayer) -> {

@@ -71,7 +71,7 @@ public class Minimax {
     private State initialSearchState;
     private Heuristic heuristic;
 
-    public SearchInterruptHandle searchBestMove(final State state, Heuristic heuristic, boolean useIterativeDeepening) {
+    public SearchInterruptHandle searchBestMove(final State state, Heuristic heuristic, boolean useIterativeDeepening, final int depthLimit /* for depth limited search only */) {
         interruptFlag.set(false);
         initialSearchState = state;
         this.heuristic = heuristic;
@@ -111,7 +111,7 @@ public class Minimax {
                 List<ScoredMove> sortedPreviousScores = topLevelMaximize(initialSearchState, null, 1);
                 ScoredMove result = sortedPreviousScores.get(0);
 
-                sortedPreviousScores = topLevelMaximize(initialSearchState, null, 4);
+                sortedPreviousScores = topLevelMaximize(initialSearchState, null, depthLimit);
                 if (!sortedPreviousScores.isEmpty()) {
                     result = sortedPreviousScores.get(0);
                 }
