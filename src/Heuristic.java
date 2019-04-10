@@ -70,6 +70,32 @@ public abstract class Heuristic {
         return grouping;
     }
 
+    private static int form3InDir(byte[][] board, byte player, Coordinate c, BoardUtil.Direction dir) {
+        BoardUtil.Neighbor neighbor = BoardUtil.neighborsOf(c).fromDirection(dir);
+        if (neighbor != null && board[neighbor.coordinate.y][neighbor.coordinate.x] == player) {
+            BoardUtil.Neighbor next = neighbor.neighbors().fromDirection(dir);
+            if (next != null && board[next.coordinate.y][next.coordinate.x] == player)
+                return 1;
+        }
+
+        return 0;
+    }
+
+    /** Count the number of 3 inline piece formations a player has */
+    static int formationsOfThree(byte[][] board, byte player) {
+        int formations = 0;
+        for (int row = 0; row < board.length; ++row) {
+            for (int col = 0; col < board[row].length; ++col) {
+                if (board[row][col] == player) {
+                    formations += form3InDir(board, player, BoardUtil.COORDINATES[row][col], BoardUtil.Direction.E)
+                                + form3InDir(board, player, BoardUtil.COORDINATES[row][col], BoardUtil.Direction.NE)
+                                + form3InDir(board, player, BoardUtil.COORDINATES[row][col], BoardUtil.Direction.NW);
+                }
+            }
+        }
+        return formations;
+    }
+
     /** Formation break happens when a player's marble is between two opponents marbles.
      * @return the number of "broken up" opponent's marbles, i.e. WBW has value of 2 for B player*/
     static int formationBreak(byte[][] board, byte player, byte opponent) {
