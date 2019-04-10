@@ -37,6 +37,18 @@ public abstract class Heuristic {
         return totalScore;
     }
 
+    static int distanceFromCenter(byte[][] board, byte player) {
+        int maxDistFromCenter = 4;
+        int totalScore = 0;
+        for (int row = 0; row < board.length; ++row) {
+            for (int col = 0; col < board[row].length; ++col) {
+                if (board[row][col] == player)
+                    totalScore += maxDistFromCenter - CACHED_CENTER_DIST_SCORE[row][col];
+            }
+        }
+        return totalScore;
+    }
+
     static int piecesOnEdge(byte[][] board, byte player) {
         int piecesOnEdge = 0;
         for (byte b : board[0])
@@ -146,6 +158,7 @@ public abstract class Heuristic {
                 return Integer.MAX_VALUE;
             if (state.maxPlayerScore < state.minPlayerScore)
                 return Integer.MIN_VALUE;
+            return Integer.MIN_VALUE / 2;
         }
 
         return 0;
