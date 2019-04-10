@@ -139,7 +139,7 @@ public class Menu extends Application {
             String errorMsg = "";
             String p1timelimitTxt = tbp1timelimit.getText().trim();
             String p2timelimitTxt = tbp2timelimit.getText().trim();
-            if (!p1timelimitTxt.matches("[0-9]+") && !p2timelimitTxt.matches("[0-9]+")) {
+            if (!p1timelimitTxt.matches("[0-9]+") || !p2timelimitTxt.matches("[0-9]+")) {
                 errorMsg += "Invalid input for time limit.";
             } else {
                 cfg.blackTimeLimitMs = Integer.parseInt(p1timelimitTxt) * 1000;
