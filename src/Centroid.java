@@ -1,7 +1,7 @@
 public class Centroid {
     double x;
     double y;
-    double w = 1.0;
+    double w;
 
     Centroid(double x, double y) {
         this.x = x;

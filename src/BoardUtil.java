@@ -306,8 +306,8 @@ public class BoardUtil {
     }
 
     public static Coordinate translatedCentroidToCoord(Centroid centroid) {
-        int centY = (int) Math.ceil(centroid.y);
-        int centX = _rtrx((int) Math.ceil(centroid.x), centY);
+        int centY = (int) Math.round(centroid.y);
+        int centX = _rtrx((int) Math.round(centroid.x), centY);
         return BoardUtil.COORDINATES[centY][centX];
     }
 

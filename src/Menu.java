@@ -56,9 +56,9 @@ public class Menu extends Application {
         GridPane.setHalignment(initialLayout, HPos.CENTER);
 
         // set default values
-        tbMoveLimit.setText("150");
-        tbp1timelimit.setText("60");
-        tbp2timelimit.setText("60");
+        tbMoveLimit.setText("40");
+        tbp1timelimit.setText("10");
+        tbp2timelimit.setText("10");
 
         humanRb.setToggleGroup(player1SelectionGroup);
         humanRb.setUserData(Config.PlayerAgent.Human);

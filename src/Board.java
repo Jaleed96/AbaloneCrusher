@@ -74,7 +74,7 @@ public class Board {
         this.board = BoardUtil.deepCopyRepresentation(board);
         gui = new GuiBoard(board, height);
 
-        current = new Player(config.blackAgent, Board.BLACK, config.moveLimit, config.blackTimeLimitMs, new PrimaryHeuristic(), false, 4);
+        current = new Player(config.blackAgent, Board.BLACK, config.moveLimit, config.blackTimeLimitMs, new ExperimentalHeuristic(), false, 4);
         opponent = new Player(config.whiteAgent, Board.WHITE, config.moveLimit, config.whiteTimeLimitMs, new PrimaryHeuristic(), false, 4);
 
         blackMovesLeft = config.moveLimit;
