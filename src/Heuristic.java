@@ -38,33 +38,33 @@ public abstract class Heuristic {
         return totalScore;
     }
 
-    static int geometricCentroidScore(byte[][] board, byte player, byte opponent, double playerWeight, double opponentWeight, double centerWeight) {
+    static int geometricCentroidScore(Minimax.State state, double maxPlayerWeight, double minPlayerWeight, double centerWeight) {
         List<Coordinate> playerCoords = new ArrayList<>();
         List<Coordinate> opponentCoords = new ArrayList<>();
-        for (int row = 0; row < board.length; ++row) {
-            for (int col = 0; col < board[row].length; ++col) {
-                if (board[row][col] == player)
+        for (int row = 0; row < state.board.length; ++row) {
+            for (int col = 0; col < state.board[row].length; ++col) {
+                if (state.board[row][col] == state.maximizingPlayer)
                     playerCoords.add(BoardUtil.COORDINATES[row][col]);
-                else if (board[row][col] == opponent)
+                else if (state.board[row][col] == state.minimizingPlayer)
                     opponentCoords.add(BoardUtil.COORDINATES[row][col]);
             }
         }
         Centroid playerMass = BoardUtil.findTranslatedCentroid(playerCoords);
-        playerMass.setWeight(playerWeight);
+        playerMass.setWeight(maxPlayerWeight);
         Centroid opponentMass = BoardUtil.findTranslatedCentroid(opponentCoords);
-        opponentMass.setWeight(opponentWeight);
+        opponentMass.setWeight(minPlayerWeight);
         Centroid center = new Centroid(4, 4);
         center.setWeight(centerWeight);
         Centroid centroidR = BoardUtil.findTranslatedRCentroid(center, playerMass, opponentMass);
         Coordinate R = BoardUtil.translatedCentroidToCoord(centroidR);
 
         System.out.println(R);
-        int score = 0;
-        for (int row = 0; row < board.length; ++row) {
-            for (int col = 0; col < board[row].length; ++col) {
-                if (board[row][col] == player)
+        int score = state.maxPlayerScore * 8 - state.minPlayerScore * 8;
+        for (int row = 0; row < state.board.length; ++row) {
+            for (int col = 0; col < state.board[row].length; ++col) {
+                if (state.board[row][col] == state.maximizingPlayer)
                     score -= BoardUtil.manhattanDistance(R, BoardUtil.COORDINATES[row][col]);
-                else if (board[row][col] == opponent)
+                else if (state.board[row][col] == state.minimizingPlayer)
                     score += BoardUtil.manhattanDistance(R, BoardUtil.COORDINATES[row][col]);
             }
         }
