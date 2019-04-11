@@ -46,7 +46,7 @@ public class BoardUtil {
         public Neighbors neighbors() {
             return neighborsOf(coordinate);
         }
-        
+
     }
 
     /// Maps neighboring cells to their coordinates and directions
@@ -282,6 +282,35 @@ public class BoardUtil {
         return null;
     }
 
+    public static Centroid findTranslatedCentroid(List<Coordinate> coordinates) {
+        double xSum = 0;
+        double ySum = 0;
+
+        for (Coordinate c : coordinates) {
+            xSum += _trx(c.x, c.y);
+            ySum += c.y;
+        }
+
+        return new Centroid(xSum / coordinates.size(), ySum / coordinates.size());
+    }
+
+    public static Centroid findTranslatedRCentroid(Centroid translatedA, Centroid translatedB, Centroid translatedC) {
+        double xSum = translatedA.x * translatedA.w
+                    + translatedB.x * translatedB.w
+                    + translatedC.x * translatedC.w;
+        double ySum = translatedA.y * translatedA.w
+                    + translatedB.y * translatedB.w
+                    + translatedC.y * translatedC.w;
+        double weightSum = translatedA.w + translatedB.w + translatedC.w;
+        return new Centroid(xSum / weightSum, ySum / weightSum);
+    }
+
+    public static Coordinate translatedCentroidToCoord(Centroid centroid) {
+        int centY = (int) Math.ceil(centroid.y);
+        int centX = _rtrx((int) Math.ceil(centroid.x), centY);
+        return BoardUtil.COORDINATES[centY][centX];
+    }
+
     // Copies the board representation and applies a move to it
     // Does not know about the legality of the move
     public static byte[][] copyThenApply(byte[][] board, Move move) {
@@ -325,7 +354,7 @@ public class BoardUtil {
         }
         return result;
     }
-    
+
     public static boolean onEdge(Coordinate coord) {
         return coord.x == 0 || coord.y == 0 || coord.y == 8 ||
                 (coord.x == 5 && coord.y == 7) || (coord.x == 6 && coord.y == 6) ||
@@ -333,7 +362,7 @@ public class BoardUtil {
                 (coord.x == 7 && coord.y == 3) || (coord.x == 6 && coord.y == 2) ||
                 (coord.x == 5 && coord.y == 1);
     }
-    
+
     public static boolean onCorner(Coordinate coord) {
         return (coord.x == 0 && coord.y == 0) || (coord.x == 4 && coord.y == 0) ||
                 (coord.x == 0 && coord.y == 8) || (coord.x == 4 && coord.y == 8);

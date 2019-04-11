@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +36,40 @@ public abstract class Heuristic {
             }
         }
         return totalScore;
+    }
+
+    static int geometricCentroidScore(byte[][] board, byte player, byte opponent, double playerWeight, double opponentWeight, double centerWeight) {
+        List<Coordinate> playerCoords = new ArrayList<>();
+        List<Coordinate> opponentCoords = new ArrayList<>();
+        for (int row = 0; row < board.length; ++row) {
+            for (int col = 0; col < board[row].length; ++col) {
+                if (board[row][col] == player)
+                    playerCoords.add(BoardUtil.COORDINATES[row][col]);
+                else if (board[row][col] == opponent)
+                    opponentCoords.add(BoardUtil.COORDINATES[row][col]);
+            }
+        }
+        Centroid playerMass = BoardUtil.findTranslatedCentroid(playerCoords);
+        playerMass.setWeight(playerWeight);
+        Centroid opponentMass = BoardUtil.findTranslatedCentroid(opponentCoords);
+        opponentMass.setWeight(opponentWeight);
+        Centroid center = new Centroid(4, 4);
+        center.setWeight(centerWeight);
+        Centroid centroidR = BoardUtil.findTranslatedRCentroid(center, playerMass, opponentMass);
+        Coordinate R = BoardUtil.translatedCentroidToCoord(centroidR);
+
+        System.out.println(R);
+        int score = 0;
+        for (int row = 0; row < board.length; ++row) {
+            for (int col = 0; col < board[row].length; ++col) {
+                if (board[row][col] == player)
+                    score -= BoardUtil.manhattanDistance(R, BoardUtil.COORDINATES[row][col]);
+                else if (board[row][col] == opponent)
+                    score += BoardUtil.manhattanDistance(R, BoardUtil.COORDINATES[row][col]);
+            }
+        }
+
+        return score;
     }
 
     static int distanceFromCenter(byte[][] board, byte player) {
